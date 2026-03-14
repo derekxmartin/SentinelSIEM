@@ -112,9 +112,25 @@ make run-correlate            # Start correlation engine
 make run-query                # Start query API + dashboard
 ```
 
-## Status
+## Implementation Phases
 
-This project is under active development. See `REQUIREMENTS.md` for the full specification and implementation phases.
+| Phase | Description | Tasks | Depends On | Status |
+|-------|-------------|-------|------------|--------|
+| P0 | Scaffolding — Go module, Docker Compose, ECS structs, config, ES client | 5 | — | In Progress |
+| P1 | HTTP Ingestion + SentinelEDR Parser | 4 | P0 | Pending |
+| P1a | Sentinel AV & DLP Parsers + Cross-Portfolio Rules | 4 | P1 | Pending |
+| P2 | Windows Event Log Ingestion (XML + Winlogbeat JSON) | 4 | P1 | Pending |
+| P3 | Syslog Ingestion (TCP/UDP/TLS, RFC 5424 & 3164) | 4 | P1 | Pending |
+| P4 | Sigma Single-Event Detection Engine | 5 | P1 | Pending |
+| P5 | Sigma Correlation Rules (event_count, value_count, temporal) | 5 | P4 | Pending |
+| P6 | Query Language + REST API | 4 | P0, P1 | Pending |
+| P7 | React Dashboard + Source Configuration | 10 | P6 | Pending |
+| P8 | CLI Management Tool | 4 | P0–P7 | Pending |
+| P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Pending |
+| P10 | Integration Tests (55 rules, 700 events, cross-source correlation) | 5 | All | Pending |
+| P11 | Hardening (metrics, load test, DLQ, graceful shutdown) | 4 | All | Pending |
+
+See `REQUIREMENTS.md` for the full specification and task breakdown.
 
 ## License
 
