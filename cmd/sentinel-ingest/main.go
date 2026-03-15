@@ -32,6 +32,14 @@ func main() {
 	registry.Register(parsers.NewSentinelEDRParser())
 	registry.Register(parsers.NewWinEvtXMLParser())
 	registry.Register(parsers.NewWinEvtJSONParser())
+
+	// Register syslog parser with sub-parsers from config dir.
+	syslogParser, err := parsers.NewSyslogECSParser(cfg.Ingest.Syslog.SubParserDir)
+	if err != nil {
+		log.Fatalf("Failed to create syslog parser: %v", err)
+	}
+	registry.Register(syslogParser)
+
 	engine := normalize.NewEngine(registry)
 
 	log.Printf("Registered parsers: %v", registry.SourceTypes())
@@ -64,6 +72,18 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
+	// Start syslog listener.
+	syslogListener := ingest.NewSyslogListener(cfg.Ingest.Syslog, pipeline.Handle)
+	syslogCtx, syslogCancel := context.WithCancel(context.Background())
+	defer syslogCancel()
+
+	if err := syslogListener.Start(syslogCtx); err != nil {
+		log.Printf("Warning: syslog listener failed to start: %v", err)
+	}
+	if err := syslogListener.StartTLS(syslogCtx); err != nil {
+		log.Printf("Warning: syslog TLS listener failed to start: %v", err)
+	}
+
 	// Graceful shutdown.
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
@@ -77,6 +97,10 @@ func main() {
 
 	<-done
 	fmt.Println("\nShutting down...")
+
+	// Stop syslog listener first.
+	syslogCancel()
+	syslogListener.Stop()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()

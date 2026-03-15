@@ -28,6 +28,7 @@ Thumbs.db
 .env
 *.pem
 *.key
+certs/
 
 # Node (web dashboard)
 web/node_modules/

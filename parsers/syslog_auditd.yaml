@@ -1,0 +1,49 @@
+name: auditd
+match: "type="
+ecs_category: ["host"]
+ecs_type: ["info"]
+
+patterns:
+  - name: auditd_execve
+    regex: 'type=EXECVE.*argc=(?P<argc>\d+)(?:\s+a0="?(?P<a0>[^"]+)"?)?(?:\s+a1="?(?P<a1>[^"]+)"?)?(?:\s+a2="?(?P<a2>[^"]+)"?)?'
+    field_map:
+      a0: process.executable
+    action: process_executed
+    category: ["process"]
+    type: ["start"]
+
+  - name: auditd_syscall
+    regex: 'type=SYSCALL.*exe="(?P<exe>[^"]+)".*pid=(?P<pid>\d+).*ppid=(?P<ppid>\d+).*uid=(?P<uid>\d+)'
+    field_map:
+      exe: process.executable
+      pid: process.pid
+      uid: user.id
+    action: syscall
+    category: ["process"]
+    type: ["info"]
+
+  - name: auditd_user_auth
+    regex: 'type=USER_AUTH.*acct="(?P<user>[^"]+)".*res=(?P<result>\w+)'
+    field_map:
+      user: user.name
+      result: event.outcome
+    action: user_authentication
+    category: ["authentication"]
+    type: ["start"]
+
+  - name: auditd_user_login
+    regex: 'type=USER_LOGIN.*acct="(?P<user>[^"]+)".*res=(?P<result>\w+)'
+    field_map:
+      user: user.name
+      result: event.outcome
+    action: user_login
+    category: ["authentication"]
+    type: ["start"]
+
+  - name: auditd_avc
+    regex: 'type=AVC.*avc:\s+(?P<decision>\w+).*comm="(?P<comm>[^"]+)"'
+    field_map:
+      comm: process.name
+    action: selinux_avc
+    category: ["process"]
+    type: ["denied"]

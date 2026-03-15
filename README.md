@@ -120,7 +120,7 @@ make run-query                # Start query API + dashboard
 | P1 | HTTP Ingestion + SentinelEDR Parser | 4 | P0 | Complete |
 | P1a | Sentinel AV & DLP Parsers + Cross-Portfolio Rules | 4 | P1 | Complete |
 | P2 | Windows Event Log Ingestion (XML + Winlogbeat JSON) | 4 | P1 | Complete |
-| P3 | Syslog Ingestion (TCP/UDP/TLS, RFC 5424 & 3164) | 4 | P1 | Pending |
+| P3 | Syslog Ingestion (TCP/UDP/TLS, RFC 5424 & 3164) | 4 | P1 | Complete |
 | P4 | Sigma Single-Event Detection Engine | 5 | P1 | Pending |
 | P5 | Sigma Correlation Rules (event_count, value_count, temporal) | 5 | P4 | Pending |
 | P6 | Query Language + REST API | 4 | P0, P1 | Pending |

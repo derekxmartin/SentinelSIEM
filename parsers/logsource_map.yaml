@@ -104,11 +104,24 @@ mappings:
       winevt.channel: Microsoft-Windows-Sysmon/Operational
 
   # ============================================================
-  # Syslog Mappings (Placeholders for Phase 3)
+  # Syslog Mappings
   # ============================================================
 
   - logsource:
       product: linux
+    conditions:
+      source_type: syslog
+
+  - logsource:
+      product: linux
+      service: auditd
+    conditions:
+      source_type: syslog
+      process.name: auditd
+
+  - logsource:
+      product: linux
+      service: syslog
     conditions:
       source_type: syslog
 

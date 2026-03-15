@@ -1,0 +1,10 @@
+name: generic_kv
+match: "\\w+=\\S+"
+ecs_category: ["host"]
+ecs_type: ["info"]
+
+patterns:
+  - name: kv_pairs
+    regex: '(?P<kv_data>\w+=\S+(?:\s+\w+=\S+)*)'
+    field_map: {}
+    action: generic_event

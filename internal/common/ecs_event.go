@@ -25,6 +25,8 @@ type ECSEvent struct {
 	Threat      *ThreatFields      `json:"threat,omitempty"`
 	DLP         *DLPFields         `json:"dlp,omitempty"`
 	AV          *AVFields          `json:"av,omitempty"`
+	Observer    *ObserverFields    `json:"observer,omitempty"`
+	Log         *LogFields         `json:"log,omitempty"`
 
 	// SourceType identifies the originating source (e.g., "sentineledr", "sentinel_av").
 	// Used by the pipeline to route events to the correct ES index.
@@ -166,5 +168,42 @@ type AVScan struct {
 
 // AVSignature captures matched AV signature details.
 type AVSignature struct {
+	Name string `json:"name,omitempty"`
+}
+
+// ObserverFields captures observer/sensor information (ECS observer.* field set).
+// Used for network devices (firewalls, IDS) that report events about other hosts.
+type ObserverFields struct {
+	Name    string           `json:"name,omitempty"`
+	Type    string           `json:"type,omitempty"`
+	Ingress *InterfaceFields `json:"ingress,omitempty"`
+	Egress  *InterfaceFields `json:"egress,omitempty"`
+}
+
+// InterfaceFields captures network interface information.
+type InterfaceFields struct {
+	Name string `json:"name,omitempty"`
+}
+
+// LogFields captures log metadata (ECS log.* field set).
+type LogFields struct {
+	Syslog *SyslogLogFields `json:"syslog,omitempty"`
+}
+
+// SyslogLogFields captures syslog-specific metadata (ECS log.syslog.* field set).
+type SyslogLogFields struct {
+	Facility *SyslogFacility `json:"facility,omitempty"`
+	Severity *SyslogSeverity `json:"severity,omitempty"`
+}
+
+// SyslogFacility captures syslog facility information.
+type SyslogFacility struct {
+	Code int    `json:"code"`
+	Name string `json:"name,omitempty"`
+}
+
+// SyslogSeverity captures syslog severity information.
+type SyslogSeverity struct {
+	Code int    `json:"code"`
 	Name string `json:"name,omitempty"`
 }

@@ -21,9 +21,12 @@ api_keys = ["changeme"]  # API keys for ingestion auth
   [ingest.syslog]
   tcp_port = 1514
   udp_port = 1514
-  tls_port = 6514
+  tls_port = 0            # Set to 6514 and configure tls_cert/tls_key to enable TLS
   # tls_cert = "/path/to/syslog.crt"
   # tls_key  = "/path/to/syslog.key"
+  max_connections = 1000
+  subparser_dir = "parsers"
+  max_message_len = 65536
 
 [correlate]
 rules_dir = "rules"

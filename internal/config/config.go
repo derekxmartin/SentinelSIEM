@@ -45,11 +45,14 @@ type IngestConfig struct {
 
 // SyslogConfig holds syslog listener settings.
 type SyslogConfig struct {
-	TCPPort  int    `toml:"tcp_port"`
-	UDPPort  int    `toml:"udp_port"`
-	TLSPort  int    `toml:"tls_port"`
-	TLSCert  string `toml:"tls_cert"`
-	TLSKey   string `toml:"tls_key"`
+	TCPPort       int    `toml:"tcp_port"`
+	UDPPort       int    `toml:"udp_port"`
+	TLSPort       int    `toml:"tls_port"`
+	TLSCert       string `toml:"tls_cert"`
+	TLSKey        string `toml:"tls_key"`
+	MaxConns      int    `toml:"max_connections"`
+	SubParserDir  string `toml:"subparser_dir"`
+	MaxMessageLen int    `toml:"max_message_len"`
 }
 
 // CorrelateConfig holds correlation engine settings.
@@ -92,7 +95,10 @@ func Defaults() Config {
 			Syslog: SyslogConfig{
 				TCPPort: 1514,
 				UDPPort: 1514,
-				TLSPort: 6514,
+				TLSPort:       0,
+				MaxConns:      1000,
+				SubParserDir:  "parsers",
+				MaxMessageLen: 65536,
 			},
 		},
 		Correlate: CorrelateConfig{
@@ -166,6 +172,9 @@ func (c *Config) Validate() error {
 	}
 	if c.Ingest.Syslog.TLSPort < 0 || c.Ingest.Syslog.TLSPort > 65535 {
 		errs = append(errs, fmt.Sprintf("ingest.syslog.tls_port: %d is not a valid port", c.Ingest.Syslog.TLSPort))
+	}
+	if c.Ingest.Syslog.TLSPort > 0 && (c.Ingest.Syslog.TLSCert == "" || c.Ingest.Syslog.TLSKey == "") {
+		errs = append(errs, "ingest.syslog: tls_cert and tls_key are required when tls_port is set")
 	}
 
 	// Query

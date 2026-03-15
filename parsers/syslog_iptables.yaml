@@ -1,0 +1,39 @@
+name: iptables
+match: "IN=.*OUT=.*"
+ecs_category: ["network"]
+ecs_type: ["connection"]
+
+patterns:
+  - name: iptables_block
+    regex: '(?P<action>DROP|REJECT).*SRC=(?P<src_ip>\S+)\s+DST=(?P<dst_ip>\S+).*PROTO=(?P<proto>\S+)(?:.*SPT=(?P<src_port>\d+))?(?:.*DPT=(?P<dst_port>\d+))?'
+    field_map:
+      src_ip: source.ip
+      dst_ip: destination.ip
+      src_port: source.port
+      dst_port: destination.port
+      proto: network.protocol
+    action: firewall_drop
+    category: ["network"]
+    type: ["denied"]
+
+  - name: iptables_accept
+    regex: '(?P<action>ACCEPT).*SRC=(?P<src_ip>\S+)\s+DST=(?P<dst_ip>\S+).*PROTO=(?P<proto>\S+)(?:.*SPT=(?P<src_port>\d+))?(?:.*DPT=(?P<dst_port>\d+))?'
+    field_map:
+      src_ip: source.ip
+      dst_ip: destination.ip
+      src_port: source.port
+      dst_port: destination.port
+      proto: network.protocol
+    action: firewall_accept
+    category: ["network"]
+    type: ["allowed"]
+
+  - name: iptables_generic
+    regex: 'SRC=(?P<src_ip>\S+)\s+DST=(?P<dst_ip>\S+).*PROTO=(?P<proto>\S+)(?:.*SPT=(?P<src_port>\d+))?(?:.*DPT=(?P<dst_port>\d+))?'
+    field_map:
+      src_ip: source.ip
+      dst_ip: destination.ip
+      src_port: source.port
+      dst_port: destination.port
+      proto: network.protocol
+    action: firewall_event
