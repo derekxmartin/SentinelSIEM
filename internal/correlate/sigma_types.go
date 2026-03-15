@@ -25,12 +25,14 @@ type SigmaRule struct {
 	// Type discriminator: "" = single-event, "correlation" = correlation rule.
 	Type string
 
-	// Correlation-specific fields (only set when Type == "correlation").
-	CorrelationRules []string    // Rule IDs referenced by this correlation.
-	GroupBy          []string    // Fields to group correlated events by.
-	Timespan         string     // Duration string, e.g. "5m", "60m".
-	Ordered          bool       // Whether the rule order matters.
+	// Correlation-specific fields (only set when Type == "correlation"
+	// or an explicit subtype like "event_count", "value_count", "temporal").
+	CorrelationRules []string       // Rule IDs referenced by this correlation.
+	GroupBy          []string       // Fields to group correlated events by.
+	Timespan         string         // Duration string, e.g. "5m", "60m".
+	Ordered          bool           // Whether the rule order matters.
 	CorrelationCond  map[string]int // Correlation condition, e.g. {"gte": 2}.
+	ValueField       string         // Field for value_count (distinct values counted).
 }
 
 // SigmaLogsource specifies the log source a rule targets.
@@ -104,11 +106,20 @@ func (reg *RuleRegistry) Count() int {
 	return len(reg.all)
 }
 
+// isCorrelationType returns true if the type string indicates a correlation rule.
+func isCorrelationType(t string) bool {
+	switch t {
+	case "correlation", "event_count", "value_count", "temporal":
+		return true
+	}
+	return false
+}
+
 // SingleEventRules returns only non-correlation rules.
 func (reg *RuleRegistry) SingleEventRules() []*SigmaRule {
 	var result []*SigmaRule
 	for _, r := range reg.all {
-		if r.Type != "correlation" {
+		if !isCorrelationType(r.Type) {
 			result = append(result, r)
 		}
 	}
@@ -119,7 +130,7 @@ func (reg *RuleRegistry) SingleEventRules() []*SigmaRule {
 func (reg *RuleRegistry) CorrelationRules() []*SigmaRule {
 	var result []*SigmaRule
 	for _, r := range reg.all {
-		if r.Type == "correlation" {
+		if isCorrelationType(r.Type) {
 			result = append(result, r)
 		}
 	}

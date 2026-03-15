@@ -112,9 +112,9 @@ func parseSigmaDocument(doc map[string]interface{}) (*SigmaRule, error) {
 		}
 	}
 
-	// Check if this is a correlation rule.
+	// Check if this is a correlation rule (any correlation type).
 	rule.Type = getString(doc, "type")
-	if rule.Type == "correlation" {
+	if isCorrelationType(rule.Type) {
 		return parseCorrelationFields(rule, doc)
 	}
 
@@ -146,10 +146,17 @@ func parseCorrelationFields(rule *SigmaRule, doc map[string]interface{}) (*Sigma
 	rule.Timespan = getString(doc, "timespan")
 	rule.Ordered = getBool(doc, "ordered")
 
-	// Parse correlation condition (e.g. {gte: 2}).
+	// Parse correlation condition (e.g. {gte: 2, field: "source.ip"}).
 	if cond, ok := doc["condition"].(map[string]interface{}); ok {
 		rule.CorrelationCond = make(map[string]int)
 		for k, v := range cond {
+			// "field" is a string value used by value_count rules.
+			if k == "field" {
+				if s, ok := v.(string); ok {
+					rule.ValueField = s
+				}
+				continue
+			}
 			if intVal, ok := toInt(v); ok {
 				rule.CorrelationCond[k] = intVal
 			}
