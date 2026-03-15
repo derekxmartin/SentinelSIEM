@@ -35,6 +35,7 @@ type ECSEvent struct {
 	SSH         *SSHFields         `json:"ssh,omitempty"`
 	NDR         *NDRFields         `json:"ndr,omitempty"`
 	Observer    *ObserverFields    `json:"observer,omitempty"`
+	Rule        *RuleFields        `json:"rule,omitempty"`
 	Log         *LogFields         `json:"log,omitempty"`
 
 	// SourceType identifies the originating source (e.g., "sentinel_edr", "sentinel_av").
@@ -196,6 +197,20 @@ type ObserverFields struct {
 // InterfaceFields captures network interface information.
 type InterfaceFields struct {
 	Name string `json:"name,omitempty"`
+}
+
+// RuleFields captures detection rule metadata (ECS rule.* field set).
+// Used for alert documents to record which rule triggered the alert.
+type RuleFields struct {
+	ID          string   `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Category    string   `json:"category,omitempty"`
+	Ruleset     string   `json:"ruleset,omitempty"`
+	Severity    string   `json:"severity,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
+	Reference   string   `json:"reference,omitempty"`
+	Author      string   `json:"author,omitempty"`
 }
 
 // LogFields captures log metadata (ECS log.* field set).

@@ -10,11 +10,14 @@ import (
 
 // Alert is returned when an ECS event matches a Sigma rule's detection logic.
 type Alert struct {
-	RuleID string
-	Title  string
-	Level  string
-	Tags   []string
-	Event  *common.ECSEvent
+	RuleID      string
+	Title       string
+	Level       string
+	Tags        []string
+	Description string
+	Author      string
+	Ruleset     string // "sigma_single" or "sigma_correlation"
+	Event       *common.ECSEvent
 }
 
 // EngineStats provides observability into the rule engine's state.
@@ -171,11 +174,14 @@ func evaluateGroup(grp *ruleGroup, event *common.ECSEvent, alerts []Alert) []Ale
 	for _, cr := range grp.rules {
 		if EvaluateEvent(cr.compiled, event) {
 			alerts = append(alerts, Alert{
-				RuleID: cr.rule.ID,
-				Title:  cr.rule.Title,
-				Level:  cr.rule.Level,
-				Tags:   cr.rule.Tags,
-				Event:  event,
+				RuleID:      cr.rule.ID,
+				Title:       cr.rule.Title,
+				Level:       cr.rule.Level,
+				Tags:        cr.rule.Tags,
+				Description: cr.rule.Description,
+				Author:      cr.rule.Author,
+				Ruleset:     "sigma_single",
+				Event:       event,
 			})
 		}
 	}

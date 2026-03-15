@@ -33,6 +33,7 @@ rules_dir = "rules"
 logsource_map_path = "parsers/logsource_map.yaml"
 reload_interval_sec = 30
 state_expiry_sec = 3600
+dedup_window_sec = 60   # suppress duplicate alerts within this window
 
 [query]
 addr = "0.0.0.0"

@@ -126,7 +126,7 @@ func TestPipelineNormalizeAndIndex(t *testing.T) {
 	reg.Register(&testParser{sourceType: "sentinel_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	// Send 5 events.
 	events := make([]json.RawMessage, 5)
@@ -146,7 +146,7 @@ func TestPipelineIndexNaming(t *testing.T) {
 	reg.Register(&testParser{sourceType: "sentinel_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
 
@@ -166,7 +166,7 @@ func TestPipelineUnknownSourceType(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	raw := json.RawMessage(`{"source_type":"futuretype","data":"test"}`)
 	pipeline.Handle([]json.RawMessage{raw})
@@ -186,7 +186,7 @@ func TestPipelineMissingSourceType(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	raw := json.RawMessage(`{"data":"no source type"}`)
 	pipeline.Handle([]json.RawMessage{raw})
@@ -207,7 +207,7 @@ func TestPipelineMixedValidInvalid(t *testing.T) {
 	reg.Register(&testParser{sourceType: "sentinel_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	events := []json.RawMessage{
 		makeTestEvent("sentinel_edr"),
@@ -231,7 +231,7 @@ func TestPipelineMultipleSourceTypes(t *testing.T) {
 	reg.Register(&testParser{sourceType: "sentinel_av"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	events := []json.RawMessage{
 		makeTestEvent("sentinel_edr"),
@@ -264,7 +264,7 @@ func TestPipelineEmptyBatch(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	// Should not panic or call indexer.
 	pipeline.Handle(nil)
@@ -279,7 +279,7 @@ func TestPipelineDefaultPrefix(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "", nil, nil, nil)
 
 	raw := json.RawMessage(`{"source_type":"test","data":"x"}`)
 	pipeline.Handle([]json.RawMessage{raw})
@@ -299,7 +299,7 @@ func TestPipelineCustomPrefix(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "myorg", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "myorg", nil, nil, nil)
 
 	raw := json.RawMessage(`{"source_type":"test","data":"x"}`)
 	pipeline.Handle([]json.RawMessage{raw})
@@ -371,7 +371,7 @@ func TestPipelineHostScoreUpsert(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	hsIndexer := &mockHostScoreIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil, nil)
 
 	events := []json.RawMessage{
 		makeTestNDRHostScoreEvent(),
@@ -395,7 +395,7 @@ func TestPipelineHostScoreNotUpsertedForNonHostScore(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	hsIndexer := &mockHostScoreIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil, nil)
 
 	events := []json.RawMessage{makeTestEvent("sentinel_edr")}
 	pipeline.Handle(events)
@@ -412,7 +412,7 @@ func TestPipelineHostScoreNilIndexer(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	// nil host score indexer — should not panic.
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	events := []json.RawMessage{makeTestNDRHostScoreEvent()}
 	pipeline.Handle(events) // Should not panic.
@@ -428,7 +428,7 @@ func TestPipelineMultipleHostScoreEvents(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	hsIndexer := &mockHostScoreIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil, nil)
 
 	events := []json.RawMessage{
 		makeTestNDRHostScoreEvent(),
@@ -581,7 +581,7 @@ func TestPipelineRuleEngineMatchGeneratesAlert(t *testing.T) {
 	reg.Register(&matchingParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
 
 	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
 
@@ -612,13 +612,23 @@ func TestPipelineRuleEngineMatchGeneratesAlert(t *testing.T) {
 	if alertDoc.SourceType != "sigma_alert" {
 		t.Errorf("alert source_type = %q, want 'sigma_alert'", alertDoc.SourceType)
 	}
-	if alertDoc.Observer == nil || alertDoc.Observer.Name != "Suspicious Process" {
-		t.Errorf("alert observer.name = %q, want 'Suspicious Process'",
-			safeObserverName(alertDoc.Observer))
+	if alertDoc.Rule == nil {
+		t.Fatal("alert rule fields are nil")
 	}
-	if alertDoc.Observer == nil || alertDoc.Observer.Ingress == nil ||
-		alertDoc.Observer.Ingress.Name != "test-rule-001" {
-		t.Error("alert observer.ingress.name should contain rule ID 'test-rule-001'")
+	if alertDoc.Rule.Name != "Suspicious Process" {
+		t.Errorf("alert rule.name = %q, want 'Suspicious Process'", alertDoc.Rule.Name)
+	}
+	if alertDoc.Rule.ID != "test-rule-001" {
+		t.Errorf("alert rule.id = %q, want 'test-rule-001'", alertDoc.Rule.ID)
+	}
+	if alertDoc.Rule.Severity != "high" {
+		t.Errorf("alert rule.severity = %q, want 'high'", alertDoc.Rule.Severity)
+	}
+	if alertDoc.Rule.Ruleset != "sigma_single" {
+		t.Errorf("alert rule.ruleset = %q, want 'sigma_single'", alertDoc.Rule.Ruleset)
+	}
+	if alertDoc.Rule.Category != "sigma" {
+		t.Errorf("alert rule.category = %q, want 'sigma'", alertDoc.Rule.Category)
 	}
 }
 
@@ -628,7 +638,7 @@ func TestPipelineRuleEngineNoMatchNoAlert(t *testing.T) {
 	reg.Register(&nonMatchingParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
 
 	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
 
@@ -651,7 +661,7 @@ func TestPipelineNilRuleEngineNoAlerts(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	// nil rule engine — should not panic or generate alerts.
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
 
 	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
 
@@ -667,7 +677,7 @@ func TestPipelineMultipleMatchingEvents(t *testing.T) {
 	reg.Register(&matchingParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
 
 	events := []json.RawMessage{
 		makeTestEvent("sentinel_edr"),
@@ -694,7 +704,7 @@ func TestPipelineMixedMatchAndNonMatch(t *testing.T) {
 	reg.Register(&mixedParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine)
+	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
 
 	events := []json.RawMessage{
 		makeTestEvent("sentinel_edr"),
@@ -783,11 +793,14 @@ func TestAlertToDocument(t *testing.T) {
 	}
 
 	alert := correlate.Alert{
-		RuleID: "rule-123",
-		Title:  "Test Alert",
-		Level:  "high",
-		Tags:   []string{"attack.execution", "attack.t1059"},
-		Event:  event,
+		RuleID:      "rule-123",
+		Title:       "Test Alert",
+		Level:       "high",
+		Tags:        []string{"attack.execution", "attack.t1059"},
+		Description: "Detects suspicious process",
+		Author:      "test-author",
+		Ruleset:     "sigma_single",
+		Event:       event,
 	}
 
 	doc := alertToDocument(alert)
@@ -803,21 +816,44 @@ func TestAlertToDocument(t *testing.T) {
 		t.Errorf("source_type = %q, want 'sigma_alert'", doc.SourceType)
 	}
 
-	// Check observer (rule metadata).
+	// Check rule metadata (ECS rule.* fields).
+	if doc.Rule == nil {
+		t.Fatal("rule fields are nil")
+	}
+	if doc.Rule.ID != "rule-123" {
+		t.Errorf("rule.id = %q, want 'rule-123'", doc.Rule.ID)
+	}
+	if doc.Rule.Name != "Test Alert" {
+		t.Errorf("rule.name = %q, want 'Test Alert'", doc.Rule.Name)
+	}
+	if doc.Rule.Severity != "high" {
+		t.Errorf("rule.severity = %q, want 'high'", doc.Rule.Severity)
+	}
+	if doc.Rule.Category != "sigma" {
+		t.Errorf("rule.category = %q, want 'sigma'", doc.Rule.Category)
+	}
+	if doc.Rule.Ruleset != "sigma_single" {
+		t.Errorf("rule.ruleset = %q, want 'sigma_single'", doc.Rule.Ruleset)
+	}
+	if doc.Rule.Description != "Detects suspicious process" {
+		t.Errorf("rule.description = %q, want 'Detects suspicious process'", doc.Rule.Description)
+	}
+	if doc.Rule.Author != "test-author" {
+		t.Errorf("rule.author = %q, want 'test-author'", doc.Rule.Author)
+	}
+	if len(doc.Rule.Tags) != 2 || doc.Rule.Tags[0] != "attack.execution" {
+		t.Errorf("rule.tags = %v, want [attack.execution, attack.t1059]", doc.Rule.Tags)
+	}
+
+	// Observer identifies the detection system (no rule-specific data).
 	if doc.Observer == nil {
 		t.Fatal("observer is nil")
-	}
-	if doc.Observer.Name != "Test Alert" {
-		t.Errorf("observer.name = %q, want 'Test Alert'", doc.Observer.Name)
 	}
 	if doc.Observer.Type != "sigma" {
 		t.Errorf("observer.type = %q, want 'sigma'", doc.Observer.Type)
 	}
-	if doc.Observer.Ingress == nil || doc.Observer.Ingress.Name != "rule-123" {
-		t.Error("observer.ingress.name should be 'rule-123'")
-	}
 
-	// Check tags preserved in threat.technique.
+	// Check tags also preserved in threat.technique.
 	if doc.Threat == nil || len(doc.Threat.Technique) != 2 {
 		t.Errorf("threat.technique length = %d, want 2", len(doc.Threat.Technique))
 	}
@@ -838,12 +874,15 @@ func TestAlertToDocumentEmptyRuleID(t *testing.T) {
 	}
 
 	doc := alertToDocument(alert)
-	if doc.Observer == nil {
-		t.Fatal("observer should not be nil")
+	if doc.Rule == nil {
+		t.Fatal("rule should not be nil")
 	}
-	// With empty RuleID, ingress should not be set.
-	if doc.Observer.Ingress != nil {
-		t.Error("observer.ingress should be nil when RuleID is empty")
+	// With empty RuleID, rule.id should be empty string.
+	if doc.Rule.ID != "" {
+		t.Errorf("rule.id = %q, want empty", doc.Rule.ID)
+	}
+	if doc.Rule.Name != "No ID Rule" {
+		t.Errorf("rule.name = %q, want 'No ID Rule'", doc.Rule.Name)
 	}
 }
 
@@ -853,7 +892,7 @@ func TestPipelineAlertIndexNaming(t *testing.T) {
 	reg.Register(&matchingParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "myprefix", nil, ruleEngine)
+	pipeline := NewPipeline(engine, indexer, "myprefix", nil, ruleEngine, nil)
 
 	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
 
@@ -872,13 +911,6 @@ func TestPipelineAlertIndexNaming(t *testing.T) {
 			t.Errorf("alert index = %q, should contain date '2026.03.14'", call.Index)
 		}
 	}
-}
-
-func safeObserverName(o *common.ObserverFields) string {
-	if o == nil {
-		return "<nil>"
-	}
-	return o.Name
 }
 
 func contains(s, substr string) bool {

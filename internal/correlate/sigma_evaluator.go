@@ -188,6 +188,8 @@ func getEventFieldValue(event *common.ECSEvent, field string) (interface{}, bool
 		return getNDRSubfield(event.NDR, rest)
 	case "observer":
 		return getObserverSubfield(event.Observer, rest)
+	case "rule":
+		return getRuleSubfield(event.Rule, rest)
 	case "log":
 		return getLogSubfield(event.Log, rest)
 	default:
@@ -899,6 +901,37 @@ func getLogSubfield(l *common.LogFields, field string) (interface{}, bool) {
 		default:
 			return nil, false
 		}
+	default:
+		return nil, false
+	}
+}
+
+func getRuleSubfield(r *common.RuleFields, field string) (interface{}, bool) {
+	if r == nil {
+		return nil, false
+	}
+	switch field {
+	case "id":
+		return r.ID, r.ID != ""
+	case "name":
+		return r.Name, r.Name != ""
+	case "description":
+		return r.Description, r.Description != ""
+	case "category":
+		return r.Category, r.Category != ""
+	case "ruleset":
+		return r.Ruleset, r.Ruleset != ""
+	case "severity":
+		return r.Severity, r.Severity != ""
+	case "tags":
+		if len(r.Tags) > 0 {
+			return r.Tags, true
+		}
+		return nil, false
+	case "reference":
+		return r.Reference, r.Reference != ""
+	case "author":
+		return r.Author, r.Author != ""
 	default:
 		return nil, false
 	}

@@ -91,9 +91,16 @@ func main() {
 		log.Println("No Sigma rules found, rule engine disabled")
 	}
 
+	// Create alert dedup cache.
+	var dedupCache *correlate.DedupCache
+	if cfg.Correlate.DedupWindowSec > 0 {
+		dedupCache = correlate.NewDedupCache(time.Duration(cfg.Correlate.DedupWindowSec) * time.Second)
+		log.Printf("Alert dedup window: %ds", cfg.Correlate.DedupWindowSec)
+	}
+
 	// Build the ingest pipeline: HTTP → normalize → ES → rule engine.
 	// esStore implements both Indexer and HostScoreIndexer.
-	pipeline := ingest.NewPipeline(engine, esStore, cfg.Elasticsearch.IndexPrefix, esStore, ruleEngine)
+	pipeline := ingest.NewPipeline(engine, esStore, cfg.Elasticsearch.IndexPrefix, esStore, ruleEngine, dedupCache)
 	listener := ingest.NewHTTPListener(cfg.Ingest, pipeline.Handle)
 
 	srv := &http.Server{

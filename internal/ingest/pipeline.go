@@ -13,18 +13,6 @@ import (
 	"github.com/SentinelSIEM/sentinel-siem/internal/store"
 )
 
-// AlertDocument is the ES document written to the alerts index when a Sigma
-// rule matches an event. It captures the rule metadata alongside the event
-// that triggered the alert.
-type AlertDocument struct {
-	Timestamp time.Time        `json:"@timestamp"`
-	RuleID    string           `json:"rule.id"`
-	RuleTitle string           `json:"rule.title"`
-	RuleLevel string           `json:"rule.level"`
-	RuleTags  []string         `json:"rule.tags,omitempty"`
-	Event     *common.ECSEvent `json:"event_data"`
-}
-
 // Pipeline wires together the ingestion components:
 // HTTPListener → normalize.Engine → store.Indexer (Elasticsearch).
 // Optionally evaluates events against a RuleEngine and indexes alerts.
@@ -34,12 +22,13 @@ type Pipeline struct {
 	indexer        store.Indexer
 	hostScoreIndex store.HostScoreIndexer
 	ruleEngine     *correlate.RuleEngine
+	dedupCache     *correlate.DedupCache
 	prefix         string
 }
 
 // NewPipeline creates an ingestion pipeline.
-// hostScoreIndex and ruleEngine may be nil if not needed.
-func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string, hostScoreIndex store.HostScoreIndexer, ruleEngine *correlate.RuleEngine) *Pipeline {
+// hostScoreIndex, ruleEngine, and dedupCache may be nil if not needed.
+func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string, hostScoreIndex store.HostScoreIndexer, ruleEngine *correlate.RuleEngine, dedupCache *correlate.DedupCache) *Pipeline {
 	if prefix == "" {
 		prefix = "sentinel"
 	}
@@ -48,6 +37,7 @@ func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string,
 		indexer:        indexer,
 		hostScoreIndex: hostScoreIndex,
 		ruleEngine:     ruleEngine,
+		dedupCache:     dedupCache,
 		prefix:         prefix,
 	}
 }
@@ -108,6 +98,10 @@ func (p *Pipeline) evaluateAndIndexAlerts(ctx context.Context, events []*common.
 	for _, event := range events {
 		alerts := p.ruleEngine.Evaluate(event)
 		for _, alert := range alerts {
+			// Skip duplicate alerts within the dedup window.
+			if p.dedupCache != nil && p.dedupCache.IsDuplicate(alert) {
+				continue
+			}
 			// Wrap alert as an ECSEvent-shaped doc for BulkIndex compatibility.
 			doc := alertToDocument(alert)
 			alertDocs = append(alertDocs, doc)
@@ -136,13 +130,13 @@ func (p *Pipeline) evaluateAndIndexAlerts(ctx context.Context, events []*common.
 }
 
 // alertToDocument converts a correlate.Alert into an ECSEvent that can be
-// bulk-indexed. The alert metadata is stored in the Threat field and the
-// original event data is preserved.
+// bulk-indexed. Rule metadata is stored in the ECS rule.* fields, and the
+// original event data (process, host, network, etc.) is preserved.
 func alertToDocument(alert correlate.Alert) common.ECSEvent {
 	// Start with a copy of the triggering event.
 	doc := *alert.Event
 
-	// Set alert-specific fields.
+	// Set alert-specific event fields.
 	doc.Event = &common.EventFields{
 		Kind:     "alert",
 		Category: []string{"intrusion_detection"},
@@ -165,19 +159,21 @@ func alertToDocument(alert correlate.Alert) common.ECSEvent {
 	// Use "sigma_alert" as the source type for index routing.
 	doc.SourceType = "sigma_alert"
 
-	// Store rule metadata in the observer field (closest ECS match for "detection system").
-	doc.Observer = &common.ObserverFields{
-		Name: alert.Title,
-		Type: "sigma",
+	// Store rule metadata in the ECS rule.* field set.
+	doc.Rule = &common.RuleFields{
+		ID:          alert.RuleID,
+		Name:        alert.Title,
+		Severity:    alert.Level,
+		Tags:        alert.Tags,
+		Description: alert.Description,
+		Author:      alert.Author,
+		Category:    "sigma",
+		Ruleset:     alert.Ruleset,
 	}
 
-	// Use a raw field extension for rule ID since ECS doesn't have a native field.
-	// We store it as observer.ingress.name as a pragmatic workaround.
-	if alert.RuleID != "" {
-		if doc.Observer.Ingress == nil {
-			doc.Observer.Ingress = &common.InterfaceFields{}
-		}
-		doc.Observer.Ingress.Name = alert.RuleID
+	// Observer identifies the detection system.
+	doc.Observer = &common.ObserverFields{
+		Type: "sigma",
 	}
 
 	return doc
