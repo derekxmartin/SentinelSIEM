@@ -15,20 +15,20 @@ import (
 
 // Pipeline wires together the ingestion components:
 // HTTPListener → normalize.Engine → store.Indexer (Elasticsearch).
-// Optionally evaluates events against a RuleEngine and indexes alerts.
+// Optionally evaluates events against a RuleEvaluator and indexes alerts.
 // NDR host_score events are additionally upserted to a dedicated index.
 type Pipeline struct {
 	engine         *normalize.Engine
 	indexer        store.Indexer
 	hostScoreIndex store.HostScoreIndexer
-	ruleEngine     *correlate.RuleEngine
+	ruleEvaluator  correlate.RuleEvaluator
 	dedupCache     *correlate.DedupCache
 	prefix         string
 }
 
 // NewPipeline creates an ingestion pipeline.
-// hostScoreIndex, ruleEngine, and dedupCache may be nil if not needed.
-func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string, hostScoreIndex store.HostScoreIndexer, ruleEngine *correlate.RuleEngine, dedupCache *correlate.DedupCache) *Pipeline {
+// hostScoreIndex, ruleEvaluator, and dedupCache may be nil if not needed.
+func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string, hostScoreIndex store.HostScoreIndexer, ruleEvaluator correlate.RuleEvaluator, dedupCache *correlate.DedupCache) *Pipeline {
 	if prefix == "" {
 		prefix = "sentinel"
 	}
@@ -36,7 +36,7 @@ func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string,
 		engine:         engine,
 		indexer:        indexer,
 		hostScoreIndex: hostScoreIndex,
-		ruleEngine:     ruleEngine,
+		ruleEvaluator:  ruleEvaluator,
 		dedupCache:     dedupCache,
 		prefix:         prefix,
 	}
@@ -85,7 +85,7 @@ func (p *Pipeline) Handle(rawEvents []json.RawMessage) {
 	}
 
 	// Evaluate Sigma rules and index alerts.
-	if p.ruleEngine != nil {
+	if p.ruleEvaluator != nil {
 		p.evaluateAndIndexAlerts(ctx, events)
 	}
 }
@@ -96,7 +96,7 @@ func (p *Pipeline) evaluateAndIndexAlerts(ctx context.Context, events []*common.
 	var alertDocs []common.ECSEvent
 
 	for _, event := range events {
-		alerts := p.ruleEngine.Evaluate(event)
+		alerts := p.ruleEvaluator.Evaluate(event)
 		for _, alert := range alerts {
 			// Skip duplicate alerts within the dedup window.
 			if p.dedupCache != nil && p.dedupCache.IsDuplicate(alert) {
