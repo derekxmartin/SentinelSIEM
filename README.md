@@ -142,23 +142,64 @@ make run-query                # Start query API + dashboard
 # Then set tls_port, tls_cert, tls_key in sentinel.toml
 ```
 
+## Test Data Infrastructure
+
+SentinelSIEM ships with comprehensive test data for development, testing, and portfolio demos.
+
+### Static Fixtures (`tests/fixtures/`)
+
+~580 pre-built NDJSON events covering all 6 source types and every event subtype:
+
+| Directory | Events | Coverage |
+|-----------|--------|----------|
+| `sentinel_edr/` | 80 | All 13 source types (DriverProcess, DriverNetwork, DriverRegistry, etc.) |
+| `sentinel_av/` | 46 | All 5 event types (scan_result, quarantine, realtime_block, etc.) |
+| `sentinel_dlp/` | 47 | All 5 event types (policy_violation, classification, block, etc.) |
+| `sentinel_ndr/` | 211 | All 15 protocol types (session, dns, http, tls, smb, kerberos, etc.) |
+| `winevt_xml/` | 65 | Event IDs 4624/4625/4688/4768/4769/7045, Sysmon 1/3/11 |
+| `winevt_json/` | 44 | Same Event IDs in Winlogbeat JSON format |
+| `syslog/` | 69 | iptables, auditd, sshd, sudo, httpd, generic |
+| `edge_cases/` | 28 | Missing fields, malformed JSON, unicode paths, oversized payloads, duplicate IDs |
+
+### Scenario Generator (`tools/generate_scenarios.py`)
+
+A Python CLI that produces realistic multi-source attack scenarios mixed with background noise, outputting replayable NDJSON files.
+
+```bash
+pip install -r tools/requirements.txt
+python tools/generate_scenarios.py --scenario credential_theft --output demo.ndjson --seed 42
+```
+
+**Ships with 3 attack scenarios:**
+- `credential_theft` — Recon, mimikatz credential dump, LSASS access, lateral movement, confidential file access
+- `lateral_movement` — RDP to web server, PsExec to database server, service installation, data staging
+- `malware_delivery` — Browser download, dropper execution, registry persistence, C2 beacon, DLP violation
+
+Each scenario produces events across multiple source types (EDR, AV, DLP, NDR, Windows Events, syslog) with configurable noise ratio (~95% background noise by default). Entity relationships (hosts, users, IPs) are consistent across sources.
+
+**Configuration files:**
+- `tools/entities/` — Host inventory, user directory, network topology
+- `tools/profiles/` — Noise profiles per host role (workstation, server, DC, firewall, NDR sensor)
+- `tools/scenarios/` — YAML attack narratives with timeline definitions
+
 ## Implementation Phases
 
 | Phase | Description | Tasks | Depends On | Status |
 |-------|-------------|-------|------------|--------|
-| P0 | Scaffolding — Go module, Docker Compose, ECS structs, config, ES client | 5 | — | Complete |
-| P1 | HTTP Ingestion + sentinel_edr Parser | 4 | P0 | Complete |
+| P0 | Scaffolding — Go module, Docker Compose, ECS structs, config, ES client, test fixtures | 6 | — | Complete |
+| P1 | HTTP Ingestion + sentinel_edr Parser + Scenario Generator | 5 | P0 | Complete |
 | P1a | Sentinel AV & DLP Parsers + Cross-Portfolio Rules | 4 | P1 | Complete |
+| P1b | SentinelNDR Parser + Host Score + Logsource Mapping | 5 | P1 | Complete |
 | P2 | Windows Event Log Ingestion (XML + Winlogbeat JSON) | 4 | P1 | Complete |
 | P3 | Syslog Ingestion (TCP/UDP/TLS, RFC 5424 & 3164) | 4 | P1 | Complete |
-| P4 | Sigma Single-Event Detection Engine | 5 | P1 | Pending |
+| P4 | Sigma Single-Event Detection Engine | 5 | P1 | In Progress |
 | P5 | Sigma Correlation Rules (event_count, value_count, temporal) | 5 | P4 | Pending |
 | P6 | Query Language + REST API | 4 | P0, P1 | Pending |
 | P7 | React Dashboard + Source Configuration | 10 | P6 | Pending |
 | P8 | CLI Management Tool | 4 | P0–P7 | Pending |
 | P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Pending |
-| P10 | Integration Tests (55 rules, 700 events, cross-source correlation) | 5 | All | Pending |
-| P11 | Hardening (metrics, load test, DLQ, graceful shutdown) | 4 | All | Pending |
+| P10 | Integration Tests (60 rules, 850 events, cross-source correlation) | 8 | All | Pending |
+| P11 | Hardening (metrics, load test, DLQ, graceful shutdown, deployment) | 5 | All | Pending |
 | P12 | AI Investigation Assistant | 10 | P6, P7, P9 | Pending |
 
 See `REQUIREMENTS.md` for the full specification and task breakdown.
