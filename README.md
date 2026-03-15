@@ -2,19 +2,40 @@
 
 A proof-of-concept Security Information & Event Management platform built in Go, backed by Elasticsearch. Designed as the central detection and investigation brain for the Sentinel security portfolio.
 
+## Why SentinelSIEM?
+
+Most SIEM platforms are either expensive commercial products with opaque internals, or open-source projects that require stitching together a dozen loosely coupled tools. SentinelSIEM takes a different approach:
+
+- **Single-binary simplicity.** Each component is a standalone Go binary — no JVM, no Python runtime, no container orchestration required. Build it, copy it, run it.
+- **Native Sigma support.** Detection rules use [Sigma](https://github.com/SigmaHQ/sigma), the open standard used by thousands of detection engineers worldwide. Ship with 3000+ community rules on day one. No proprietary rule language to learn.
+- **ECS-first normalization.** Every event from every source is normalized to the [Elastic Common Schema](https://www.elastic.co/guide/en/ecs/current/index.html) before it hits storage. Cross-source correlation works because the data model is consistent, not because you wrote custom joins.
+- **Cross-portfolio correlation.** SentinelSIEM natively correlates across EDR, AV, DLP, Windows, and syslog sources. A malware detection on one host plus a DLP policy violation on the same user within 15 minutes? That's one alert, not two tickets in two consoles.
+- **Built-in case management.** Alert escalation, observable tracking, analyst collaboration, and resolution metrics without an external tool like TheHive or ServiceNow.
+- **Transparent and hackable.** The entire codebase is readable Go with minimal dependencies. If you want to add a parser, write a struct that implements one interface. If you want to add a detection, write a YAML file.
+
+SentinelSIEM is designed for security teams that want to understand their tooling, not just operate it.
+
 ## What It Does
 
-SentinelSIEM ingests telemetry from multiple security sources, normalizes events to the Elastic Common Schema (ECS), evaluates Sigma detection rules in real time, and provides a query interface for threat hunting — all through a React-based dashboard with built-in case management.
+SentinelSIEM ingests telemetry from multiple security sources, normalizes events to ECS, evaluates Sigma detection rules in real time, and provides a query interface for threat hunting — all through a React-based dashboard with built-in case management.
 
 ### Data Sources
 
-| Source | Protocol | Description |
-|--------|----------|-------------|
-| SentinelEDR | JSON/HTTP | Endpoint behavior telemetry (process, network, registry, file events) |
-| Sentinel AV | JSON/HTTP | Malware scan results, quarantine actions, real-time blocks |
-| Sentinel DLP | JSON/HTTP | Data classification, policy violations, removable media events |
-| Windows Event Logs | WEF/HTTP | Security, Sysmon, and system events via XML or Winlogbeat JSON |
-| Syslog | TCP/UDP/TLS | Firewalls, Linux auditd, network devices (RFC 5424 & 3164) |
+| Source | Protocol | Status | Description |
+|--------|----------|--------|-------------|
+| SentinelEDR | JSON/HTTP | Implemented | Endpoint behavior telemetry (process, network, registry, file events) |
+| Sentinel AV | JSON/HTTP | Implemented | Malware scan results, quarantine actions, real-time blocks |
+| Sentinel DLP | JSON/HTTP | Implemented | Data classification, policy violations, removable media events |
+| Windows Event Logs | WEF/HTTP | Implemented | Security, Sysmon, and system events via XML or Winlogbeat JSON |
+| Syslog | TCP/UDP/TLS | Implemented | Firewalls, Linux auditd, network devices (RFC 5424 & 3164) |
+
+### Ingestion Pipeline
+
+- **HTTP endpoint** (`/api/v1/ingest`) — NDJSON and JSON array batch support, API key authentication, per-IP rate limiting
+- **WEF endpoint** (`/api/v1/ingest/wef`) — Windows Event Forwarding with auto-detection of XML vs JSON payloads, BOM handling, batch XML splitting
+- **Syslog listener** — TCP (newline-delimited + octet-counting framing), UDP, and TLS on configurable ports with connection limits and idle timeouts
+- **Normalization engine** — Per-source-type parsers registered at startup, routing by `source_type` field. Extensible via the `normalize.Parser` interface
+- **Syslog sub-parsers** — YAML-driven regex configs for structured field extraction (ships with iptables, auditd, generic KV). Regexes pre-compiled at startup using Go's RE2 engine (linear-time, no ReDoS)
 
 ### Detection Engine
 
@@ -44,8 +65,8 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 
 | Component | Description |
 |-----------|-------------|
-| `sentinel-ingest` | HTTP/syslog listener, API key auth, NDJSON batch support |
-| `sentinel-normalize` | ECS normalization engine with per-source-type parsers |
+| `sentinel-ingest` | HTTP/syslog/WEF listener, API key auth, NDJSON batch support, TLS syslog |
+| `sentinel-normalize` | ECS normalization engine with per-source-type parsers and YAML sub-parsers |
 | `sentinel-store` | Elasticsearch client — index templates, ILM, bulk indexing |
 | `sentinel-correlate` | Real-time Sigma rule engine with correlation state management |
 | `sentinel-query` | REST API server, query language → ES DSL translation, serves dashboard |
@@ -56,7 +77,7 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 
 ```
 ├── cmd/
-│   ├── sentinel-ingest/       # HTTP ingestion server
+│   ├── sentinel-ingest/       # HTTP/syslog ingestion server
 │   ├── sentinel-correlate/    # Sigma rule evaluation engine
 │   ├── sentinel-query/        # Query API + dashboard server
 │   └── sentinel-cli/          # Management CLI
@@ -64,17 +85,19 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 │   ├── common/                # Shared types (ECS event, auth, metrics)
 │   ├── config/                # TOML config loading
 │   ├── store/                 # Elasticsearch client wrapper
-│   ├── ingest/                # HTTP/syslog listeners, pipeline
+│   ├── ingest/                # HTTP/syslog/WEF listeners, pipeline
 │   ├── normalize/parsers/     # Per-source-type ECS parsers
-│   ├── correlate/             # Sigma rule engine + correlation state
+│   ├── correlate/             # Sigma rule engine + logsource mapping
 │   ├── query/                 # Query parser, ES translator, REST API
 │   ├── cases/                 # Case management service
 │   ├── sources/               # Source configuration + snippets
 │   └── alert/                 # Alert pipeline
 ├── rules/                     # Sigma detection rules
-├── parsers/                   # Logsource maps + syslog sub-parser configs
-├── web/                       # React dashboard
+│   ├── sigma_curated/         # Curated SigmaHQ community rules
+│   └── sentinel_portfolio/    # Cross-source correlation rules
+├── parsers/                   # Logsource maps + syslog sub-parser YAML configs
 ├── scripts/                   # Helper scripts (ES wait, cert gen)
+├── web/                       # React dashboard
 └── tests/                     # Integration + benchmark tests
 ```
 
@@ -112,6 +135,13 @@ make run-correlate            # Start correlation engine
 make run-query                # Start query API + dashboard
 ```
 
+### Syslog TLS Setup
+
+```bash
+./scripts/gen-certs.sh        # Generate self-signed certs for development
+# Then set tls_port, tls_cert, tls_key in sentinel.toml
+```
+
 ## Implementation Phases
 
 | Phase | Description | Tasks | Depends On | Status |
@@ -129,6 +159,7 @@ make run-query                # Start query API + dashboard
 | P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Pending |
 | P10 | Integration Tests (55 rules, 700 events, cross-source correlation) | 5 | All | Pending |
 | P11 | Hardening (metrics, load test, DLQ, graceful shutdown) | 4 | All | Pending |
+| P12 | AI Investigation Assistant | 10 | P6, P7, P9 | Pending |
 
 See `REQUIREMENTS.md` for the full specification and task breakdown.
 
