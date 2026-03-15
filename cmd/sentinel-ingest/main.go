@@ -69,27 +69,15 @@ func main() {
 		log.Println("NDR host score index ensured")
 	}
 
-	// Load Sigma rules and logsource map for rule engine.
-	var ruleEngine *correlate.RuleEngine
-	sigmaRules, parseErrors := correlate.LoadRulesFromDir(cfg.Correlate.RulesDir)
-	for _, pe := range parseErrors {
-		log.Printf("Warning: rule parse error: %v", pe)
-	}
+	// Create hot-reloadable Sigma rule loader.
+	reloadInterval := time.Duration(cfg.Correlate.ReloadInterval) * time.Second
+	ruleLoader := correlate.NewRuleLoader(cfg.Correlate.RulesDir, cfg.Correlate.LogsourceMapPath, reloadInterval)
+	stats := ruleLoader.Stats()
+	log.Printf("Sigma rule engine loaded: %d rules compiled, %d skipped, %d buckets, %d errors",
+		stats.RulesCompiled, stats.RulesSkipped, stats.BucketCount, len(stats.CompileErrors))
 
-	if len(sigmaRules) > 0 {
-		lsMap, err := correlate.LoadLogsourceMap(cfg.Correlate.LogsourceMapPath)
-		if err != nil {
-			log.Printf("Warning: failed to load logsource map: %v", err)
-		} else {
-			sigmaRegistry := correlate.NewRuleRegistry(sigmaRules)
-			ruleEngine = correlate.NewRuleEngine(sigmaRegistry, lsMap)
-			stats := ruleEngine.Stats()
-			log.Printf("Sigma rule engine loaded: %d rules compiled, %d skipped, %d buckets, %d errors",
-				stats.RulesCompiled, stats.RulesSkipped, stats.BucketCount, len(stats.CompileErrors))
-		}
-	} else {
-		log.Println("No Sigma rules found, rule engine disabled")
-	}
+	// Start file watcher for hot-reload.
+	ruleLoader.StartWatcher()
 
 	// Create alert dedup cache.
 	var dedupCache *correlate.DedupCache
@@ -100,8 +88,11 @@ func main() {
 
 	// Build the ingest pipeline: HTTP → normalize → ES → rule engine.
 	// esStore implements both Indexer and HostScoreIndexer.
-	pipeline := ingest.NewPipeline(engine, esStore, cfg.Elasticsearch.IndexPrefix, esStore, ruleEngine, dedupCache)
+	pipeline := ingest.NewPipeline(engine, esStore, cfg.Elasticsearch.IndexPrefix, esStore, ruleLoader, dedupCache)
 	listener := ingest.NewHTTPListener(cfg.Ingest, pipeline.Handle)
+
+	// Mount the reload endpoint for CLI-triggered hot-reload.
+	listener.Post("/api/v1/rules/reload", ruleLoader.ReloadHandler())
 
 	srv := &http.Server{
 		Addr:         listener.ListenAddr(),
@@ -137,7 +128,10 @@ func main() {
 	<-done
 	fmt.Println("\nShutting down...")
 
-	// Stop syslog listener first.
+	// Stop rule loader file watcher.
+	ruleLoader.Stop()
+
+	// Stop syslog listener.
 	syslogCancel()
 	syslogListener.Stop()
 

@@ -94,6 +94,11 @@ func (l *HTTPListener) Router() http.Handler {
 	return l.router
 }
 
+// Post registers an additional POST route on the listener's router.
+func (l *HTTPListener) Post(pattern string, handler http.HandlerFunc) {
+	l.router.Post(pattern, handler)
+}
+
 // ListenAddr returns the configured listen address string.
 func (l *HTTPListener) ListenAddr() string {
 	return fmt.Sprintf("%s:%d", l.cfg.HTTPAddr, l.cfg.HTTPPort)

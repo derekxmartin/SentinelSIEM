@@ -23,9 +23,10 @@ SentinelSIEM ingests telemetry from multiple security sources, normalizes events
 
 | Source | Protocol | Status | Description |
 |--------|----------|--------|-------------|
-| sentinel_edr | JSON/HTTP | Implemented | Endpoint behavior telemetry (process, network, registry, file events) |
+| Sentinel EDR | JSON/HTTP | Implemented | Endpoint behavior telemetry (process, network, registry, file events) |
 | Sentinel AV | JSON/HTTP | Implemented | Malware scan results, quarantine actions, real-time blocks |
 | Sentinel DLP | JSON/HTTP | Implemented | Data classification, policy violations, removable media events |
+| Sentinel NDR | JSON/HTTP | Implemented | Network detection & response (session, DNS, HTTP, TLS, SMB, Kerberos, etc.) |
 | Windows Event Logs | WEF/HTTP | Implemented | Security, Sysmon, and system events via XML or Winlogbeat JSON |
 | Syslog | TCP/UDP/TLS | Implemented | Firewalls, Linux auditd, network devices (RFC 5424 & 3164) |
 
@@ -52,11 +53,12 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 ## Architecture
 
 ```
-[sentinel_edr]  ─┐
+[Sentinel EDR] ─┐
 [Sentinel AV]  ─┤
 [Sentinel DLP] ─┤─→ [sentinel-ingest] → [sentinel-normalize] → [sentinel-store (ES)]
-[Windows WEF]  ─┤                                ↓
-[Syslog]       ─┘                       [sentinel-correlate]
+[Sentinel NDR] ─┤                                ↓
+[Windows WEF]  ─┤                       [sentinel-correlate]
+[Syslog]       ─┘
                                                  ↓
                                         [alerts + cases in ES]
                                                  ↓
