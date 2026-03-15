@@ -189,6 +189,21 @@ func ecsFieldMappings() map[string]any {
 			},
 		},
 
+		// rule.* (ECS rule field set — used for alert documents)
+		"rule": map[string]any{
+			"properties": map[string]any{
+				"id":          mapping("keyword"),
+				"name":        mapping("keyword"),
+				"description": mapping("text"),
+				"category":    mapping("keyword"),
+				"ruleset":     mapping("keyword"),
+				"severity":    mapping("keyword"),
+				"tags":        mapping("keyword"),
+				"reference":   mapping("keyword"),
+				"author":      mapping("keyword"),
+			},
+		},
+
 		// raw — original event preserved as disabled (not indexed/searchable)
 		"raw": map[string]any{
 			"type":    "object",
