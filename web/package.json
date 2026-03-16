@@ -9,7 +9,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "screenshots": "playwright test --project=screenshots",
+    "screenshots:headed": "playwright test --project=screenshots --headed"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.1",

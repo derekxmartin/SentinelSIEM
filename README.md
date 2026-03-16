@@ -1,8 +1,8 @@
 # SentinelSIEM
 
-![SentinelSIEM Dashboard](docs/images/sentinel-dashboard-concept.png)
-
 A proof-of-concept Security Information & Event Management platform built in Go, backed by Elasticsearch. Designed as the central detection and investigation brain for the Sentinel security portfolio.
+
+![Overview Dashboard](web/docs/screenshots/02-overview.png)
 
 ## Why SentinelSIEM?
 
@@ -48,9 +48,19 @@ SentinelSIEM ingests telemetry from multiple security sources, normalizes events
 - **Cross-portfolio detections** — Rules that correlate across EDR + AV + DLP sources to detect multi-stage attack chains
 - **Hot-reload** — File watcher + CLI trigger for zero-downtime rule updates
 
+![Rules grouped by MITRE ATT&CK tactic](web/docs/screenshots/04-rules.png)
+
+### Alert Triage
+
+Severity-coded alert queue with MITRE ATT&CK tactic tagging, source/destination IP context, status workflow (New → Acknowledged → In Progress → Escalated → Closed), and bulk actions for efficient triage.
+
+![Alert triage queue](web/docs/screenshots/03-alerts.png)
+
 ### Case Management
 
 Built-in incident response workflow: alert escalation, observable extraction (IPs, hashes, domains, usernames), analyst collaboration via timeline, MITRE ATT&CK tagging, and resolution tracking with detection efficacy metrics (MTTD/MTTR).
+
+![Case management dashboard](web/docs/screenshots/07-cases.png)
 
 ## Architecture
 
@@ -104,7 +114,9 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 ├── parsers/                   # Logsource maps + syslog sub-parser YAML configs
 ├── scripts/                   # Helper scripts (ES wait, cert gen)
 ├── web/                       # React dashboard
-│   └── tests/e2e/             # Playwright E2E browser tests
+│   ├── tests/e2e/             # Playwright E2E browser tests
+│   ├── tests/screenshots/     # Playwright documentation screenshot capture
+│   └── docs/screenshots/      # Captured page screenshots
 └── tests/                     # Integration + benchmark tests
 ```
 
@@ -197,6 +209,16 @@ npx playwright test --headed  # Run with visible browser
 ```
 
 Requires the backend (`make run-query`) and Elasticsearch to be running. Tests cover auth flows, page rendering, navigation, theme persistence, and interactive features across 8 test suites (35 tests).
+
+#### Documentation Screenshots
+
+Capture full-page screenshots of every dashboard view at 1440x900 for documentation:
+
+```bash
+cd web
+npm run screenshots            # Headless capture to web/docs/screenshots/
+npm run screenshots:headed     # Watch it run in a visible browser
+```
 
 ### Management CLI
 
