@@ -74,7 +74,7 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 | `sentinel-store` | Elasticsearch client — index templates, ILM, bulk indexing |
 | `sentinel-correlate` | Real-time Sigma rule engine with correlation state management |
 | `sentinel-query` | REST API server, query language → ES DSL translation, serves dashboard |
-| `sentinel-cli` | Management CLI for rules, sources, keys, health, and ad-hoc queries |
+| `sentinel-cli` | Management CLI — user/key admin, rules validate/update/reload, ingest test/replay, diagnostics, ad-hoc queries |
 | `sentinel-dashboard` | React SPA — alert triage, cases, threat hunting, rule management, source health |
 | `sentinel-auth` | User auth service — JWT, TOTP MFA, RBAC, login rate limiting, first-run setup |
 
@@ -165,6 +165,37 @@ npx playwright test --headed  # Run with visible browser
 
 Requires the backend (`make run-query`) and Elasticsearch to be running. Tests cover auth flows, page rendering, navigation, theme persistence, and interactive features across 8 test suites (35 tests).
 
+### Management CLI
+
+```bash
+# System diagnostics (config, servers, ES, rules)
+sentinel-cli diagnose
+
+# User management
+sentinel-cli --api-key <key> users list
+sentinel-cli --api-key <key> users create --username jsmith --display-name "John Smith" --role analyst --password <pw>
+sentinel-cli --api-key <key> users disable jsmith
+
+# API key management
+sentinel-cli --api-key <key> keys list
+sentinel-cli --api-key <key> keys create --name "ingest-prod" --scopes "ingest"
+
+# Rules operations
+sentinel-cli rules validate                              # Local validation only
+sentinel-cli --ingest-key <key> rules update              # Validate + hot-reload
+sentinel-cli --ingest-key <key> rules update --init       # Clone SigmaHQ + validate + reload
+
+# Ingest testing
+sentinel-cli --ingest-key <key> ingest test               # Send single test event
+sentinel-cli --ingest-key <key> ingest replay data.ndjson  # Replay NDJSON file
+
+# Ad-hoc queries
+sentinel-cli --api-key <key> query "source_type:sentinel_edr AND event.action:process_create"
+sentinel-cli --api-key <key> alerts --level critical
+```
+
+Global flags: `--server` (query API, default `localhost:8081`), `--ingest-server` (ingest API, default `localhost:8080`), `--api-key`, `--ingest-key`, `--json` (raw JSON output). All support environment variables (`SENTINEL_URL`, `SENTINEL_API_KEY`, `SENTINEL_INGEST_URL`, `SENTINEL_INGEST_KEY`).
+
 ### Syslog TLS Setup
 
 ```bash
@@ -225,8 +256,8 @@ Each scenario produces events across multiple source types (EDR, AV, DLP, NDR, W
 | P4 | Sigma Single-Event Detection Engine | 5 | P1 | Complete |
 | P5 | Sigma Correlation Rules (event_count, value_count, temporal) | 5 | P4 | Complete |
 | P6 | Query Language + REST API | 4 | P0, P1 | Complete |
-| P7 | React Dashboard + Auth + Source Configuration | 15 | P6 | In Progress (T1–T15 complete) |
-| P8 | CLI Management Tool | 4 | P0–P7 | Pending |
+| P7 | React Dashboard + Auth + Source Configuration | 15 | P6 | Complete |
+| P8 | CLI Management Tool | 4 | P0–P7 | Complete |
 | P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Pending |
 | P10 | Integration Tests (60 rules, 850 events, cross-source correlation) | 8 | All | Pending |
 | P11 | Hardening (metrics, load test, DLQ, graceful shutdown, deployment) | 5 | All | Pending |
