@@ -154,6 +154,15 @@ type SearchResult struct {
 	Hits  []json.RawMessage
 }
 
+// SearchRawResult holds the full response from a raw ES search body,
+// including aggregation results.
+type SearchRawResult struct {
+	Total int
+	Hits  []json.RawMessage
+	Aggs  json.RawMessage // raw "aggregations" block, nil if none
+	TookMs int            // server-side time in milliseconds
+}
+
 // Search executes a query string search against an index and returns raw hits.
 func (s *Store) Search(ctx context.Context, index string, query map[string]any, size int) (*SearchResult, error) {
 	body, err := json.Marshal(map[string]any{
@@ -199,6 +208,62 @@ func (s *Store) Search(ctx context.Context, index string, query map[string]any, 
 
 	result := &SearchResult{
 		Total: parsed.Hits.Total.Value,
+	}
+	for _, hit := range parsed.Hits.Hits {
+		result.Hits = append(result.Hits, hit.Source)
+	}
+
+	return result, nil
+}
+
+// SearchRaw executes a full search body against an index and returns
+// hits plus optional aggregation results. The body is the complete
+// Elasticsearch search request (query, sort, size, aggs, etc.).
+func (s *Store) SearchRaw(ctx context.Context, index string, body map[string]any) (*SearchRawResult, error) {
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling search body: %w", err)
+	}
+
+	res, err := s.client.Search(
+		s.client.Search.WithContext(ctx),
+		s.client.Search.WithIndex(index),
+		s.client.Search.WithBody(bytes.NewReader(bodyBytes)),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("search request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return nil, fmt.Errorf("search error: %s", res.String())
+	}
+
+	rawBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading search response: %w", err)
+	}
+
+	var parsed struct {
+		Took int `json:"took"`
+		Hits struct {
+			Total struct {
+				Value int `json:"value"`
+			} `json:"total"`
+			Hits []struct {
+				Source json.RawMessage `json:"_source"`
+			} `json:"hits"`
+		} `json:"hits"`
+		Aggregations json.RawMessage `json:"aggregations"`
+	}
+	if err := json.Unmarshal(rawBody, &parsed); err != nil {
+		return nil, fmt.Errorf("decoding search response: %w", err)
+	}
+
+	result := &SearchRawResult{
+		Total:  parsed.Hits.Total.Value,
+		TookMs: parsed.Took,
+		Aggs:   parsed.Aggregations,
 	}
 	for _, hit := range parsed.Hits.Hits {
 		result.Hits = append(result.Hits, hit.Source)
