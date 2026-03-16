@@ -35,6 +35,13 @@ reload_interval_sec = 30
 state_expiry_sec = 3600
 dedup_window_sec = 60   # suppress duplicate alerts within this window
 
+[auth]
+jwt_secret = "change-me-in-production"
+# MFA encryption key: 64 hex chars (32 bytes) for AES-256-GCM. Generate with:
+#   python -c "import secrets; print(secrets.token_hex(32))"
+# MFA enrollment is unavailable until this is set.
+mfa_encryption_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
 [query]
 addr = "0.0.0.0"
 port = 8081

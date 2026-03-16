@@ -14,6 +14,11 @@ var (
 	ErrSessionExpired   = errors.New("session expired")
 	ErrInvalidToken     = errors.New("invalid token")
 	ErrMFARequired      = errors.New("MFA verification required")
+	ErrMFAAlreadyEnabled = errors.New("MFA is already enabled")
+	ErrMFANotEnabled    = errors.New("MFA is not enabled")
+	ErrMFANotEnrolled   = errors.New("no MFA enrollment pending")
+	ErrInvalidMFACode   = errors.New("invalid MFA code")
+	ErrMFANotConfigured = errors.New("MFA encryption key not configured on server")
 )
 
 func errorf(format string, args ...any) error {

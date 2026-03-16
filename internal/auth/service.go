@@ -28,15 +28,19 @@ type Backend interface {
 type Service struct {
 	backend      Backend
 	jwt          *JWTManager
+	mfaEncryptor *MFAEncryptor // nil if MFA encryption not configured
+	totp         *TOTPManager
 	userIndex    string
 	sessionIndex string
 }
 
 // NewService creates a new auth Service.
-func NewService(backend Backend, jwtManager *JWTManager, userIndex, sessionIndex string) *Service {
+func NewService(backend Backend, jwtManager *JWTManager, mfaEncryptor *MFAEncryptor, userIndex, sessionIndex string) *Service {
 	return &Service{
 		backend:      backend,
 		jwt:          jwtManager,
+		mfaEncryptor: mfaEncryptor,
+		totp:         NewTOTPManager("SentinelSIEM"),
 		userIndex:    userIndex,
 		sessionIndex: sessionIndex,
 	}
@@ -143,13 +147,9 @@ func (s *Service) Login(ctx context.Context, req *LoginRequest, userAgent, ip st
 		return nil, ErrInvalidPassword
 	}
 
-	// If MFA is enabled, return a short-lived MFA token instead of full tokens.
+	// If MFA is enabled, return a short-lived MFA challenge token instead of full tokens.
 	if user.MFAEnabled {
-		mfaToken, err := s.jwt.GenerateAccessToken(&User{
-			ID:       user.ID,
-			Username: user.Username,
-			Role:     user.Role,
-		})
+		mfaToken, err := s.jwt.GenerateMFAToken(user)
 		if err != nil {
 			return nil, fmt.Errorf("generating MFA token: %w", err)
 		}
@@ -391,6 +391,178 @@ func (s *Service) UpdateProfile(ctx context.Context, userID, displayName, email 
 	}
 
 	return user.ToResponse(), nil
+}
+
+// EnrollMFA generates a new TOTP secret for the user and stores it encrypted.
+// The user must verify with a valid code before MFA is activated.
+// Returns the raw secret and otpauth:// URI for QR code display.
+func (s *Service) EnrollMFA(ctx context.Context, userID string) (string, string, error) {
+	if s.mfaEncryptor == nil {
+		return "", "", ErrMFANotConfigured
+	}
+
+	user, err := s.GetUser(ctx, userID)
+	if err != nil {
+		return "", "", err
+	}
+
+	if user.MFAEnabled {
+		return "", "", ErrMFAAlreadyEnabled
+	}
+
+	secret, uri, err := s.totp.GenerateSecret(user.Username)
+	if err != nil {
+		return "", "", fmt.Errorf("generating TOTP secret: %w", err)
+	}
+
+	encrypted, err := s.mfaEncryptor.Encrypt(secret)
+	if err != nil {
+		return "", "", fmt.Errorf("encrypting MFA secret: %w", err)
+	}
+
+	// Store encrypted secret but don't enable MFA yet (pending verification).
+	user.MFASecret = encrypted
+	user.UpdatedAt = time.Now().UTC()
+
+	doc, err := json.Marshal(user)
+	if err != nil {
+		return "", "", fmt.Errorf("marshaling user: %w", err)
+	}
+
+	if err := s.backend.UpdateDoc(ctx, s.userIndex, user.ID, doc); err != nil {
+		return "", "", fmt.Errorf("storing MFA secret: %w", err)
+	}
+
+	return secret, uri, nil
+}
+
+// VerifyMFAEnrollment completes MFA enrollment by verifying a TOTP code.
+// This activates MFA on the user's account.
+func (s *Service) VerifyMFAEnrollment(ctx context.Context, userID, code string) error {
+	if s.mfaEncryptor == nil {
+		return ErrMFANotConfigured
+	}
+
+	user, err := s.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if user.MFAEnabled {
+		return ErrMFAAlreadyEnabled
+	}
+
+	if user.MFASecret == "" {
+		return ErrMFANotEnrolled
+	}
+
+	secret, err := s.mfaEncryptor.Decrypt(user.MFASecret)
+	if err != nil {
+		return fmt.Errorf("decrypting MFA secret: %w", err)
+	}
+
+	if !s.totp.ValidateCode(secret, code) {
+		return ErrInvalidMFACode
+	}
+
+	user.MFAEnabled = true
+	user.UpdatedAt = time.Now().UTC()
+
+	doc, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("marshaling user: %w", err)
+	}
+
+	return s.backend.UpdateDoc(ctx, s.userIndex, user.ID, doc)
+}
+
+// DisableMFA disables MFA on a user's account after verifying their password.
+func (s *Service) DisableMFA(ctx context.Context, userID, password string) error {
+	user, err := s.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if !user.MFAEnabled {
+		return ErrMFANotEnabled
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return ErrInvalidPassword
+	}
+
+	user.MFAEnabled = false
+	user.MFASecret = ""
+	user.UpdatedAt = time.Now().UTC()
+
+	doc, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("marshaling user: %w", err)
+	}
+
+	return s.backend.UpdateDoc(ctx, s.userIndex, user.ID, doc)
+}
+
+// VerifyMFALogin completes the MFA login challenge. Takes an MFA-purpose JWT
+// and a TOTP code, validates both, and issues full access/refresh tokens.
+func (s *Service) VerifyMFALogin(ctx context.Context, mfaToken, code, userAgent, ip string) (*LoginResponse, error) {
+	if s.mfaEncryptor == nil {
+		return nil, ErrMFANotConfigured
+	}
+
+	claims, err := s.jwt.ValidateMFAToken(mfaToken)
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+
+	user, err := s.GetUser(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Disabled {
+		return nil, ErrUserDisabled
+	}
+
+	if !user.MFAEnabled || user.MFASecret == "" {
+		return nil, ErrMFANotEnabled
+	}
+
+	secret, err := s.mfaEncryptor.Decrypt(user.MFASecret)
+	if err != nil {
+		return nil, fmt.Errorf("decrypting MFA secret: %w", err)
+	}
+
+	if !s.totp.ValidateCode(secret, code) {
+		return nil, ErrInvalidMFACode
+	}
+
+	return s.issueTokens(ctx, user, userAgent, ip)
+}
+
+// ResetMFA disables MFA on a user's account without requiring their password.
+// This is an admin recovery operation (for CLI `users reset-mfa` command).
+func (s *Service) ResetMFA(ctx context.Context, userID string) error {
+	user, err := s.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	user.MFAEnabled = false
+	user.MFASecret = ""
+	user.UpdatedAt = time.Now().UTC()
+
+	doc, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("marshaling user: %w", err)
+	}
+
+	return s.backend.UpdateDoc(ctx, s.userIndex, user.ID, doc)
+}
+
+// MFAConfigured returns whether MFA encryption is configured on the server.
+func (s *Service) MFAConfigured() bool {
+	return s.mfaEncryptor != nil
 }
 
 // hashToken returns the SHA-256 hex digest of a token string.

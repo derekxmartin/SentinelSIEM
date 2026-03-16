@@ -215,6 +215,164 @@ func (h *APIHandler) HandleFirstRunSetup(w http.ResponseWriter, r *http.Request)
 	writeJSON(w, http.StatusCreated, user.ToResponse())
 }
 
+// HandleMFAVerify handles POST /api/v1/auth/mfa.
+// Completes the MFA login challenge with a TOTP code.
+func (h *APIHandler) HandleMFAVerify(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		MFAToken string `json:"mfa_token"`
+		Code     string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if body.MFAToken == "" || body.Code == "" {
+		writeError(w, http.StatusBadRequest, "mfa_token and code are required")
+		return
+	}
+
+	userAgent := r.UserAgent()
+	ip := r.RemoteAddr
+
+	resp, err := h.service.VerifyMFALogin(r.Context(), body.MFAToken, body.Code, userAgent, ip)
+	if err != nil {
+		if errors.Is(err, ErrInvalidToken) {
+			writeError(w, http.StatusUnauthorized, "invalid or expired MFA token")
+			return
+		}
+		if errors.Is(err, ErrInvalidMFACode) {
+			writeError(w, http.StatusUnauthorized, "invalid MFA code")
+			return
+		}
+		if errors.Is(err, ErrMFANotConfigured) {
+			writeError(w, http.StatusServiceUnavailable, "MFA not configured on server")
+			return
+		}
+		log.Printf("MFA verify error: %v", err)
+		writeError(w, http.StatusInternalServerError, "MFA verification failed")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+// HandleMFAEnroll handles POST /api/v1/auth/me/mfa/enroll.
+// Starts MFA enrollment by generating a TOTP secret.
+func (h *APIHandler) HandleMFAEnroll(w http.ResponseWriter, r *http.Request) {
+	claims := ClaimsFromContext(r.Context())
+	if claims == nil {
+		writeError(w, http.StatusUnauthorized, "authentication required")
+		return
+	}
+
+	secret, uri, err := h.service.EnrollMFA(r.Context(), claims.UserID)
+	if err != nil {
+		if errors.Is(err, ErrMFAAlreadyEnabled) {
+			writeError(w, http.StatusConflict, "MFA is already enabled")
+			return
+		}
+		if errors.Is(err, ErrMFANotConfigured) {
+			writeError(w, http.StatusServiceUnavailable, "MFA not configured on server")
+			return
+		}
+		log.Printf("MFA enroll error: %v", err)
+		writeError(w, http.StatusInternalServerError, "MFA enrollment failed")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"secret": secret,
+		"uri":    uri,
+	})
+}
+
+// HandleMFAVerifyEnrollment handles POST /api/v1/auth/me/mfa/verify.
+// Completes MFA enrollment by verifying a TOTP code.
+func (h *APIHandler) HandleMFAVerifyEnrollment(w http.ResponseWriter, r *http.Request) {
+	claims := ClaimsFromContext(r.Context())
+	if claims == nil {
+		writeError(w, http.StatusUnauthorized, "authentication required")
+		return
+	}
+
+	var body struct {
+		Code string `json:"code"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if body.Code == "" {
+		writeError(w, http.StatusBadRequest, "code is required")
+		return
+	}
+
+	if err := h.service.VerifyMFAEnrollment(r.Context(), claims.UserID, body.Code); err != nil {
+		if errors.Is(err, ErrMFAAlreadyEnabled) {
+			writeError(w, http.StatusConflict, "MFA is already enabled")
+			return
+		}
+		if errors.Is(err, ErrMFANotEnrolled) {
+			writeError(w, http.StatusBadRequest, "no MFA enrollment pending — enroll first")
+			return
+		}
+		if errors.Is(err, ErrInvalidMFACode) {
+			writeError(w, http.StatusUnauthorized, "invalid MFA code")
+			return
+		}
+		if errors.Is(err, ErrMFANotConfigured) {
+			writeError(w, http.StatusServiceUnavailable, "MFA not configured on server")
+			return
+		}
+		log.Printf("MFA verify enrollment error: %v", err)
+		writeError(w, http.StatusInternalServerError, "MFA verification failed")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "mfa_enabled"})
+}
+
+// HandleMFADisable handles DELETE /api/v1/auth/me/mfa.
+// Disables MFA after verifying the user's password.
+func (h *APIHandler) HandleMFADisable(w http.ResponseWriter, r *http.Request) {
+	claims := ClaimsFromContext(r.Context())
+	if claims == nil {
+		writeError(w, http.StatusUnauthorized, "authentication required")
+		return
+	}
+
+	var body struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if body.Password == "" {
+		writeError(w, http.StatusBadRequest, "password is required")
+		return
+	}
+
+	if err := h.service.DisableMFA(r.Context(), claims.UserID, body.Password); err != nil {
+		if errors.Is(err, ErrMFANotEnabled) {
+			writeError(w, http.StatusBadRequest, "MFA is not enabled")
+			return
+		}
+		if errors.Is(err, ErrInvalidPassword) {
+			writeError(w, http.StatusUnauthorized, "invalid password")
+			return
+		}
+		log.Printf("MFA disable error: %v", err)
+		writeError(w, http.StatusInternalServerError, "MFA disable failed")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "mfa_disabled"})
+}
+
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

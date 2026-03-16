@@ -47,6 +47,11 @@ func Middleware(jwtManager *JWTManager, apiKeyStore *common.APIKeyStore) func(ht
 						http.Error(w, `{"error":"invalid or expired token"}`, http.StatusUnauthorized)
 						return
 					}
+					// Reject MFA-purpose tokens from normal API access.
+					if claims.Purpose == "mfa" {
+						http.Error(w, `{"error":"MFA verification required"}`, http.StatusUnauthorized)
+						return
+					}
 					ctx := context.WithValue(r.Context(), ContextKeyClaims, claims)
 					next.ServeHTTP(w, r.WithContext(ctx))
 					return

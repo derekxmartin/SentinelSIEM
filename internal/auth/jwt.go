@@ -15,6 +15,9 @@ const (
 
 	// RefreshTokenExpiry is the lifetime of a refresh token.
 	RefreshTokenExpiry = 7 * 24 * time.Hour
+
+	// MFATokenExpiry is the lifetime of an MFA challenge token.
+	MFATokenExpiry = 5 * time.Minute
 )
 
 // Claims are the JWT claims embedded in access tokens.
@@ -23,6 +26,7 @@ type Claims struct {
 	UserID   string `json:"uid"`
 	Username string `json:"usr"`
 	Role     Role   `json:"role"`
+	Purpose  string `json:"purpose,omitempty"` // "" = access token, "mfa" = MFA challenge token
 }
 
 // JWTManager handles JWT creation and validation.
@@ -80,6 +84,44 @@ func (m *JWTManager) ValidateAccessToken(tokenStr string) (*Claims, error) {
 		return nil, ErrInvalidToken
 	}
 
+	return claims, nil
+}
+
+// GenerateMFAToken creates a short-lived JWT for MFA challenge verification.
+// This token has Purpose="mfa" and cannot be used as a regular access token.
+func (m *JWTManager) GenerateMFAToken(user *User) (string, error) {
+	now := time.Now().UTC()
+	claims := Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    m.issuer,
+			Subject:   user.ID,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(MFATokenExpiry)),
+		},
+		UserID:   user.ID,
+		Username: user.Username,
+		Role:     user.Role,
+		Purpose:  "mfa",
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString(m.signingKey)
+	if err != nil {
+		return "", fmt.Errorf("signing MFA token: %w", err)
+	}
+	return signed, nil
+}
+
+// ValidateMFAToken parses and validates a JWT MFA challenge token.
+// Returns claims only if the token has Purpose="mfa".
+func (m *JWTManager) ValidateMFAToken(tokenStr string) (*Claims, error) {
+	claims, err := m.ValidateAccessToken(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+	if claims.Purpose != "mfa" {
+		return nil, ErrInvalidToken
+	}
 	return claims, nil
 }
 

@@ -75,7 +75,8 @@ type QueryConfig struct {
 
 // AuthConfig holds authentication settings.
 type AuthConfig struct {
-	JWTSecret string `toml:"jwt_secret"`
+	JWTSecret        string `toml:"jwt_secret"`
+	MFAEncryptionKey string `toml:"mfa_encryption_key"` // 64-char hex (32 bytes AES-256-GCM)
 }
 
 // CasesConfig holds case management settings.

@@ -62,8 +62,21 @@ func main() {
 	jwtSecret := []byte(cfg.Auth.JWTSecret)
 	jwtManager := auth.NewJWTManager(jwtSecret)
 
+	// Initialize MFA encryptor (optional — MFA enrollment disabled if not configured).
+	var mfaEncryptor *auth.MFAEncryptor
+	if cfg.Auth.MFAEncryptionKey != "" {
+		enc, err := auth.NewMFAEncryptor(cfg.Auth.MFAEncryptionKey)
+		if err != nil {
+			log.Fatalf("Invalid MFA encryption key: %v", err)
+		}
+		mfaEncryptor = enc
+		log.Println("MFA encryption configured")
+	} else {
+		log.Println("MFA encryption key not set — MFA enrollment will be unavailable")
+	}
+
 	// Initialize auth service.
-	authService := auth.NewService(esStore, jwtManager, esStore.UserIndexName(), esStore.SessionIndexName())
+	authService := auth.NewService(esStore, jwtManager, mfaEncryptor, esStore.UserIndexName(), esStore.SessionIndexName())
 
 	// Initialize normalization engine (for parser testing).
 	registry := normalize.NewRegistry()
@@ -106,6 +119,7 @@ func main() {
 	// Public routes (no auth required).
 	r.Get("/api/v1/health", apiHandler.HandleHealth)
 	r.Post("/api/v1/auth/login", authHandler.HandleLogin)
+	r.Post("/api/v1/auth/mfa", authHandler.HandleMFAVerify)
 	r.Post("/api/v1/auth/refresh", authHandler.HandleRefresh)
 	r.Get("/api/v1/auth/setup-required", authHandler.HandleSetupRequired)
 	r.Post("/api/v1/auth/setup", authHandler.HandleFirstRunSetup)
@@ -122,6 +136,11 @@ func main() {
 		r.Get("/api/v1/auth/profile", authHandler.HandleGetProfile)
 		r.Put("/api/v1/auth/profile", authHandler.HandleUpdateProfile)
 		r.Post("/api/v1/auth/password", authHandler.HandleChangePassword)
+
+		// MFA management (requires active session).
+		r.Post("/api/v1/auth/me/mfa/enroll", authHandler.HandleMFAEnroll)
+		r.Post("/api/v1/auth/me/mfa/verify", authHandler.HandleMFAVerifyEnrollment)
+		r.Delete("/api/v1/auth/me/mfa", authHandler.HandleMFADisable)
 
 		// Source management routes.
 		sourceHandler.Routes(r)
