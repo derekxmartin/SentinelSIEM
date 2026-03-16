@@ -21,7 +21,7 @@ detection:
       - psexec
   selection_cmdline:
     process.command_line|contains:
-      - \\\\
+      - \\
   condition: selection_name and selection_cmdline
 falsepositives:
   - Legitimate admin remote maintenance using PsExec

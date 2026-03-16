@@ -37,6 +37,7 @@ type ECSEvent struct {
 	Observer    *ObserverFields    `json:"observer,omitempty"`
 	Rule        *RuleFields        `json:"rule,omitempty"`
 	Log         *LogFields         `json:"log,omitempty"`
+	WinEvt      *WinEvtFields      `json:"winevt,omitempty"`
 
 	// SourceType identifies the originating source (e.g., "sentinel_edr", "sentinel_av").
 	// Used by the pipeline to route events to the correct ES index.
@@ -211,6 +212,13 @@ type RuleFields struct {
 	Tags        []string `json:"tags,omitempty"`
 	Reference   string   `json:"reference,omitempty"`
 	Author      string   `json:"author,omitempty"`
+}
+
+// WinEvtFields captures Windows Event Log metadata (custom extension for logsource routing).
+type WinEvtFields struct {
+	Channel  string `json:"channel,omitempty"`
+	Provider string `json:"provider,omitempty"`
+	EventID  int    `json:"event_id,omitempty"`
 }
 
 // LogFields captures log metadata (ECS log.* field set).

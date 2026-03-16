@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -41,6 +42,14 @@ func buildModifierChain(modifiers []string, values []interface{}) (fieldMatchFun
 			matchType = "re"
 		case "cidr":
 			matchType = "cidr"
+		case "gt":
+			matchType = "gt"
+		case "gte":
+			matchType = "gte"
+		case "lt":
+			matchType = "lt"
+		case "lte":
+			matchType = "lte"
 		case "base64":
 			hasBase64 = true
 		default:
@@ -127,6 +136,14 @@ func buildSingleValueMatcher(matchType string, ruleValue interface{}) (fieldMatc
 		return buildRegexMatcher(ruleValue)
 	case "cidr":
 		return buildCIDRMatcher(ruleValue)
+	case "gt":
+		return buildNumericMatcher(ruleValue, func(a, b float64) bool { return a > b })
+	case "gte":
+		return buildNumericMatcher(ruleValue, func(a, b float64) bool { return a >= b })
+	case "lt":
+		return buildNumericMatcher(ruleValue, func(a, b float64) bool { return a < b })
+	case "lte":
+		return buildNumericMatcher(ruleValue, func(a, b float64) bool { return a <= b })
 	default:
 		// Plain exact match (case-insensitive for strings).
 		return buildExactMatcher(ruleValue), nil
@@ -221,6 +238,42 @@ func buildCIDRMatcher(ruleValue interface{}) (fieldMatchFunc, error) {
 		}
 		return network.Contains(ip)
 	}, nil
+}
+
+// buildNumericMatcher creates a matcher that compares numeric field values.
+// Supports int, float64, and string representations of numbers.
+func buildNumericMatcher(ruleValue interface{}, cmp func(float64, float64) bool) (fieldMatchFunc, error) {
+	threshold, err := toFloat64(ruleValue)
+	if err != nil {
+		return nil, fmt.Errorf("numeric modifier: rule value %v: %w", ruleValue, err)
+	}
+	return func(value interface{}) bool {
+		eventVal, err := toFloat64(value)
+		if err != nil {
+			return false
+		}
+		return cmp(eventVal, threshold)
+	}, nil
+}
+
+// toFloat64 converts an interface value to float64.
+func toFloat64(v interface{}) (float64, error) {
+	switch n := v.(type) {
+	case float64:
+		return n, nil
+	case float32:
+		return float64(n), nil
+	case int:
+		return float64(n), nil
+	case int64:
+		return float64(n), nil
+	case int32:
+		return float64(n), nil
+	case string:
+		return strconv.ParseFloat(n, 64)
+	default:
+		return 0, fmt.Errorf("cannot convert %T to float64", v)
+	}
 }
 
 // base64EncodeValues encodes string values as base64.

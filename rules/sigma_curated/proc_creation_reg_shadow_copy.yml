@@ -16,12 +16,14 @@ logsource:
   category: process_creation
   product: windows
 detection:
-  selection:
-    process.command_line|contains:
+  selection_cmd:
+    process.command_line|contains|all:
       - reg
       - save
+  selection_hive:
+    process.command_line|contains:
       - sam
       - security
-  condition: selection
+  condition: selection_cmd and selection_hive
 falsepositives:
   - Legitimate registry backup operations by IT administrators

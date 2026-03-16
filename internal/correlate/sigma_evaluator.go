@@ -192,6 +192,8 @@ func getEventFieldValue(event *common.ECSEvent, field string) (interface{}, bool
 		return getRuleSubfield(event.Rule, rest)
 	case "log":
 		return getLogSubfield(event.Log, rest)
+	case "winevt":
+		return getWinEvtSubfield(event.WinEvt, rest)
 	default:
 		return nil, false
 	}
@@ -808,13 +810,13 @@ func getNDRSubfield(n *common.NDRFields, field string) (interface{}, bool) {
 			return n.Session.CommunityID, n.Session.CommunityID != ""
 		case "duration":
 			return n.Session.Duration, true
-		case "bytes_orig":
+		case "bytes_orig", "bytes_sent":
 			return n.Session.BytesOrig, true
-		case "bytes_resp":
+		case "bytes_resp", "bytes_recv":
 			return n.Session.BytesResp, true
-		case "packets_orig":
+		case "packets_orig", "packets_sent":
 			return n.Session.PacketsOrig, true
-		case "packets_resp":
+		case "packets_resp", "packets_recv":
 			return n.Session.PacketsResp, true
 		default:
 			return nil, false
@@ -1127,4 +1129,20 @@ func (p *condParser) parsePrimary() (ConditionExpr, error) {
 	// Must be a selection reference.
 	p.advance()
 	return &ConditionRef{Name: tok}, nil
+}
+
+func getWinEvtSubfield(w *common.WinEvtFields, field string) (interface{}, bool) {
+	if w == nil {
+		return nil, false
+	}
+	switch field {
+	case "channel":
+		return w.Channel, w.Channel != ""
+	case "provider":
+		return w.Provider, w.Provider != ""
+	case "event_id":
+		return w.EventID, true
+	default:
+		return nil, false
+	}
 }

@@ -53,6 +53,11 @@ func MapWinEventToECS(w *WinEvent) *common.ECSEvent {
 		event.Host = &common.HostFields{}
 	}
 	event.Host.Name = w.Computer
+	event.WinEvt = &common.WinEvtFields{
+		Channel:  w.Channel,
+		Provider: w.Provider,
+		EventID:  w.EventID,
+	}
 
 	return event
 }
@@ -91,6 +96,11 @@ func applySysmonCommon(w *WinEvent, event *common.ECSEvent) *common.ECSEvent {
 		event.Host = &common.HostFields{}
 	}
 	event.Host.Name = w.Computer
+	event.WinEvt = &common.WinEvtFields{
+		Channel:  w.Channel,
+		Provider: w.Provider,
+		EventID:  w.EventID,
+	}
 	return event
 }
 
@@ -430,6 +440,11 @@ func mapDefault(w *WinEvent) *common.ECSEvent {
 		},
 		Host: &common.HostFields{
 			Name: w.Computer,
+		},
+		WinEvt: &common.WinEvtFields{
+			Channel:  w.Channel,
+			Provider: w.Provider,
+			EventID:  w.EventID,
 		},
 	}
 

@@ -43,7 +43,7 @@ SentinelSIEM ingests telemetry from multiple security sources, normalizes events
 ### Detection Engine
 
 - **Sigma rules** — Native parsing and evaluation of the open-standard YAML detection format
-- **Single-event rules** — Field matching with full modifier support (`contains`, `re`, `cidr`, `base64`, `all`, etc.)
+- **Single-event rules** — Field matching with full modifier support (`contains`, `re`, `cidr`, `base64`, `all`, `gt`, `gte`, `lt`, `lte`, etc.)
 - **Correlation rules** — Multi-event patterns: `event_count` (threshold), `value_count` (distinct values), `temporal` (ordered sequences within time windows)
 - **Cross-portfolio detections** — Rules that correlate across EDR + AV + DLP sources to detect multi-stage attack chains
 - **Hot-reload** — File watcher + CLI trigger for zero-downtime rule updates
@@ -118,7 +118,7 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 
 **Auth:** JWT (access + refresh tokens), bcrypt password hashing, TOTP MFA (RFC 6238) with AES-256-GCM encrypted secrets, RBAC (admin, soc_lead, detection_engineer, analyst, read_only), login rate limiting
 
-**Testing:** Playwright (E2E browser tests), Go `testing` (unit + integration)
+**Testing:** Go `testing` (unit + integration, 850-event replay validation), Playwright (E2E browser tests)
 
 ## Getting Started
 
@@ -153,6 +153,39 @@ cd web
 npm install                   # Install frontend dependencies
 npm run dev                   # Start Vite dev server (port 3000)
 ```
+
+### Integration Tests
+
+SentinelSIEM includes a comprehensive integration test suite that validates the full detection pipeline end-to-end — no Elasticsearch or running servers required.
+
+```bash
+# Run all integration tests
+go test ./tests/integration/ -v
+
+# Run just the 850-event replay test
+go test ./tests/integration/ -run TestReplay850Events -v
+
+# Run the full test suite (unit + integration)
+go test ./... -v
+```
+
+**Test suite breakdown:**
+
+| Test | What it validates |
+|------|-------------------|
+| `TestReplay850Events` | 850 synthetic ECS events (40 malicious + 810 benign) evaluated against 50 Sigma rules. Asserts exactly 40 alerts and zero false positives across all 6 source types. |
+| `TestEngineStats` | Verifies all project rules load, compile, and map to logsource buckets. Currently: 74 compiled rules, 16 logsource buckets, 0 compile errors. |
+| `TestEachRuleCategory` | Fires at least one rule per logsource category (process_creation, sentinel_av, sentinel_dlp, sentinel_ndr, windows_security, syslog_linux). |
+| `TestBenignEventsZeroAlerts` | Dedicated false-positive regression test — 810 benign events must produce 0 alerts. |
+
+The 40 malicious events cover the full attack surface:
+
+- **15 process creation** — Mimikatz, PsExec, encoded PowerShell, certutil, WMIC, rundll32, mshta, whoami, net.exe, BITSAdmin, schtasks, download cradles, regsvr32, reg hive dump, Office child process
+- **4 antivirus** — Trojan, webshell, Cobalt Strike beacon, hacktool/PUA
+- **5 data loss prevention** — PCI exfil, PII violation, source code upload, USB restricted data, financial data leak
+- **6 network detection** — C2 long session, large outbound transfer, Tor connection, suspicious port, DNS suspicious TLD, high packet beaconing
+- **6 Windows events** — Brute force, account creation, privilege escalation, log cleared, service installed, RDP logon
+- **4 Linux/syslog** — SSH brute force, sudo escalation, crontab modification, unauthorized root login
 
 ### E2E Tests
 
@@ -258,8 +291,8 @@ Each scenario produces events across multiple source types (EDR, AV, DLP, NDR, W
 | P6 | Query Language + REST API | 4 | P0, P1 | Complete |
 | P7 | React Dashboard + Auth + Source Configuration | 15 | P6 | Complete |
 | P8 | CLI Management Tool | 4 | P0–P7 | Complete |
-| P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Pending |
-| P10 | Integration Tests (60 rules, 850 events, cross-source correlation) | 8 | All | Pending |
+| P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Complete |
+| P10 | Integration Tests (60 rules, 850 events, cross-source correlation) | 8 | All | In Progress |
 | P11 | Hardening (metrics, load test, DLQ, graceful shutdown, deployment) | 5 | All | Pending |
 | P12 | AI Investigation Assistant | 10 | P6, P7, P9 | Pending |
 

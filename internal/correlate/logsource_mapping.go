@@ -181,11 +181,11 @@ func eventFieldEquals(event *common.ECSEvent, field, expected string) bool {
 	case "network.direction":
 		return event.Network != nil && event.Network.Direction == expected
 
-	// Placeholder fields for future phases (winevt, syslog).
-	// These will be matched once those parsers populate the ECSEvent.
+	// Windows Event Log metadata fields.
 	case "winevt.channel":
-		// Will be implemented in Phase 2.
-		return false
+		return event.WinEvt != nil && event.WinEvt.Channel == expected
+	case "winevt.provider":
+		return event.WinEvt != nil && event.WinEvt.Provider == expected
 
 	// process.* fields
 	case "process.name":
