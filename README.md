@@ -76,6 +76,7 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 | `sentinel-query` | REST API server, query language → ES DSL translation, serves dashboard |
 | `sentinel-cli` | Management CLI for rules, sources, keys, health, and ad-hoc queries |
 | `sentinel-dashboard` | React SPA — alert triage, cases, threat hunting, rule management, source health |
+| `sentinel-auth` | User auth service — JWT, TOTP MFA, RBAC, login rate limiting, first-run setup |
 
 ## Project Structure
 
@@ -95,13 +96,15 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 │   ├── query/                 # Query parser, ES translator, REST API
 │   ├── cases/                 # Case management service
 │   ├── sources/               # Source configuration + snippets
-│   └── alert/                 # Alert pipeline
+│   ├── alert/                 # Alert pipeline
+│   └── auth/                  # JWT, MFA, RBAC, rate limiting, user management
 ├── rules/                     # Sigma detection rules
 │   ├── sigma_curated/         # Curated SigmaHQ community rules
 │   └── sentinel_portfolio/    # Cross-source correlation rules
 ├── parsers/                   # Logsource maps + syslog sub-parser YAML configs
 ├── scripts/                   # Helper scripts (ES wait, cert gen)
 ├── web/                       # React dashboard
+│   └── tests/e2e/             # Playwright E2E browser tests
 └── tests/                     # Integration + benchmark tests
 ```
 
@@ -111,7 +114,11 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 
 **Storage:** Elasticsearch 8.x with ECS-compliant index templates and ILM policies
 
-**Frontend:** React, Tailwind CSS, TanStack Table + Query, Recharts, Nivo (ATT&CK heatmap), CodeMirror 6 (query editor), Zustand, Headless UI
+**Frontend:** React 19, Vite 6, Tailwind CSS v4, TanStack Table + Query, Recharts, Nivo (ATT&CK heatmap), CodeMirror 6 (query editor), Zustand, Headless UI
+
+**Auth:** JWT (access + refresh tokens), bcrypt password hashing, TOTP MFA (RFC 6238) with AES-256-GCM encrypted secrets, RBAC (admin, soc_lead, detection_engineer, analyst, read_only), login rate limiting
+
+**Testing:** Playwright (E2E browser tests), Go `testing` (unit + integration)
 
 ## Getting Started
 
@@ -138,6 +145,25 @@ make run-ingest               # Start ingestion server
 make run-correlate            # Start correlation engine
 make run-query                # Start query API + dashboard
 ```
+
+### Dashboard Development
+
+```bash
+cd web
+npm install                   # Install frontend dependencies
+npm run dev                   # Start Vite dev server (port 3000)
+```
+
+### E2E Tests
+
+```bash
+cd web
+npx playwright install        # Install browser binaries (first time)
+npx playwright test           # Run all E2E tests (headless)
+npx playwright test --headed  # Run with visible browser
+```
+
+Requires the backend (`make run-query`) and Elasticsearch to be running. Tests cover auth flows, page rendering, navigation, theme persistence, and interactive features across 8 test suites (35 tests).
 
 ### Syslog TLS Setup
 
@@ -199,7 +225,7 @@ Each scenario produces events across multiple source types (EDR, AV, DLP, NDR, W
 | P4 | Sigma Single-Event Detection Engine | 5 | P1 | Complete |
 | P5 | Sigma Correlation Rules (event_count, value_count, temporal) | 5 | P4 | Complete |
 | P6 | Query Language + REST API | 4 | P0, P1 | Complete |
-| P7 | React Dashboard + Source Configuration | 10 | P6 | Pending |
+| P7 | React Dashboard + Auth + Source Configuration | 15 | P6 | In Progress (T1–T15 complete) |
 | P8 | CLI Management Tool | 4 | P0–P7 | Pending |
 | P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Pending |
 | P10 | Integration Tests (60 rules, 850 events, cross-source correlation) | 8 | All | Pending |
