@@ -327,6 +327,86 @@ func (s *Store) GetDoc(ctx context.Context, index, id string) ([]byte, error) {
 	return parsed.Source, nil
 }
 
+// VersionedDoc holds a document source along with its ES sequence number
+// and primary term, used for optimistic concurrency control.
+type VersionedDoc struct {
+	Source      json.RawMessage
+	SeqNo      int
+	PrimaryTerm int
+}
+
+// GetDocVersioned retrieves a document by ID along with its _seq_no and
+// _primary_term for use with optimistic concurrency control.
+func (s *Store) GetDocVersioned(ctx context.Context, index, id string) (*VersionedDoc, error) {
+	res, err := s.client.Get(
+		index,
+		id,
+		s.client.Get.WithContext(ctx),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get doc: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 404 {
+		return nil, fmt.Errorf("document not found: %s/%s", index, id)
+	}
+
+	if res.IsError() {
+		return nil, fmt.Errorf("get doc error: %s", res.String())
+	}
+
+	rawBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("reading get response: %w", err)
+	}
+
+	var parsed struct {
+		Source      json.RawMessage `json:"_source"`
+		SeqNo      int             `json:"_seq_no"`
+		PrimaryTerm int            `json:"_primary_term"`
+	}
+	if err := json.Unmarshal(rawBody, &parsed); err != nil {
+		return nil, fmt.Errorf("decoding get response: %w", err)
+	}
+
+	return &VersionedDoc{
+		Source:      parsed.Source,
+		SeqNo:      parsed.SeqNo,
+		PrimaryTerm: parsed.PrimaryTerm,
+	}, nil
+}
+
+// IndexDocIfMatch indexes a document only if the current _seq_no and
+// _primary_term match. Returns ErrConflict if they don't match.
+func (s *Store) IndexDocIfMatch(ctx context.Context, index, id string, doc []byte, seqNo, primaryTerm int) error {
+	res, err := s.client.Index(
+		index,
+		bytes.NewReader(doc),
+		s.client.Index.WithContext(ctx),
+		s.client.Index.WithDocumentID(id),
+		s.client.Index.WithRefresh("true"),
+		s.client.Index.WithIfSeqNo(seqNo),
+		s.client.Index.WithIfPrimaryTerm(primaryTerm),
+	)
+	if err != nil {
+		return fmt.Errorf("index doc: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode == 409 {
+		return ErrConflict
+	}
+
+	if res.IsError() {
+		return fmt.Errorf("index doc error: %s", res.String())
+	}
+	return nil
+}
+
+// ErrConflict is returned when an optimistic concurrency check fails.
+var ErrConflict = fmt.Errorf("version conflict: document was modified by another request")
+
 // SearchDocs executes a search and returns the raw _source of each hit.
 func (s *Store) SearchDocs(ctx context.Context, index string, query map[string]any) ([]json.RawMessage, error) {
 	body, err := json.Marshal(query)
