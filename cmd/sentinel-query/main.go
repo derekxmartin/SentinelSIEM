@@ -99,6 +99,9 @@ func main() {
 	loginLimiter := auth.NewLoginRateLimiter(5, 30*time.Second)
 	authHandler := auth.NewAPIHandler(authService, loginLimiter)
 
+	// Create admin handler for user and API key management.
+	adminHandler := auth.NewAdminHandler(authService, keyStore)
+
 	// Build router with middleware.
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -145,6 +148,9 @@ func main() {
 
 		// Source management routes.
 		sourceHandler.Routes(r)
+
+		// Admin routes (admin role required).
+		adminHandler.Routes(r)
 	})
 
 	// Server.

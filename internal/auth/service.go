@@ -560,6 +560,42 @@ func (s *Service) ResetMFA(ctx context.Context, userID string) error {
 	return s.backend.UpdateDoc(ctx, s.userIndex, user.ID, doc)
 }
 
+// DisableUser disables a user account (admin operation).
+func (s *Service) DisableUser(ctx context.Context, userID string) error {
+	user, err := s.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	user.Disabled = true
+	user.UpdatedAt = time.Now().UTC()
+
+	doc, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("marshaling user: %w", err)
+	}
+
+	return s.backend.UpdateDoc(ctx, s.userIndex, user.ID, doc)
+}
+
+// EnableUser re-enables a disabled user account (admin operation).
+func (s *Service) EnableUser(ctx context.Context, userID string) error {
+	user, err := s.GetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	user.Disabled = false
+	user.UpdatedAt = time.Now().UTC()
+
+	doc, err := json.Marshal(user)
+	if err != nil {
+		return fmt.Errorf("marshaling user: %w", err)
+	}
+
+	return s.backend.UpdateDoc(ctx, s.userIndex, user.ID, doc)
+}
+
 // MFAConfigured returns whether MFA encryption is configured on the server.
 func (s *Service) MFAConfigured() bool {
 	return s.mfaEncryptor != nil
