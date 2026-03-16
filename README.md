@@ -1,5 +1,7 @@
 # SentinelSIEM
 
+![SentinelSIEM Dashboard](docs/images/sentinel-dashboard-concept.png)
+
 A proof-of-concept Security Information & Event Management platform built in Go, backed by Elasticsearch. Designed as the central detection and investigation brain for the Sentinel security portfolio.
 
 ## Why SentinelSIEM?
