@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 )
 
@@ -21,7 +22,12 @@ func NewAPIHandler(service *Service, rateLimiter *LoginRateLimiter) *APIHandler 
 // HandleLogin handles POST /api/v1/auth/login.
 // Rate limited: 5 failed attempts per 30s per IP → 429.
 func (h *APIHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	ip := r.RemoteAddr
+	// Strip port from RemoteAddr so rate limiting keys on IP only
+	// (proxies like Vite use different ephemeral ports per request).
+	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	if ip == "" {
+		ip = r.RemoteAddr
+	}
 
 	// Check rate limit before processing.
 	if !h.rateLimiter.Allow(ip) {
@@ -247,7 +253,10 @@ func (h *APIHandler) HandleMFAVerify(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userAgent := r.UserAgent()
-	ip := r.RemoteAddr
+	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	if ip == "" {
+		ip = r.RemoteAddr
+	}
 
 	resp, err := h.service.VerifyMFALogin(r.Context(), body.MFAToken, body.Code, userAgent, ip)
 	if err != nil {
