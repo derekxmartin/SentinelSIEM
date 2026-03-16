@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import logo from '../assets/logo.svg'
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react'
 import {
   HomeIcon,
@@ -46,17 +47,15 @@ function NavItem({ item, collapsed }) {
 
 function SidebarContent({ collapsed, onToggle, onClose }) {
   return (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#0D0608' }}>
       {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-slate-700/50">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="h-8 w-8 rounded-lg bg-indigo-500 flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">S</span>
-          </div>
+      <div className={`flex items-center justify-center h-16 px-4 border-b border-slate-700/50 ${collapsed ? 'px-2' : ''}`}>
+        <NavLink to="/" className="flex items-center gap-2 min-w-0">
+          <img src={logo} alt="SentinelSIEM" className={`shrink-0 transition-all ${collapsed ? 'h-10 w-10' : 'h-9 w-9'}`} />
           {!collapsed && (
             <span className="text-white font-semibold text-lg truncate">SentinelSIEM</span>
           )}
-        </div>
+        </NavLink>
         {/* Mobile close button */}
         {onClose && (
           <button onClick={onClose} className="ml-auto text-slate-400 hover:text-white lg:hidden">
