@@ -32,16 +32,7 @@ install:
 # dev: Hot-reload development mode — starts Docker services, runs ingest + query
 # servers, and starts the React dev server with live reload.
 dev: build
-	@echo Starting Docker services...
-	-@docker compose up -d 2>nul || docker-compose up -d 2>nul || echo Docker not available
-	@echo Waiting for Elasticsearch...
-	-@bash scripts/wait-for-es.sh http://localhost:9200 20 || echo ES not ready
-	@echo Starting sentinel-ingest...
-	@start /b $(BINDIR)/sentinel-ingest.exe --config sentinel.toml
-	@echo Starting sentinel-query...
-	@start /b $(BINDIR)/sentinel-query.exe --config sentinel.toml
-	@echo Starting React dev server...
-	@cd web && npm run dev
+	bash scripts/dev.sh
 
 # demo: Full demo setup — install + create demo analyst accounts + replay all
 # fixture datasets + trigger correlation rules + populate dashboard.
