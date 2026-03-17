@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/SentinelSIEM/sentinel-siem/internal/alert"
+	"github.com/SentinelSIEM/sentinel-siem/internal/common"
 	"github.com/SentinelSIEM/sentinel-siem/internal/config"
 	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
 	"github.com/SentinelSIEM/sentinel-siem/internal/ingest"
@@ -27,6 +28,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+
+	logCleanup, err := common.SetupLogging(cfg.Logging, "sentinel-ingest")
+	if err != nil {
+		log.Fatalf("Failed to setup file logging: %v", err)
+	}
+	defer logCleanup()
 
 	// Initialize parser registry with all known parsers.
 	registry := normalize.NewRegistry()

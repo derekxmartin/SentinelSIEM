@@ -52,3 +52,9 @@ auto_extract_observables = true
 [logging]
 level = "info"    # debug, info, warn, error
 format = "json"   # json, text
+file_enabled = false   # set true to write logs to rotating files
+log_dir = "logs"       # directory for log files
+max_size = 100         # max size per log file in MB before rotation
+max_files = 10         # max number of rotated log files to keep
+max_age = 30           # max days to retain old log files
+compress = true        # gzip-compress rotated log files

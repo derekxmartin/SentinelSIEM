@@ -87,8 +87,14 @@ type CasesConfig struct {
 
 // LoggingConfig holds logging settings.
 type LoggingConfig struct {
-	Level  string `toml:"level"`
-	Format string `toml:"format"`
+	Level       string `toml:"level"`
+	Format      string `toml:"format"`
+	FileEnabled bool   `toml:"file_enabled"`
+	LogDir      string `toml:"log_dir"`
+	MaxSizeMB   int    `toml:"max_size"`
+	MaxFiles    int    `toml:"max_files"`
+	MaxAgeDays  int    `toml:"max_age"`
+	Compress    bool   `toml:"compress"`
 }
 
 // Defaults returns a Config populated with sensible defaults.
@@ -132,8 +138,14 @@ func Defaults() Config {
 			AutoExtract:   true,
 		},
 		Logging: LoggingConfig{
-			Level:  "info",
-			Format: "json",
+			Level:       "info",
+			Format:      "json",
+			FileEnabled: false,
+			LogDir:      "logs",
+			MaxSizeMB:   100,
+			MaxFiles:    10,
+			MaxAgeDays:  30,
+			Compress:    true,
 		},
 	}
 }
@@ -211,6 +223,20 @@ func (c *Config) Validate() error {
 	validFormats := map[string]bool{"json": true, "text": true}
 	if !validFormats[strings.ToLower(c.Logging.Format)] {
 		errs = append(errs, fmt.Sprintf("logging.format: %q is not valid (json, text)", c.Logging.Format))
+	}
+	if c.Logging.FileEnabled {
+		if c.Logging.LogDir == "" {
+			errs = append(errs, "logging.log_dir: cannot be empty when file_enabled is true")
+		}
+		if c.Logging.MaxSizeMB < 1 {
+			errs = append(errs, fmt.Sprintf("logging.max_size: %d must be at least 1 MB", c.Logging.MaxSizeMB))
+		}
+		if c.Logging.MaxFiles < 1 {
+			errs = append(errs, fmt.Sprintf("logging.max_files: %d must be at least 1", c.Logging.MaxFiles))
+		}
+		if c.Logging.MaxAgeDays < 1 {
+			errs = append(errs, fmt.Sprintf("logging.max_age: %d must be at least 1 day", c.Logging.MaxAgeDays))
+		}
 	}
 
 	if len(errs) > 0 {
