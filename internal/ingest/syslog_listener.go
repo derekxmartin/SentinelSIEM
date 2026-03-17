@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
 )
 
 // SyslogListener accepts syslog messages over TCP and UDP, wraps them in JSON
@@ -133,9 +134,11 @@ func (s *SyslogListener) serveTCP(ctx context.Context, ln net.Listener, maxMsgLe
 		}
 
 		s.wg.Add(1)
+		metrics.SyslogConnections.WithLabelValues("tcp").Inc()
 		go func() {
 			defer s.wg.Done()
 			defer func() { <-s.connSem }()
+			defer metrics.SyslogConnections.WithLabelValues("tcp").Dec()
 			s.handleTCPConn(ctx, conn, maxMsgLen)
 		}()
 	}
@@ -179,6 +182,7 @@ func (s *SyslogListener) handleTCPConn(ctx context.Context, conn net.Conn, maxMs
 		conn.SetDeadline(time.Now().Add(idleTimeout))
 
 		// Wrap and deliver.
+		metrics.SyslogMessages.WithLabelValues("tcp").Inc()
 		event := wrapSyslogEvent(msg, "tcp", conn.RemoteAddr().String())
 		if s.handler != nil {
 			s.handler([]json.RawMessage{event})
@@ -270,6 +274,7 @@ func (s *SyslogListener) serveUDP(ctx context.Context, pc net.PacketConn, maxMsg
 		}
 
 		msg := string(buf[:n])
+		metrics.SyslogMessages.WithLabelValues("udp").Inc()
 		event := wrapSyslogEvent(msg, "udp", addr.String())
 		if s.handler != nil {
 			s.handler([]json.RawMessage{event})

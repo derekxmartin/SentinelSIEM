@@ -17,6 +17,7 @@ import (
 	"github.com/SentinelSIEM/sentinel-siem/internal/common"
 	"github.com/SentinelSIEM/sentinel-siem/internal/config"
 	"github.com/SentinelSIEM/sentinel-siem/internal/lifecycle"
+	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
 	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
 	"github.com/SentinelSIEM/sentinel-siem/internal/query"
 	"github.com/SentinelSIEM/sentinel-siem/internal/sources"
@@ -128,6 +129,9 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300,
 	}))
+
+	// Prometheus metrics endpoint (no auth — scraped by infrastructure).
+	r.Handle("/metrics", metrics.Handler())
 
 	// Public routes (no auth required).
 	r.Get("/api/v1/health", apiHandler.HandleHealth)

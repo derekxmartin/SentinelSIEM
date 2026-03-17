@@ -11,6 +11,7 @@ import (
 
 	"github.com/SentinelSIEM/sentinel-siem/internal/common"
 	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
 	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
 	"github.com/SentinelSIEM/sentinel-siem/internal/store"
 )
@@ -49,9 +50,6 @@ func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string,
 	}
 }
 
-// Handle is the EventHandler callback for HTTPListener. It normalizes a batch
-// of raw events, indexes them into Elasticsearch, evaluates Sigma rules, and
-// indexes any resulting alerts.
 // Drain waits for all in-flight event batches to finish processing.
 // It should be called during graceful shutdown after new event acceptance
 // has been stopped (HTTP server shutdown / syslog listener close).
@@ -75,14 +73,30 @@ func (p *Pipeline) Handle(rawEvents []json.RawMessage) {
 	p.inflight.Add(1)
 	defer p.inflight.Done()
 
+	metrics.InflightBatches.Inc()
+	defer metrics.InflightBatches.Dec()
+
+	pipelineStart := time.Now()
+	metrics.BatchSize.Observe(float64(len(rawEvents)))
+
 	// Normalize.
 	events, errs := p.engine.NormalizeBatch(rawEvents)
 	for _, err := range errs {
 		log.Printf("[pipeline] normalization error: %v", err)
+		metrics.EventsDropped.WithLabelValues("normalization").Inc()
 	}
 
 	if len(events) == 0 {
 		return
+	}
+
+	// Count ingested events by source type.
+	for _, event := range events {
+		st := event.SourceType
+		if st == "" {
+			st = "unknown"
+		}
+		metrics.EventsIngested.WithLabelValues(st, "http").Inc()
 	}
 
 	// Group events by target index.
@@ -93,11 +107,15 @@ func (p *Pipeline) Handle(rawEvents []json.RawMessage) {
 	defer cancel()
 
 	for index, batch := range groups {
+		indexStart := time.Now()
 		if err := p.indexer.BulkIndex(ctx, index, batch); err != nil {
 			log.Printf("[pipeline] indexing error for %s: %v", index, err)
+			metrics.EventsDropped.WithLabelValues("indexing").Add(float64(len(batch)))
 		} else {
 			p.processed.Add(int64(len(batch)))
+			metrics.EventsIndexed.WithLabelValues(index).Add(float64(len(batch)))
 		}
+		metrics.IndexLatency.WithLabelValues(index).Observe(time.Since(indexStart).Seconds())
 	}
 
 	// Upsert NDR host score events to the dedicated index.
@@ -115,6 +133,8 @@ func (p *Pipeline) Handle(rawEvents []json.RawMessage) {
 	if p.ruleEvaluator != nil {
 		p.evaluateAndIndexAlerts(ctx, events)
 	}
+
+	metrics.PipelineLatency.Observe(time.Since(pipelineStart).Seconds())
 }
 
 // evaluateAndIndexAlerts runs each event through the rule engine and bulk-indexes
@@ -123,12 +143,17 @@ func (p *Pipeline) evaluateAndIndexAlerts(ctx context.Context, events []*common.
 	var alertDocs []common.ECSEvent
 
 	for _, event := range events {
+		evalStart := time.Now()
 		alerts := p.ruleEvaluator.Evaluate(event)
+		metrics.RuleEvalDuration.Observe(time.Since(evalStart).Seconds())
+
 		for _, alert := range alerts {
 			// Skip duplicate alerts within the dedup window.
 			if p.dedupCache != nil && p.dedupCache.IsDuplicate(alert) {
+				metrics.AlertsDeduplicated.Inc()
 				continue
 			}
+			metrics.AlertsGenerated.WithLabelValues(alert.Level).Inc()
 			// Wrap alert as an ECSEvent-shaped doc for BulkIndex compatibility.
 			doc := alertToDocument(alert)
 			alertDocs = append(alertDocs, doc)

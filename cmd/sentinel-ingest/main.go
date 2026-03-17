@@ -12,6 +12,7 @@ import (
 	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
 	"github.com/SentinelSIEM/sentinel-siem/internal/ingest"
 	"github.com/SentinelSIEM/sentinel-siem/internal/lifecycle"
+	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
 	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
 	"github.com/SentinelSIEM/sentinel-siem/internal/normalize/parsers"
 	"github.com/SentinelSIEM/sentinel-siem/internal/store"
@@ -101,6 +102,12 @@ func main() {
 
 	// Mount correlation health endpoint.
 	listener.Get("/api/v1/correlate/health", stateManager.HealthHandler())
+
+	// Mount Prometheus metrics endpoint.
+	listener.Get("/metrics", metrics.Handler().ServeHTTP)
+
+	// Set initial rules loaded gauge.
+	metrics.RulesLoaded.Set(float64(stats.RulesCompiled))
 
 	srv := &http.Server{
 		Addr:         listener.ListenAddr(),

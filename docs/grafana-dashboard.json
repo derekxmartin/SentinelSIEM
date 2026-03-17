@@ -1,0 +1,262 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "type": "datasource",
+      "pluginId": "prometheus"
+    }
+  ],
+  "title": "SentinelSIEM Overview",
+  "uid": "sentinel-siem-overview",
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "title": "Events Ingested (rate/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(sentinel_ingest_events_received_total[5m])) by (source_type)",
+          "legendFormat": "{{source_type}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" }
+      }
+    },
+    {
+      "title": "Events Indexed (rate/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(sentinel_ingest_events_indexed_total[5m]))",
+          "legendFormat": "indexed"
+        },
+        {
+          "expr": "sum(rate(sentinel_ingest_events_dropped_total[5m])) by (reason)",
+          "legendFormat": "dropped ({{reason}})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" }
+      }
+    },
+    {
+      "title": "Alerts Generated (rate/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(sentinel_detect_alerts_generated_total[5m])) by (level)",
+          "legendFormat": "{{level}}"
+        },
+        {
+          "expr": "rate(sentinel_detect_alerts_deduplicated_total[5m])",
+          "legendFormat": "deduplicated"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" }
+      }
+    },
+    {
+      "title": "Rules Loaded",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "sentinel_detect_rules_loaded",
+          "legendFormat": "rules"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "thresholds": { "steps": [
+          { "color": "red", "value": 0 },
+          { "color": "green", "value": 1 }
+        ]}}
+      }
+    },
+    {
+      "title": "In-Flight Batches",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 8 },
+      "targets": [
+        {
+          "expr": "sentinel_ingest_inflight_batches",
+          "legendFormat": "batches"
+        }
+      ]
+    },
+    {
+      "title": "Correlation Buckets",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 8 },
+      "targets": [
+        {
+          "expr": "sentinel_correlate_buckets_active",
+          "legendFormat": "buckets"
+        }
+      ]
+    },
+    {
+      "title": "Syslog Connections",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "sum(sentinel_syslog_connections_active) by (transport)",
+          "legendFormat": "{{transport}}"
+        }
+      ]
+    },
+    {
+      "title": "Syslog Messages (rate/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 12 },
+      "targets": [
+        {
+          "expr": "sum(rate(sentinel_syslog_messages_received_total[5m])) by (transport)",
+          "legendFormat": "{{transport}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" }
+      }
+    },
+    {
+      "title": "Pipeline Latency (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(sentinel_ingest_pipeline_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "pipeline p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(sentinel_ingest_pipeline_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "pipeline p50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "title": "Rule Eval Latency (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(sentinel_detect_eval_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "eval p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(sentinel_detect_eval_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "eval p50"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "title": "Index Latency (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(sentinel_ingest_index_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "index p95"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "title": "Query API Latency (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(sentinel_query_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "query p95"
+        },
+        {
+          "expr": "rate(sentinel_query_requests_total[5m])",
+          "legendFormat": "queries/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "s" }
+      }
+    },
+    {
+      "title": "Auth Events",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "targets": [
+        {
+          "expr": "sum(rate(sentinel_auth_login_attempts_total[5m])) by (result)",
+          "legendFormat": "{{result}}"
+        },
+        {
+          "expr": "rate(sentinel_auth_rate_limited_total[5m])",
+          "legendFormat": "rate_limited"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "ops" }
+      }
+    },
+    {
+      "title": "Batch Size Distribution",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(sentinel_ingest_batch_size_bucket[5m])) by (le))",
+          "legendFormat": "p95 batch size"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(sentinel_ingest_batch_size_bucket[5m])) by (le))",
+          "legendFormat": "p50 batch size"
+        }
+      ]
+    },
+    {
+      "title": "Go Runtime",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "targets": [
+        {
+          "expr": "go_goroutines",
+          "legendFormat": "goroutines"
+        }
+      ]
+    },
+    {
+      "title": "Process Memory",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 40 },
+      "targets": [
+        {
+          "expr": "process_resident_memory_bytes",
+          "legendFormat": "RSS"
+        },
+        {
+          "expr": "go_memstats_alloc_bytes",
+          "legendFormat": "heap alloc"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "bytes" }
+      }
+    }
+  ]
+}
