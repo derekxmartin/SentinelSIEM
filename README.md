@@ -81,7 +81,7 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 |-----------|-------------|
 | `sentinel-ingest` | HTTP/syslog/WEF listener, API key auth, NDJSON batch support, TLS syslog |
 | `sentinel-normalize` | ECS normalization engine with per-source-type parsers and YAML sub-parsers |
-| `sentinel-store` | Elasticsearch client — index templates, ILM, bulk indexing |
+| `sentinel-store` | Elasticsearch client — index templates, ILM, bulk indexing, dead letter queue |
 | `sentinel-correlate` | Real-time Sigma rule engine with correlation state management |
 | `sentinel-query` | REST API server, query language → ES DSL translation, serves dashboard |
 | `sentinel-cli` | Management CLI — user/key admin, rules validate/update/reload, ingest test/replay, diagnostics, ad-hoc queries |
@@ -106,17 +106,20 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 │   ├── query/                 # Query parser, ES translator, REST API
 │   ├── cases/                 # Case management service
 │   ├── sources/               # Source configuration + snippets
-│   ├── alert/                 # Alert pipeline
-│   └── auth/                  # JWT, MFA, RBAC, rate limiting, user management
+│   ├── alert/                 # Alert pipeline + retry queue
+│   ├── auth/                  # JWT, MFA, RBAC, rate limiting, user management
+│   ├── lifecycle/             # Graceful shutdown manager
+│   └── metrics/               # Prometheus instrumentation (18 metrics)
 ├── rules/                     # Sigma detection rules
 │   ├── sigma_curated/         # Curated SigmaHQ community rules
 │   └── sentinel_portfolio/    # Cross-source correlation rules
 ├── parsers/                   # Logsource maps + syslog sub-parser YAML configs
-├── scripts/                   # Helper scripts (ES wait, cert gen)
+├── scripts/                   # Install, demo, dev, teardown, cert gen
 ├── web/                       # React dashboard
 │   ├── tests/e2e/             # Playwright E2E browser tests
 │   ├── tests/screenshots/     # Playwright documentation screenshot capture
 │   └── docs/screenshots/      # Captured page screenshots
+├── docs/                      # Grafana dashboard JSON
 └── tests/                     # Integration + benchmark tests
 ```
 
@@ -130,7 +133,9 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 
 **Auth:** JWT (access + refresh tokens), bcrypt password hashing, TOTP MFA (RFC 6238) with AES-256-GCM encrypted secrets, RBAC (admin, soc_lead, detection_engineer, analyst, read_only), login rate limiting
 
-**Testing:** Go `testing` (unit + integration, 850-event replay validation), Playwright (E2E browser tests)
+**Observability:** Prometheus metrics (18 across 6 subsystems), Grafana dashboard (16 panels), dead letter queue, alert retry queue
+
+**Testing:** Go `testing` (unit + integration, 850-event replay validation), load test (1000 eps × 10 min), Playwright (E2E browser tests)
 
 ## Getting Started
 
@@ -141,21 +146,35 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 - Node.js 18+ (for dashboard development)
 - Make
 
+### Quick Start
+
+```bash
+make demo                     # Build, start services, create demo users, replay fixture data
+```
+
+This runs the full setup: builds binaries, starts Elasticsearch via Docker, creates an admin account and 5 demo analyst accounts via first-run setup, replays all fixture datasets, and prints access URLs and credentials.
+
+When finished:
+
+```bash
+make demo-clean               # Disable demo users, delete all indices, stop services
+```
+
 ### Build
 
 ```bash
 make build       # Compiles all binaries to bin/
 make test        # Runs tests
 make lint        # Runs go vet
+make clean       # Removes bin/ directory
 ```
 
 ### Run
 
 ```bash
-docker-compose up -d          # Start Elasticsearch
-make run-ingest               # Start ingestion server
-make run-correlate            # Start correlation engine
-make run-query                # Start query API + dashboard
+docker compose up -d                            # Start Elasticsearch + Kibana
+.\bin\sentinel-ingest.exe --config sentinel.toml  # Start ingestion server
+.\bin\sentinel-query.exe --config sentinel.toml   # Start query API (separate terminal)
 ```
 
 ### Dashboard Development
@@ -165,6 +184,19 @@ cd web
 npm install                   # Install frontend dependencies
 npm run dev                   # Start Vite dev server (port 3000)
 ```
+
+Requires `sentinel-query` to be running on port 8081 (Vite proxies API requests).
+
+### Scripts
+
+| Script | Make Target | Description |
+|--------|-------------|-------------|
+| `scripts/install.sh` | `make install` | Build binaries, start Docker, apply ES templates, create admin user, print credentials |
+| `scripts/demo.sh` | `make demo` | Full demo: install + 6 analyst accounts + replay all fixtures + verify |
+| `scripts/demo-clean.sh` | `make demo-clean` | Teardown: disable demo users, delete all indices, stop services |
+| `scripts/dev.sh` | `make dev` | Hot-reload development mode with ingest + query + Vite |
+| `scripts/gen-certs.sh` | — | Generate self-signed TLS certs for syslog development |
+| `scripts/wait-for-es.sh` | — | Block until Elasticsearch is healthy (used by install.sh) |
 
 ### Integration Tests
 
@@ -199,6 +231,21 @@ The 40 malicious events cover the full attack surface:
 - **6 Windows events** — Brute force, account creation, privilege escalation, log cleared, service installed, RDP logon
 - **4 Linux/syslog** — SSH brute force, sudo escalation, crontab modification, unauthorized root login
 
+### Load Test & Benchmarks
+
+```bash
+# 30-second sustained load test (1000 events/sec, no ES required)
+go test ./tests/benchmark/ -v -run TestLoadTest -loadduration=30s -timeout 2m
+
+# Full 10-minute load test
+go test ./tests/benchmark/ -v -run TestLoadTest -loadduration=10m -timeout 15m
+
+# Per-batch and per-rule-eval benchmarks
+go test ./tests/benchmark/ -bench=. -benchmem
+```
+
+Assertions: ≥90% target EPS, p95 latency <5s, rule eval p95 <10ms, heap <500MB, no event loss.
+
 ### E2E Tests
 
 ```bash
@@ -222,34 +269,40 @@ npm run screenshots:headed     # Watch it run in a visible browser
 
 ### Management CLI
 
+Global flags must come **before** the subcommand (Go `flag` package requirement):
+
 ```bash
 # System diagnostics (config, servers, ES, rules)
 sentinel-cli diagnose
 
 # User management
-sentinel-cli --api-key <key> users list
-sentinel-cli --api-key <key> users create --username jsmith --display-name "John Smith" --role analyst --password <pw>
-sentinel-cli --api-key <key> users disable jsmith
+sentinel-cli --server http://localhost:8081 --api-key <key> users list
+sentinel-cli --server http://localhost:8081 --api-key <key> users create --username jsmith --display-name "John Smith" --role analyst --password <pw>
+sentinel-cli --server http://localhost:8081 --api-key <key> users disable --username jsmith
 
 # API key management
-sentinel-cli --api-key <key> keys list
-sentinel-cli --api-key <key> keys create --name "ingest-prod" --scopes "ingest"
+sentinel-cli --server http://localhost:8081 --api-key <key> keys list
+sentinel-cli --server http://localhost:8081 --api-key <key> keys create --name "ingest-prod" --scopes "ingest"
 
 # Rules operations
-sentinel-cli rules validate                              # Local validation only
-sentinel-cli --ingest-key <key> rules update              # Validate + hot-reload
-sentinel-cli --ingest-key <key> rules update --init       # Clone SigmaHQ + validate + reload
+sentinel-cli rules validate                                                        # Local validation only
+sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> rules update   # Validate + hot-reload
+sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> rules update --init  # Clone SigmaHQ + validate + reload
 
 # Ingest testing
-sentinel-cli --ingest-key <key> ingest test               # Send single test event
-sentinel-cli --ingest-key <key> ingest replay data.ndjson  # Replay NDJSON file
+sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> ingest test               # Send single test event
+sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> ingest replay data.ndjson  # Replay NDJSON file
 
 # Ad-hoc queries
-sentinel-cli --api-key <key> query "source_type:sentinel_edr AND event.action:process_create"
-sentinel-cli --api-key <key> alerts --level critical
+sentinel-cli --server http://localhost:8081 --api-key <key> query "source_type:sentinel_edr AND event.action:process_create"
+sentinel-cli --server http://localhost:8081 --api-key <key> alerts --level critical
 ```
 
 Global flags: `--server` (query API, default `localhost:8081`), `--ingest-server` (ingest API, default `localhost:8080`), `--api-key`, `--ingest-key`, `--json` (raw JSON output). All support environment variables (`SENTINEL_URL`, `SENTINEL_API_KEY`, `SENTINEL_INGEST_URL`, `SENTINEL_INGEST_KEY`).
+
+### Configuration
+
+On first run, `make install` or `make demo` generates `sentinel.toml` from `sentinel.toml.template` with random secrets. To customize, edit `sentinel.toml` directly or set environment variables before running.
 
 ### Syslog TLS Setup
 
@@ -314,8 +367,8 @@ Each scenario produces events across multiple source types (EDR, AV, DLP, NDR, W
 | P7 | React Dashboard + Auth + Source Configuration | 15 | P6 | Complete |
 | P8 | CLI Management Tool | 4 | P0–P7 | Complete |
 | P9 | Case Management (escalation, observables, timeline) | 7 | P4, P7 | Complete |
-| P10 | Integration Tests (60 rules, 850 events, cross-source correlation) | 8 | All | In Progress |
-| P11 | Hardening (metrics, load test, DLQ, graceful shutdown, deployment) | 5 | All | Pending |
+| P10 | Integration Tests (60 rules, 850 events, cross-source correlation) | 8 | All | Complete |
+| P11 | Hardening (metrics, load test, DLQ, graceful shutdown, deployment) | 5 | All | Complete |
 | P12 | AI Investigation Assistant | 10 | P6, P7, P9 | Pending |
 
 See `REQUIREMENTS.md` for the full specification and task breakdown.
