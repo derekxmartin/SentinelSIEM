@@ -58,6 +58,11 @@ else
     INGEST_KEY=$(grep -oP 'api_keys\s*=\s*\["\K[^"]+' sentinel.toml 2>/dev/null || echo "see sentinel.toml")
 fi
 
+# ─── Step 1b: Create log directory ─────────────────────────────────────────────
+LOG_DIR=$(grep -oP 'log_dir\s*=\s*"\K[^"]+' sentinel.toml 2>/dev/null || echo "logs")
+mkdir -p "$LOG_DIR"
+ok "Log directory ready: ${LOG_DIR}/"
+
 # ─── Step 2: Build all binaries ───────────────────────────────────────────────
 info "Building Go binaries..."
 mkdir -p "$BINDIR"

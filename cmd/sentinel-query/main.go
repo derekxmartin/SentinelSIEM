@@ -33,6 +33,12 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
+	logCleanup, err := common.SetupLogging(cfg.Logging, "sentinel-query")
+	if err != nil {
+		log.Fatalf("Failed to setup file logging: %v", err)
+	}
+	defer logCleanup()
+
 	// Initialize Elasticsearch store.
 	esStore, err := store.New(cfg.Elasticsearch)
 	if err != nil {
