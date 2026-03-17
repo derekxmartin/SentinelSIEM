@@ -35,7 +35,7 @@ dev: build
 
 # demo: Full demo setup — install + create demo analyst accounts + replay all
 # fixture datasets + trigger correlation rules + populate dashboard.
-demo:
+demo: build
 	bash scripts/demo.sh
 
 # dashboard: Build the React dashboard for production.

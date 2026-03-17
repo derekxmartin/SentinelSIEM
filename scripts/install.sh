@@ -8,11 +8,11 @@
 
 set -euo pipefail
 
-if [[ -n "${BASH_SOURCE[0]:-}" && "${BASH_SOURCE[0]}" == */* ]]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-else
-    PROJECT_DIR="$(pwd)"
+PROJECT_DIR="$(pwd)"
+if [[ ! -f "$PROJECT_DIR/go.mod" ]]; then
+    if [[ -f "$PROJECT_DIR/../go.mod" ]]; then
+        PROJECT_DIR="$(cd "$PROJECT_DIR/.." && pwd)"
+    fi
 fi
 cd "$PROJECT_DIR"
 SCRIPT_DIR="$PROJECT_DIR/scripts"
