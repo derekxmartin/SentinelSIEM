@@ -3,10 +3,10 @@ package store
 import "fmt"
 
 // ECSIndexTemplate returns the index template body for ECS-compliant mappings.
-// Applied to all sentinel-* indices via index_patterns.
+// Applied to event, alert, and DLQ indices via index_patterns.
 func ECSIndexTemplate(prefix string) map[string]any {
 	return map[string]any{
-		"index_patterns": []string{prefix + "-*"},
+		"index_patterns": []string{prefix + "-events-*", prefix + "-alerts-*", prefix + "-dlq-*"},
 		"priority":       100,
 		"template": map[string]any{
 			"settings": map[string]any{
