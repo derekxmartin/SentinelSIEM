@@ -19,6 +19,14 @@ export default defineConfig({
       name: 'chromium',
       use: { browserName: 'chromium' },
     },
+     {
+      name: 'screenshots',
+      use: {
+        browserName: 'chromium',
+        viewport: { width: 1440, height: 900 },
+      },
+      testDir: './tests/screenshots',
+    }
   ],
   // Dev server is expected to already be running.
   // Use `npm run dev` before running tests.

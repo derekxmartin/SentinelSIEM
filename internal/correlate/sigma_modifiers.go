@@ -38,7 +38,7 @@ func buildModifierChain(modifiers []string, values []interface{}) (fieldMatchFun
 			matchType = "startswith"
 		case "endswith":
 			matchType = "endswith"
-		case "re":
+		case "re", "regex":
 			matchType = "re"
 		case "cidr":
 			matchType = "cidr"
