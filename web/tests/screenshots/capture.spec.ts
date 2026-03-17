@@ -99,6 +99,38 @@ test.describe('Documentation Screenshots', () => {
     })
   })
 
+  test('global search', async ({ page }) => {
+    await navigateTo(page, '/', 'Overview')
+    await page.waitForTimeout(2000)
+
+    // Click search bar and type an IP.
+    const searchInput = page.locator('input[placeholder*="Search"]')
+    await searchInput.click()
+    await searchInput.fill('10.1.2.45')
+    await page.waitForTimeout(1500) // Let debounce + results render
+
+    await page.screenshot({
+      path: path.join(SCREENSHOT_DIR, '10-global-search.png'),
+      fullPage: false,
+    })
+  })
+
+  test('command palette', async ({ page }) => {
+    await navigateTo(page, '/', 'Overview')
+    await page.waitForTimeout(2000)
+
+    // Open command palette.
+    const searchInput = page.locator('input[placeholder*="Search"]')
+    await searchInput.click()
+    await searchInput.fill('/')
+    await page.waitForTimeout(500)
+
+    await page.screenshot({
+      path: path.join(SCREENSHOT_DIR, '11-command-palette.png'),
+      fullPage: false,
+    })
+  })
+
   test('overview dark theme', async ({ page }) => {
     await navigateTo(page, '/', 'Overview')
     await page.waitForTimeout(2000)

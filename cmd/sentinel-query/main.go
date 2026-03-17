@@ -16,10 +16,12 @@ import (
 	"github.com/SentinelSIEM/sentinel-siem/internal/cases"
 	"github.com/SentinelSIEM/sentinel-siem/internal/common"
 	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
 	"github.com/SentinelSIEM/sentinel-siem/internal/lifecycle"
 	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
 	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
 	"github.com/SentinelSIEM/sentinel-siem/internal/query"
+	"github.com/SentinelSIEM/sentinel-siem/internal/search"
 	"github.com/SentinelSIEM/sentinel-siem/internal/sources"
 	"github.com/SentinelSIEM/sentinel-siem/internal/store"
 )
@@ -115,6 +117,17 @@ func main() {
 	escalationSvc := cases.NewEscalationService(caseSvc, esStore, alertIndex)
 	caseHandler := cases.NewCaseAPIHandler(caseSvc, escalationSvc)
 
+	// Load Sigma rules from disk for global search.
+	sigmaRules, ruleErrors := correlate.LoadRulesFromDir(cfg.Correlate.RulesDir)
+	if len(ruleErrors) > 0 {
+		log.Printf("Warning: %d rule parse errors during search init", len(ruleErrors))
+	}
+	log.Printf("Global search: loaded %d Sigma rules", len(sigmaRules))
+
+	// Create global search handler.
+	searchAdapter := &searchStoreAdapter{store: esStore}
+	searchHandler := search.NewHandler(searchAdapter, sigmaRules, cfg.Elasticsearch.IndexPrefix)
+
 	// Create admin handler for user and API key management.
 	adminHandler := auth.NewAdminHandler(authService, keyStore)
 
@@ -153,6 +166,9 @@ func main() {
 
 		// Query.
 		r.Post("/api/v1/query", apiHandler.HandleQuery)
+
+		// Global search.
+		r.Post("/api/v1/search", searchHandler.HandleSearch)
 
 		// Auth management.
 		r.Post("/api/v1/auth/logout", authHandler.HandleLogout)
@@ -223,6 +239,24 @@ func (a *storeAdapter) SearchRaw(ctx context.Context, index string, body map[str
 		return nil, err
 	}
 	return &query.SearchRawResult{
+		Total:  result.Total,
+		Hits:   result.Hits,
+		Aggs:   result.Aggs,
+		TookMs: result.TookMs,
+	}, nil
+}
+
+// searchStoreAdapter adapts store.Store to the search.Searcher interface.
+type searchStoreAdapter struct {
+	store *store.Store
+}
+
+func (a *searchStoreAdapter) SearchRaw(ctx context.Context, index string, body map[string]any) (*search.SearchRawResult, error) {
+	result, err := a.store.SearchRaw(ctx, index, body)
+	if err != nil {
+		return nil, err
+	}
+	return &search.SearchRawResult{
 		Total:  result.Total,
 		Hits:   result.Hits,
 		Aggs:   result.Aggs,
