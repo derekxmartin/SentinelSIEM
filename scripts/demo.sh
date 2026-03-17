@@ -48,12 +48,16 @@ QUERY_URL="http://localhost:${QUERY_PORT}"
 
 # ─── Step 1: Verify services are running ──────────────────────────────────────
 info "Checking services..."
-if ! curl -s "http://localhost:${INGEST_PORT}/healthz" | grep -q "ok" 2>/dev/null; then
+STARTED_SERVICES=false
+if ! curl -s "http://localhost:${INGEST_PORT}/healthz" 2>/dev/null | grep -q "ok"; then
     info "Ingest not running, starting services..."
     "$BINDIR/sentinel-ingest${EXT}" --config sentinel.toml &
     INGEST_PID=$!
+    disown "$INGEST_PID"
     "$BINDIR/sentinel-query${EXT}" --config sentinel.toml &
     QUERY_PID=$!
+    disown "$QUERY_PID"
+    STARTED_SERVICES=true
     sleep 3
     ok "Services started (ingest=$INGEST_PID query=$QUERY_PID)"
 else

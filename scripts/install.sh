@@ -112,8 +112,10 @@ ok "Index templates applied"
 info "Starting SentinelSIEM services..."
 "$BINDIR/sentinel-ingest${EXT}" --config sentinel.toml &
 INGEST_PID=$!
+disown "$INGEST_PID"
 "$BINDIR/sentinel-query${EXT}" --config sentinel.toml &
 QUERY_PID=$!
+disown "$QUERY_PID"
 sleep 2
 
 # Verify services are running.
