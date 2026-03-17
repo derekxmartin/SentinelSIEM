@@ -62,6 +62,12 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 
 ![Case management dashboard](web/docs/screenshots/07-cases.png)
 
+### Global Search
+
+Universal entity search with auto-detection: type an IP, hash, domain, username, or free text and the search bar identifies the entity type, queries across all indices (events, alerts, cases, host scores, Sigma rules) in parallel, and returns grouped results. Command palette mode (`/` or `Ctrl+Shift+P`) provides quick navigation and actions. Recent searches persist per user.
+
+![Global search with entity detection](web/docs/screenshots/10-global-search.png)
+
 ## Architecture
 
 ```
@@ -83,7 +89,7 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 | `sentinel-normalize` | ECS normalization engine with per-source-type parsers and YAML sub-parsers |
 | `sentinel-store` | Elasticsearch client — index templates, ILM, bulk indexing, dead letter queue |
 | `sentinel-correlate` | Real-time Sigma rule engine with correlation state management |
-| `sentinel-query` | REST API server, query language → ES DSL translation, serves dashboard |
+| `sentinel-query` | REST API server, query language → ES DSL translation, global search, serves dashboard |
 | `sentinel-cli` | Management CLI — user/key admin, rules validate/update/reload, ingest test/replay, diagnostics, ad-hoc queries |
 | `sentinel-dashboard` | React SPA — alert triage, cases, threat hunting, rule management, source health |
 | `sentinel-auth` | User auth service — JWT, TOTP MFA, RBAC, login rate limiting, first-run setup |
@@ -104,6 +110,7 @@ Built-in incident response workflow: alert escalation, observable extraction (IP
 │   ├── normalize/parsers/     # Per-source-type ECS parsers
 │   ├── correlate/             # Sigma rule engine + logsource mapping
 │   ├── query/                 # Query parser, ES translator, REST API
+│   ├── search/                # Global search — multi-index fan-out, entity-aware queries
 │   ├── cases/                 # Case management service
 │   ├── sources/               # Source configuration + snippets
 │   ├── alert/                 # Alert pipeline + retry queue
