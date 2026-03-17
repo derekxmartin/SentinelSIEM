@@ -1,9 +1,11 @@
-# Sentinel SIEM — Requirements Document v2.3
+# Sentinel SIEM — Requirements Document v2.4
 ## A Proof-of-Concept Security Information & Event Management Platform
-**Version 2.3 — Claude Code Implementation Phases | March 2026**
+**Version 2.4 — Claude Code Implementation Phases | March 2026**
 
-Built on Go + Elasticsearch with native Sigma rule support and ECS normalization. Designed to ingest telemetry from sentinel_edr, SentinelAV, SentinelDLP, and SentinelNDR. React-based dashboard with built-in case management and AI-powered investigation assistant.
+Built on Go + Elasticsearch with native Sigma rule support and ECS normalization. Designed to ingest telemetry from SentinelEDR, SentinelAV, SentinelDLP, and SentinelNDR. React-based dashboard with built-in case management, user authentication with MFA, and AI-powered investigation assistant.
 
+> **v2.4 Changelog (from v2.3):** Added dashboard authentication: local user accounts in ES, bcrypt password hashing, JWT sessions (access + refresh tokens), TOTP MFA with Google Authenticator/Authy compatibility, login/logout pages, auth guard on all routes, user profile in Settings, CLI user management. Case management now attributes all actions to authenticated users. Added Playwright headless browser E2E test suite for all dashboard workflows. 5 new tasks in Phase 7 (P7-T11 through P7-T15). Total: +5 tasks (86 → 91).
+>
 > **v2.3 Changelog (from v2.2):** Added test data generation infrastructure: static fixture files for all 6 source types (P0-T6), Python scenario generator CLI with 8 attack narratives and noise profiles (P1-T5), full 50K+ event demo dataset with `make demo` validation (P10-T0), deployment automation with `make install`/`make dev`/`make demo`/`make clean` targets (P11-T5). Total: +4 tasks (82 → 86).
 >
 > **v2.2 Changelog (from v2.1):** Added SentinelNDR as ingestion source (Section 4.7), added `ndr.*`/`dns.*`/`tls.*`/`smb.*`/`kerberos.*`/`ssh.*` ECS extension fields (Section 3.3), added 5 NDR cross-portfolio Sigma correlation rules (Section 5.3), added Phase 1b for NDR parser implementation (5 tasks), updated Phase 10 integration tests for 6 source types (2 new tasks), updated AI assistant tools and capabilities for NDR context, updated source onboarding for NDR, updated dashboard for NDR host score surfacing.
@@ -14,9 +16,9 @@ Built on Go + Elasticsearch with native Sigma rule support and ECS normalization
 
 ## 1. Executive Summary
 
-Sentinel SIEM is a proof-of-concept Security Information and Event Management platform built in Go, backed by Elasticsearch for storage and search. Its purpose is to provide a centralized detection and investigation platform that ingests telemetry from the entire Sentinel portfolio — sentinel_edr, SentinelAV, SentinelDLP, and SentinelNDR — as well as Windows Event Logs and syslog sources, normalizes events into the Elastic Common Schema (ECS), evaluates Sigma detection rules in real time, and exposes a query interface for threat hunting.
+Sentinel SIEM is a proof-of-concept Security Information and Event Management platform built in Go, backed by Elasticsearch for storage and search. Its purpose is to provide a centralized detection and investigation platform that ingests telemetry from the entire Sentinel portfolio — SentinelEDR, SentinelAV, SentinelDLP, and SentinelNDR — as well as Windows Event Logs and syslog sources, normalizes events into the Elastic Common Schema (ECS), evaluates Sigma detection rules in real time, and exposes a query interface for threat hunting.
 
-The project is the central brain of the Sentinel portfolio. Where sentinel_edr generates endpoint behavior telemetry, SentinelAV generates malware scan and quarantine events, SentinelDLP generates data classification and policy violation events, and SentinelNDR generates network traffic metadata, behavioral detections, and host threat scores, SentinelSIEM is the cross-host, cross-source, cross-product correlator that unifies all of them into a single detection and investigation platform. Together they cover the full security stack: endpoint behavior (EDR) + malware detection (AV) + data protection (DLP) + network visibility (NDR) + log aggregation (SIEM) → correlation → alerting → investigation.
+The project is the central brain of the Sentinel portfolio. Where SentinelEDR generates endpoint behavior telemetry, SentinelAV generates malware scan and quarantine events, SentinelDLP generates data classification and policy violation events, and SentinelNDR generates network traffic metadata, behavioral detections, and host threat scores, SentinelSIEM is the cross-host, cross-source, cross-product correlator that unifies all of them into a single detection and investigation platform. Together they cover the full security stack: endpoint behavior (EDR) + malware detection (AV) + data protection (DLP) + network visibility (NDR) + log aggregation (SIEM) → correlation → alerting → investigation.
 
 Sentinel SIEM natively consumes Sigma rules — the open-standard YAML-based detection format used by thousands of detection engineers worldwide. This means the platform ships with access to 3000+ community-written detections from the SigmaHQ repository and is interoperable with real-world detection engineering workflows.
 
@@ -26,11 +28,12 @@ The platform includes a built-in case management module for alert escalation and
 
 ### 2.1 Goals
 
-- Build a working SIEM that ingests events from the full Sentinel portfolio (sentinel_edr, SentinelAV, SentinelDLP, SentinelNDR) plus Windows Event Logs and syslog, normalizes them to ECS, stores them in Elasticsearch, and evaluates Sigma rules in real time.
+- Build a working SIEM that ingests events from the full Sentinel portfolio (SentinelEDR, SentinelAV, SentinelDLP, SentinelNDR) plus Windows Event Logs and syslog, normalizes them to ECS, stores them in Elasticsearch, and evaluates Sigma rules in real time.
 - Support native Sigma rule loading, parsing, and evaluation — including single-event rules and Sigma correlation rules (multi-event sequences, thresholds, temporal proximity).
 - Provide a query interface for ad-hoc threat hunting over stored events using a simplified query language that translates to Elasticsearch DSL.
 - Provide built-in case management for alert escalation, observable tracking, analyst collaboration, and incident resolution.
 - Generate a React-based web dashboard for alert triage, event exploration, case management, source onboarding, and system health monitoring.
+- Provide user authentication with JWT sessions, TOTP-based MFA, and analyst identity attribution across case management, alert triage, and AI assistant actions.
 - Provide an AI-powered investigation assistant that leverages the SIEM's REST API to assist analysts with natural language queries, alert triage, multi-step investigations, detection rule drafting, and cross-portfolio attack narrative generation.
 - Surface SentinelNDR host threat scores alongside alerts and cases to provide network-layer risk context for investigation prioritization.
 - Maintain a clean Go codebase with minimal external dependencies, buildable with standard Go tooling.
@@ -40,7 +43,7 @@ The platform includes a built-in case management module for alert escalation and
 - Replacing Splunk, Elastic Security, or any production SIEM. This is a learning and portfolio tool.
 - Machine learning or behavioral analytics. v1 is rule-based only.
 - Multi-tenant or multi-cluster Elasticsearch deployments.
-- Agent deployment on endpoints (sentinel_edr is the agent, SentinelNDR is the network sensor — Sentinel SIEM is the server).
+- Agent deployment on endpoints (SentinelEDR is the agent, SentinelNDR is the network sensor — Sentinel SIEM is the server).
 - SOAR (Security Orchestration, Automation, and Response) beyond basic case management.
 
 ## 3. System Architecture
@@ -60,7 +63,7 @@ The platform includes a built-in case management module for alert escalation and
 ### 3.2 Data Flow
 
 ```
-[sentinel_edr] ──JSON/HTTP──→
+[SentinelEDR] ──JSON/HTTP──→
 [SentinelAV]  ──JSON/HTTP──→
 [SentinelDLP] ──JSON/HTTP──→
 [SentinelNDR] ──JSON/HTTP──→  [sentinel-ingest] → [sentinel-normalize] → [sentinel-store (ES)]
@@ -95,7 +98,7 @@ All events are normalized to ECS before storage. ECS provides a common field sch
 - `ssh.*`: ssh.client, ssh.server, ssh.hassh, ssh.hassh_server (populated by NDR SSH metadata)
 - `ndr.*`: ndr.detection.name, ndr.detection.severity, ndr.host_score.threat, ndr.host_score.certainty, ndr.host_score.quadrant, ndr.beacon.interval_mean, ndr.beacon.interval_stddev, ndr.session.conn_state, ndr.session.community_id (custom extension for NDR events)
 
-Each source type gets a dedicated parser that maps its native fields to ECS. For example, sentinel_edr's `SENTINEL_EVENT` with source `drv:process_create` maps to ECS `event.category: process`, `event.type: start`, `process.pid`, `process.executable`, etc.
+Each source type gets a dedicated parser that maps its native fields to ECS. For example, SentinelEDR's `SENTINEL_EVENT` with source `drv:process_create` maps to ECS `event.category: process`, `event.type: start`, `process.pid`, `process.executable`, etc.
 
 Sentinel AV scan events map to `event.category: malware` with `file.*`, `av.*`, and `threat.*` fields. Sentinel DLP violation events map to `event.category: file` with `file.*`, `user.*`, `dlp.*`, and `event.action: violation`.
 
@@ -110,7 +113,7 @@ The correlation engine natively loads and evaluates Sigma rules. Sigma rules are
 - **Logsource mapping:** Sigma's logsource (category/product/service) maps to ECS field filters so rules target the correct event subset.
 - **Modifier support:** `contains`, `startswith`, `endswith`, `re` (regex), `base64`, `cidr`, `all`, etc.
 
-Rules are loaded from a configurable directory (Git-managed, same pattern as sentinel_edr) with hot-reload support.
+Rules are loaded from a configurable directory (Git-managed, same pattern as SentinelEDR) with hot-reload support.
 
 The logsource mapping table includes `product: sentinel_ndr` which routes to NDR events. NDR protocol-specific events support **dual logsource matching**: `ndr:dns` events match both `product: sentinel_ndr` AND `category: dns`, meaning community SigmaHQ network detection rules (e.g., DNS rules targeting `dns.question.name`) automatically evaluate against NDR DNS metadata without modification. Same pattern applies for `ndr:http` → `category: web`, `ndr:tls` → `category: tls`, `ndr:smb` → `category: smb`, `ndr:kerberos` → `category: kerberos`.
 
@@ -118,7 +121,7 @@ The logsource mapping table includes `product: sentinel_ndr` which routes to NDR
 
 When a Sigma rule fires, the alert is indexed in Elasticsearch for dashboard display. Analysts can escalate alerts to cases via the built-in case management module. The escalation pipeline automatically extracts observables (IPs, hashes, usernames, domains, process names, JA3/JA4 fingerprints, Community IDs, SNI values) from linked events, inherits severity from the highest-severity alert, and auto-tags with MITRE ATT&CK techniques from the triggering Sigma rules. For cross-portfolio alerts involving NDR events, observables include network-layer evidence and the NDR host threat score is attached to the case for risk context.
 
-Cases follow a defined workflow: New → In Progress → Resolved → Closed. Analysts can merge multiple related alerts into a single case, add comments, manually add observables for analyst-discovered IOCs, and close cases with a required resolution type (true_positive, false_positive, benign, duplicate). All analyst actions are logged to a case timeline for audit and collaboration.
+Cases follow a defined workflow: New → In Progress → Resolved → Closed. Analysts can merge multiple related alerts into a single case, add comments, manually add observables for analyst-discovered IOCs, and close cases with a required resolution type (true_positive, false_positive, benign, duplicate). All analyst actions are logged to a case timeline with the authenticated user's identity for audit and collaboration.
 
 Closed cases with `resolution_type = true_positive` contribute to detection efficacy metrics (MTTD, MTTR) displayed on the Overview dashboard.
 
@@ -155,19 +158,21 @@ When an analyst clicks "Escalate" on an alert (or selects multiple alerts for bu
 - **Alerts:** `sentinel-alerts-{date}` — alert documents with references to triggering event IDs.
 - **Cases:** `sentinel-cases-{date}` — case documents with linked alert IDs, observables, and timeline entries. 365-day retention matching alert retention.
 - **Sources:** `sentinel-sources` — source configuration documents (not date-rotated, low-volume config store).
+- **Users:** `sentinel-users` — user accounts (username, display_name, password_hash, mfa_secret, mfa_enabled). Not date-rotated.
+- **Sessions:** `sentinel-sessions` — refresh token records with user_id, issued_at, expires_at, revoked flag. TTL-based cleanup.
 - **NDR Host Scores:** `sentinel-ndr-host-scores` — latest-only per host IP, upserted from `ndr:host_score` events. Not date-rotated. Used by dashboard for NDR risk context display.
 - **Index templates:** ECS-compliant field mappings applied automatically to new indices. Includes all `ndr.*`, `dns.*`, `http.*`, `tls.*`, `smb.*`, `kerberos.*`, and `ssh.*` custom extension field mappings.
 - **ILM (Index Lifecycle Management):** Hot → warm → delete policy with configurable retention (default 90 days for events, 30 days for `ndr:session` events due to volume, 365 for alerts and cases).
 
 ## 4. Ingestion Sources
 
-### 4.1 sentinel_edr (JSON/HTTP)
+### 4.1 SentinelEDR (JSON/HTTP)
 
 | Aspect | Requirement |
 |--------|-------------|
 | Protocol | HTTP POST to `/api/v1/ingest` with JSON body. TLS optional for v1. |
 | Authentication | API key in `X-API-Key` header. Keys managed via CLI. |
-| Event format | `SENTINEL_EVENT` JSON as emitted by the sentinel_edr agent's JSON writer. |
+| Event format | `SENTINEL_EVENT` JSON as emitted by the SentinelEDR agent's JSON writer. |
 | ECS mapping | Per-sensor-type mapper: `drv:process_create` → `event.category: process`, `hook:NtProtectVirtualMemory` → `event.category: process, event.type: change`, etc. |
 | Batch support | Accept NDJSON (newline-delimited JSON) for bulk ingestion. |
 
@@ -193,7 +198,7 @@ When an analyst clicks "Escalate" on an alert (or selects multiple alerts for bu
 
 | Aspect | Requirement |
 |--------|-------------|
-| Protocol | HTTP POST to `/api/v1/ingest` with JSON body (same endpoint as sentinel_edr, differentiated by `source_type` field). |
+| Protocol | HTTP POST to `/api/v1/ingest` with JSON body (same endpoint as SentinelEDR, differentiated by `source_type` field). |
 | Authentication | API key in `X-API-Key` header. |
 | Event types | `av:scan_result` (file scanned, verdict clean/malicious/suspicious, matched signature name), `av:quarantine` (file moved to quarantine vault, original path, hash, rule), `av:realtime_block` (on-access scan blocked execution), `av:signature_update` (signature DB updated, version, count), `av:scan_error` (scan failed, reason). |
 | ECS mapping | `av:scan_result` → `event.category: malware`, `event.type: info`, `file.path`, `file.hash.*`, `file.size`, `av.scan.result`, `av.signature.name`, `threat.indicator.type: file`. `av:quarantine` → `event.category: malware`, `event.type: deletion`, `event.action: quarantine`, `file.*`. `av:realtime_block` → `event.category: malware`, `event.type: denied`, `process.*` (blocked process), `file.*`. |
@@ -219,14 +224,14 @@ When an analyst clicks "Escalate" on an alert (or selects multiple alerts for bu
 | ECS mapping | NDR events arrive pre-normalized to ECS by the SentinelNDR export pipeline. The SIEM parser validates ECS field presence, adds `event.ingested` timestamp, tags `source_type: sentinel_ndr`, and ensures custom extension fields (`ndr.*`, `smb.*`, `kerberos.*`, `ssh.*`) are correctly indexed. `ndr:session` → `event.category: network_connection`, `source.*`, `destination.*`, `network.*`, `ndr.session.*`. `ndr:dns` → `event.category: network` + `dns.*`. `ndr:detection` → `event.category: intrusion_detection`, `threat.*`, `ndr.detection.*`. `ndr:host_score` → `event.category: host`, `ndr.host_score.*` (upserted to dedicated index). |
 | Batch support | NDJSON. NDR exports in batches of 500 events or 5s flush. |
 | Sigma compatibility | Logsource `product: sentinel_ndr` maps to all NDR events. NDR protocol events support **dual logsource matching**: `ndr:dns` events match both `product: sentinel_ndr` AND `category: dns`, `ndr:http` matches `category: web`, etc. Community SigmaHQ network rules automatically evaluate against NDR metadata. |
-| Community ID | All `ndr:session` and protocol events include `network.community_id` (Community ID v1.0 spec). Enables cross-tool correlation with sentinel_edr and SentinelFW events sharing the same flow identifier. |
+| Community ID | All `ndr:session` and protocol events include `network.community_id` (Community ID v1.0 spec). Enables cross-tool correlation with SentinelEDR and SentinelFW events sharing the same flow identifier. |
 | Host scores | `ndr:host_score` events are indexed in both the standard time-series event index AND upserted to the dedicated `sentinel-ndr-host-scores` index (latest-only per host IP). The dashboard queries this index to display NDR risk context alongside alerts and cases. |
 
 ### 4.8 Source Onboarding
 
 Source onboarding is supported via both the CLI (`sentinel-cli sources add`) and a guided wizard in the dashboard. The onboarding flow covers:
 
-1. **Source type selection** — Card-based selector for sentinel_edr, SentinelAV, SentinelDLP, SentinelNDR, Windows Event Logs, Syslog (Firewall/Linux Host/Network Device/Custom).
+1. **Source type selection** — Card-based selector for SentinelEDR, SentinelAV, SentinelDLP, SentinelNDR, Windows Event Logs, Syslog (Firewall/Linux Host/Network Device/Custom).
 2. **Type-specific configuration** — Source name, protocol, port, sub-parser selection (for syslog), expected host count. Auto-generates API key on completion.
 3. **Configuration snippet generation** — Copy-paste config blocks tailored to the source type (TOML for Sentinel agents, YAML for Winlogbeat, rsyslog conf for syslog, pfSense instructions for firewalls).
 4. **Live verification** — Polls for first event from the newly configured source with real-time feedback. Shows parsed ECS fields on success or troubleshooting tips on timeout.
@@ -276,7 +281,18 @@ A simplified query syntax that translates to Elasticsearch DSL: field-value matc
 - `GET /api/v1/alerts/{id}` — alert detail with linked events
 - `GET /api/v1/rules` — loaded Sigma rules
 - `POST /api/v1/rules/reload` — trigger hot-reload
-- `GET /api/v1/health` — system health
+- `GET /api/v1/health` — system health (no auth required)
+
+**Authentication endpoints:**
+- `POST /api/v1/auth/login` — authenticate with username + password. Returns access_token or mfa_required flag.
+- `POST /api/v1/auth/mfa` — complete MFA challenge with TOTP code. Returns access_token.
+- `POST /api/v1/auth/refresh` — exchange refresh_token cookie for new access_token.
+- `POST /api/v1/auth/logout` — revoke refresh_token.
+- `GET /api/v1/auth/me` — current user profile (username, display_name, mfa_enabled).
+- `PUT /api/v1/auth/me/password` — change password. Body: current_password, new_password.
+- `POST /api/v1/auth/me/mfa/enroll` — begin MFA enrollment. Returns QR code URI.
+- `POST /api/v1/auth/me/mfa/verify` — confirm MFA enrollment with TOTP code.
+- `DELETE /api/v1/auth/me/mfa` — disable MFA. Requires current password.
 
 **Case management endpoints:**
 - `POST /api/v1/cases` — create a case (from escalation or manual). Body: title, severity, alert_ids[], tags[]. Returns case document with auto-extracted observables.
@@ -303,7 +319,7 @@ A simplified query syntax that translates to Elasticsearch DSL: field-value matc
 
 ### 6.3 Web Dashboard
 
-React SPA with seven pages: Overview (KPI dashboard), Alerts (triage queue), Cases (incident management), Hunt (query + results), Rules (Sigma management + ATT&CK coverage), Sources (health + onboarding), Settings (preferences + integrations). An AI investigation assistant panel is accessible from any page via a persistent header icon. NDR host threat scores are surfaced as risk indicators alongside alerts and cases. See Section 10 for full dashboard design specification and Section 11 for AI assistant specification.
+React SPA with seven pages: Overview (KPI dashboard), Alerts (triage queue), Cases (incident management), Hunt (query + results), Rules (Sigma management + ATT&CK coverage), Sources (health + onboarding), Settings (user profile + password + MFA + integrations). All routes protected by JWT auth guard. An AI investigation assistant panel is accessible from any page via a persistent header icon. NDR host threat scores are surfaced as risk indicators alongside alerts and cases. See Section 10 for full dashboard design specification and Section 11 for AI assistant specification.
 
 ## 7. Build & Development Environment
 
@@ -352,11 +368,11 @@ The dashboard uses a collapsible left sidebar (`bg-slate-800`, `indigo-500` acti
 4. **Hunt** — Query interface with autocomplete, results table, pivot actions
 5. **Rules** — Sigma rule management grouped by MITRE ATT&CK tactic
 6. **Sources** — Data source health monitoring and onboarding wizard
-7. **Settings** — User preferences, integrations, theme configuration
+7. **Settings** — User profile (display name, password change, MFA enrollment), integrations, theme configuration
 
 The sidebar is 264px wide (`w-64`) on desktop with a collapse toggle to icon-only mode (`w-16`). On mobile, it renders as a full-width overlay with `bg-black/50` backdrop. Active pages are highlighted with `bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500`.
 
-The global header bar is sticky (`sticky top-0 z-30`) with `backdrop-blur` and contains: time range picker (left), global search input (center), AI assistant toggle button (right), notification dropdown (right), and user avatar menu (far right).
+The global header bar is sticky (`sticky top-0 z-30`) with `backdrop-blur` and contains: time range picker (left), global search input (center), AI assistant toggle button (right), notification dropdown (right), and authenticated user avatar dropdown with profile link and sign out (far right).
 
 ### 10.2 Overview Dashboard
 
@@ -504,6 +520,7 @@ Note: Yellow text on dark backgrounds requires `text-yellow-300` (#fde047) for 4
 | Server State | `@tanstack/react-query` v5.x | Data fetching, caching, polling, SSE integration |
 | Client State | `zustand` v5.x | Sidebar, filters, time range, theme, assistant conversation (~1KB gzipped) |
 | AI Assistant | Anthropic Messages API | Tool-use with streaming for investigation assistant (React-side, no backend dependency) |
+| E2E Testing | `@playwright/test` | Headless browser testing for all dashboard workflows (auth, triage, hunting, cases, sources, rules) |
 
 ---
 
@@ -581,7 +598,7 @@ Stored as `web/src/agent/system_prompt.md`, loaded at runtime. Covers: Sentinel 
 
 ## 12. How To Use Part II With Claude Code
 
-Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, and complexity (S/M/L/XL).
+Same workflow as SentinelEDR: each task has an ID, files, acceptance criteria, and complexity (S/M/L/XL).
 
 ---
 
@@ -596,19 +613,19 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 | P0-T3 | Core ECS event Go struct. All field groups from 3.3 including `ndr.*`, `dns.*`, `http.*`, `tls.*`, `smb.*`, `kerberos.*`, `ssh.*` extension fields. JSON tags. Original raw field. | `internal/common/ecs_event.go` | Compiles. Round-trip marshal/unmarshal. All field groups covered. | M |
 | P0-T4 | Config loading (TOML): ES, ingest, correlate, query, case management sections. | `internal/config/config.go`, `sentinel.toml` | Loads and validates. Missing fields → clear errors. | M |
 | P0-T5 | ES client wrapper: connect, health, index template (ECS mappings), bulk index, search. | `internal/store/es_client.go`, `index_template.go` | Connects. Template created. Bulk index 100 events, search returns them. | L |
-| P0-T6 | Static test fixture files for all 6 source types (sentinel_edr, SentinelAV, SentinelDLP, SentinelNDR, Windows Events, syslog). Cover every event type from Appendix A including all 15 NDR event types. Include edge cases (missing fields, malformed JSON, unicode paths, oversized payloads, duplicate event_ids). ~600 events total. | `tests/fixtures/**/*.ndjson`, `tests/fixtures/**/*.xml`, `tests/fixtures/**/*.txt`, `tests/fixtures/edge_cases/` | Every event type has ≥3 fixture events. All conform to Appendix A schemas. NDR fixtures include session, dns, http, tls, smb, kerberos, ssh, detection, signature, host_score event types. Edge case files present. Replayable via `sentinel-cli ingest replay`. | M |
+| P0-T6 | Static test fixture files for all 6 source types (SentinelEDR, SentinelAV, SentinelDLP, SentinelNDR, Windows Events, syslog). Cover every event type from Appendix A including all 15 NDR event types. Include edge cases (missing fields, malformed JSON, unicode paths, oversized payloads, duplicate event_ids). ~600 events total. | `tests/fixtures/**/*.ndjson`, `tests/fixtures/**/*.xml`, `tests/fixtures/**/*.txt`, `tests/fixtures/edge_cases/` | Every event type has ≥3 fixture events. All conform to Appendix A schemas. NDR fixtures include session, dns, http, tls, smb, kerberos, ssh, detection, signature, host_score event types. Edge case files present. Replayable via `sentinel-cli ingest replay`. | M |
 
 ---
 
-### Phase 1: HTTP Ingestion & sentinel_edr Parser
+### Phase 1: HTTP Ingestion & SentinelEDR Parser
 
-**Goal:** Accept JSON over HTTP, normalize sentinel_edr telemetry to ECS.
+**Goal:** Accept JSON over HTTP, normalize SentinelEDR telemetry to ECS.
 
 | ID | Task | Files | Acceptance Criteria | Est. |
 |----|------|-------|---------------------|------|
 | P1-T1 | HTTP listener. POST `/api/v1/ingest`. API key auth. NDJSON support. Rate limiting. | `internal/ingest/http_listener.go`, `cmd/sentinel-ingest/main.go` | Valid key → 202. Invalid → 401. 100-event NDJSON accepted. | M |
 | P1-T2 | Normalization engine framework. Source type routing. Parser registry. | `internal/normalize/engine.go`, `parser_registry.go` | Routes to correct parser. Unknown type → raw preserved. | M |
-| P1-T3 | sentinel_edr parser. Map all `SENTINEL_EVENT` types to ECS. | `internal/normalize/parsers/sentinel_edr.go` | Each event type normalizes correctly. Round-trip tests. | L |
+| P1-T3 | SentinelEDR parser. Map all `SENTINEL_EVENT` types to ECS. | `internal/normalize/parsers/SentinelEDR.go` | Each event type normalizes correctly. Round-trip tests. | L |
 | P1-T4 | End-to-end pipeline: ingest → normalize → ES. Verify searchable. | `internal/ingest/pipeline.go` | POST 100 events → all in ES within 5s with correct ECS fields. | M |
 | P1-T5 | Scenario generator CLI (Python). YAML scenario parser with timeline definitions, entity directory (hosts, users, network topology), noise profile mixer (workstation, server, DC, firewall, NDR sensor), NDJSON output. Ship 3 initial scenarios: credential_theft, lateral_movement, malware_delivery. Each scenario produces events across multiple source types with realistic timing and causal relationships, mixed with background noise at ~95/5 ratio. | `tools/generate_scenarios.py`, `tools/scenarios/*.yaml`, `tools/profiles/*.yaml`, `tools/entities/*.yaml` | `python generate_scenarios.py --scenario credential_theft --output out.ndjson` produces valid NDJSON. Events conform to Appendix A schemas for all source types used. Timestamps are realistic with proper causal ordering. Entity relationships consistent across sources (same hostnames, IPs, usernames). Background noise mixed in. | L |
 
@@ -710,7 +727,7 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 
 ### Phase 7: Web Dashboard
 
-**Goal:** React dashboard for alert triage, case management, hunting, source management, and rule visualization.
+**Goal:** React dashboard for alert triage, case management, hunting, source management, rule visualization, and user authentication with MFA.
 
 | ID | Task | Files | Acceptance Criteria | Est. |
 |----|------|-------|---------------------|------|
@@ -724,6 +741,11 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 | P7-T8 | Sub-parser test interface. Textarea for sample log line, sub-parser dropdown, "Test" button, results panel showing parsed ECS fields or error. Accessible from onboarding wizard Step 2 (syslog types) and as standalone tool in Sources page. | `web/src/components/ParserTester.jsx` | Paste iptables log + select iptables parser → correct ECS fields displayed. Paste auditd log + select iptables parser → parse error or incorrect fields shown. Dropdown populated from available parsers on disk. | M |
 | P7-T9 | Source health page. 3 KPI cards (Total EPS, Active Sources, Error Rate). Ingestion rate area chart with anomaly band. Source health TanStack Table with status dots, EPS sparklines, expandable detail rows. Integrated "Add Source" button linking to wizard. | `web/src/pages/Sources.jsx`, `web/src/components/SourceHealthTable.jsx`, `web/src/components/IngestionChart.jsx` | Correct metrics. Sparklines render. Expandable rows show error log and latency histogram. Error sources highlighted. Add Source opens wizard. | M |
 | P7-T10 | Rules page. Detection Rules list (TanStack Table grouped by MITRE tactic with collapsible sections, enabled toggle, hit count, last triggered). ATT&CK Coverage heatmap (Nivo `<ResponsiveHeatMap>`, 14 tactic columns, three-tier coverage states, interactive cells, compact/expanded toggle, coverage percentages, Navigator JSON export). Tab toggle between list and heatmap views. | `web/src/pages/Rules.jsx`, `web/src/components/RulesList.jsx`, `web/src/components/AttackHeatmap.jsx` | Rules display grouped by tactic. Toggle enables/disables rule. Heatmap renders with correct coverage states. Click cell → popover with rule details. Export generates valid Navigator JSON. | XL |
+| P7-T11 | User data model and auth service. ES indices for users (`sentinel-users`) and sessions (`sentinel-sessions`). Go structs for user and session. bcrypt password hashing (cost 12). JWT access token generation/validation (15min expiry). Refresh token storage in ES with revocation. Auth middleware that accepts JWT Bearer token or API key — dual auth so existing ingestion/CLI integrations are unaffected. | `internal/auth/types.go`, `internal/auth/service.go`, `internal/auth/jwt.go`, `internal/auth/middleware.go`, `internal/store/user_index.go` | Create user → password hashed. Login with correct password → JWT issued. Login with wrong password → 401. Access token expires after 15min. Refresh token issues new access token. Logout revokes refresh token. All dashboard API endpoints return 401 without valid auth. Ingestion endpoints still accept API key. | L |
+| P7-T12 | TOTP MFA implementation. Secret generation, QR code URI encoding (`otpauth://` format), TOTP validation (RFC 6238, 30s window with ±1 window tolerance). MFA secret encrypted at rest with server-side key from sentinel.toml. Enrollment: generate → verify → enable. Disable: require current password. CLI `sentinel-cli users reset-mfa` command for admin recovery. | `internal/auth/mfa.go`, `internal/auth/totp.go`, `cmd/sentinel-cli/commands/users.go` (extend) | Enroll MFA → QR code URI valid in Google Authenticator. Enter correct TOTP → authenticated. Enter wrong TOTP → rejected. ±1 window tolerance works. `sentinel-cli users reset-mfa jsmith` → MFA disabled. Secret encrypted in ES document. | M |
+| P7-T13 | Auth REST API. All 9 auth endpoints: login (password → optional MFA → tokens), refresh, logout, profile read/update, password change, MFA enroll/verify/disable. Rate limiting on login endpoint (5 attempts per 30s per IP). | `internal/auth/api_handlers.go` | Full login flow works (with and without MFA). Refresh issues new access token. Logout invalidates refresh. Password change works. MFA enrollment full cycle works. 6th failed login in 30s → 429 response. | M |
+| P7-T14 | Login page + MFA page + auth guard + Settings profile section. Login page with username/password form, error states, SentinelSIEM branding (dark mode palette). MFA page with 6-digit input and auto-submit on 6th digit. React Router auth guard with silent refresh on mount — unauthenticated requests redirect to `/login`. Settings profile section: display name, password change form, MFA toggle with QR code enrollment modal. Header user avatar dropdown with profile link and sign out. Zustand auth store for token and user state. First-run detection: if no users exist, redirect to one-time admin setup page. | `web/src/pages/Login.jsx`, `web/src/pages/MFAVerify.jsx`, `web/src/pages/FirstRunSetup.jsx`, `web/src/components/AuthGuard.jsx`, `web/src/components/UserMenu.jsx`, `web/src/components/MFAEnrollModal.jsx`, `web/src/pages/Settings.jsx` (extend), `web/src/stores/authStore.js` | Login → dashboard. Wrong password → error. MFA enabled → MFA page after password. Correct TOTP → dashboard. Token expiry → silent refresh. Refresh expired → login redirect. Sign out → login page. Password change works. MFA enroll shows QR, verification completes enrollment. First run → admin setup page. | XL |
+| P7-T15 | Playwright headless browser E2E test suite. Test all critical dashboard workflows against a running SIEM instance (Docker Compose + seeded test data). Test suites: **Auth flows** (login, wrong password error, MFA challenge, token refresh, logout, first-run setup). **Alert triage** (page loads, sort, filter, flyout opens with 3 tabs, acknowledge, bulk select, escalate to case). **Hunt page** (query bar accepts input, autocomplete dropdown appears, execute query returns results, time picker changes range, expandable row shows Table/JSON/Raw tabs, right-click context menu renders). **Cases** (case queue loads, flyout opens with 4 tabs, add comment appears in timeline, status change reflected, close requires resolution). **Sources** (health page loads with status indicators, onboarding wizard opens, step navigation works, snippet displays with copy button). **Rules** (rules list loads grouped by tactic, toggle enable/disable, ATT&CK heatmap renders, cell click opens popover). **Overview** (KPI cards render with values, charts render, NDR Host Risk Panel displays). **Dark mode** (toggle switches theme, persists across navigation). All tests run headless in CI via `npx playwright test`. | `web/tests/e2e/auth.spec.ts`, `web/tests/e2e/alerts.spec.ts`, `web/tests/e2e/hunt.spec.ts`, `web/tests/e2e/cases.spec.ts`, `web/tests/e2e/sources.spec.ts`, `web/tests/e2e/rules.spec.ts`, `web/tests/e2e/overview.spec.ts`, `web/tests/e2e/theme.spec.ts`, `web/playwright.config.ts`, `web/tests/e2e/fixtures/seed.ts` | All 8 test suites pass headless in CI. Auth flow: login → dashboard → logout round-trip completes. Alert triage: full flyout interaction works. Hunt: query execution returns results, context menu renders. Cases: comment → timeline → close workflow completes. Sources: wizard step navigation works end-to-end. Rules: heatmap renders without JS errors. Tests run against Docker Compose with seeded test data via `make test-e2e`. Total: ≥40 E2E test cases across 8 suites. | L |
 
 ---
 
@@ -733,10 +755,10 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 
 | ID | Task | Files | Acceptance Criteria | Est. |
 |----|------|-------|---------------------|------|
-| P8-T1 | CLI: health, query, alerts, rules, keys, sources. `--json` flag. | `cmd/sentinel-cli/main.go`, `commands/*.go` | All subcommands work. JSON output. | M |
+| P8-T1 | CLI: health, query, alerts, rules, keys, sources, users. `--json` flag. Users subcommands: `users create`, `users list`, `users disable`, `users reset-mfa`. | `cmd/sentinel-cli/main.go`, `commands/*.go` | All subcommands work. JSON output. `users create --username jsmith --display-name "John Smith"` → user created. `users list` → table of users. `users reset-mfa jsmith` → MFA disabled. | M |
 | P8-T2 | `rules update`: git pull + validate + hot-reload + rollback. `--init`. | `commands/rules_update.go` | New rule active. Bad rule rolls back. | M |
 | P8-T3 | `ingest test` + `ingest replay <file>`. | `commands/ingest_test.go` | Test event in ES. Replay indexes all events. | S |
-| P8-T4 | CLI source management. `sentinel-cli sources add`, `sources list`, `sources remove`, `sources test-parser`. The `add` subcommand mirrors the wizard flow in non-interactive mode (flags for all fields) and prints the configuration snippet to stdout. | `cmd/sentinel-cli/commands/sources.go` | `sources add --type sentinel_edr --name "Lab EDR"` → source created, snippet printed. `sources list` → table of sources with health. `sources test-parser --parser iptables --log "<log line>"` → ECS output. `--json` flag works on all subcommands. | M |
+| P8-T4 | CLI source management. `sentinel-cli sources add`, `sources list`, `sources remove`, `sources test-parser`. The `add` subcommand mirrors the wizard flow in non-interactive mode (flags for all fields) and prints the configuration snippet to stdout. | `cmd/sentinel-cli/commands/sources.go` | `sources add --type SentinelEDR --name "Lab EDR"` → source created, snippet printed. `sources list` → table of sources with health. `sources test-parser --parser iptables --log "<log line>"` → ECS output. `--json` flag works on all subcommands. | M |
 
 ---
 
@@ -764,8 +786,8 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 |----|------|-------|---------------------|------|
 | P10-T0 | Complete scenario library (all 8 scenarios: credential_theft, lateral_movement, data_exfiltration, malware_delivery, full_kill_chain, insider_threat, brute_force, ransomware — each producing events across multiple source types including NDR). Generate full demo dataset (50K+ events, 24h simulated window, 50 hosts, all 6 source types). Validate all scenarios trigger expected Sigma rules including NDR cross-portfolio rules, with zero FPs from noise. Wire into `make demo` target. | `tools/scenarios/*.yaml` (remaining 5), `tests/generated/demo_dataset.ndjson`, `Makefile` (demo target) | All 8 scenarios produce expected alerts. Full demo dataset: 50K+ events, 40–60 alerts, 8–12 cross-source correlations (including NDR), 0 FPs. `make demo` replays dataset and populates dashboard with realistic data across all pages including NDR Host Risk Panel. | L |
 | P10-T1 | Load 50 curated SigmaHQ rules + 5 cross-portfolio rules + 5 NDR cross-portfolio rules. Verify parse + load. | `rules/sigma_curated/`, `rules/sentinel_portfolio/` | 60 rules loaded. CLI lists all with metadata. | M |
-| P10-T2 | Replay 850 events across all 6 source types (sentinel_edr, SentinelAV, SentinelDLP, SentinelNDR, Windows Events, syslog) including 40 events that should trigger loaded rules. | `tests/integration/test_events.json`, `replay_test.go` | All indexed. Exactly 40 alerts. Zero FPs from benign events. | L |
-| P10-T3 | Cross-source temporal correlation: "EDR credential theft alert → NDR lateral movement detection → EDR outbound data transfer, correlated by source.ip within 30 min." | `rules/test_cross_portfolio.yml`, `correlation_test.go` | Temporal rule fires across sentinel_edr + SentinelNDR sources. Events from same host correlated correctly. | L |
+| P10-T2 | Replay 850 events across all 6 source types (SentinelEDR, SentinelAV, SentinelDLP, SentinelNDR, Windows Events, syslog) including 40 events that should trigger loaded rules. | `tests/integration/test_events.json`, `replay_test.go` | All indexed. Exactly 40 alerts. Zero FPs from benign events. | L |
+| P10-T3 | Cross-source temporal correlation: "EDR credential theft alert → NDR lateral movement detection → EDR outbound data transfer, correlated by source.ip within 30 min." | `rules/test_cross_portfolio.yml`, `correlation_test.go` | Temporal rule fires across SentinelEDR + SentinelNDR sources. Events from same host correlated correctly. | L |
 | P10-T4 | Cross-product validation: "NDR detects SMB file transfer to Host X → AV shows file is malicious on Host X → EDR shows process that dropped the file → Windows Event shows the user who launched the process." Four sources, one incident. | `rules/test_ndr_av_edr_winevt.yml`, `tests/integration/cross_product_test.go` | Correlation links NDR, AV, EDR, and Windows Event telemetry into a single alert with observables from all four sources. | L |
 | P10-T5 | Case management end-to-end. Cross-portfolio rule → alert → escalate to case → case created with observables from multiple sources including NDR network metadata (Community IDs, JA3 fingerprints). | `tests/integration/case_management_test.go` | Alert escalated to case. Case contains observables extracted from EDR events (process, IPs), AV events (file hashes, signature names), DLP events (classification, policy), and NDR events (Community ID, JA3/JA4, detection name, host score). Timeline shows escalation event. | M |
 | P10-T6 | NDR dual logsource validation. Verify that SigmaHQ community DNS rule fires on NDR DNS event. Verify community TLS rule fires on NDR TLS event. Verify `product: sentinel_ndr` rule does NOT fire on non-NDR events. | `tests/integration/ndr_logsource_test.go` | Community `category: dns` rule fires on `ndr:dns` event. `product: sentinel_ndr` rule fires only on NDR events. No cross-contamination. | M |
@@ -783,7 +805,7 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 | P11-T2 | Prometheus metrics. Events ingested, indexed, alerts, latency, queue depth. | `internal/common/metrics.go` | Prometheus scrapes. Grafana template. Accurate. | L |
 | P11-T3 | Load test. 1000 eps × 10 min. Measure latency, eval time, memory. | `tests/benchmark/load_test.go` | 1000 eps sustained. p95 <5s. Eval <10ms/event. No leaks. | L |
 | P11-T4 | Dead letter queue. Failed events → DLQ index. Failed alerts → retry queue. | `internal/ingest/dead_letter.go`, `internal/alert/retry_queue.go` | Malformed → DLQ. Alert pipeline timeout → retry → DLQ after 3 fails. | M |
-| P11-T5 | Deployment automation. `make install` builds all binaries + dashboard, starts Docker Compose, applies ES templates/ILM, creates admin key, starts services. `make dev` for hot-reload development. `make demo` for portfolio demos (install + replay full demo dataset + trigger correlation rules + open dashboard). `make clean` for reset. | `Makefile`, `scripts/install.sh`, `scripts/demo.sh`, `docker-compose.yml` (update), `sentinel.toml.template` | `make install` → dashboard accessible, API key printed, CLI works. `make demo` → 50K+ events in ES, alerts fired, cases available, NDR host scores populated, dashboard fully populated across all pages. `make clean` → clean state. `make dev` → hot-reload works for Go and React. | M |
+| P11-T5 | Deployment automation. `make install` builds all binaries + dashboard, starts Docker Compose, applies ES templates/ILM, creates initial admin user via CLI, prints credentials + API key + dashboard URL. `make dev` for hot-reload development. `make demo` for portfolio demos (install + create demo analyst accounts + replay full demo dataset + trigger correlation rules + pre-assign demo cases to different analysts + open dashboard). `make clean` for reset. | `Makefile`, `scripts/install.sh`, `scripts/demo.sh`, `docker-compose.yml` (update), `sentinel.toml.template` | `make install` → dashboard accessible, admin credentials printed, API key printed, CLI works. `make demo` → 50K+ events in ES, alerts fired, cases available with multi-analyst attribution, NDR host scores populated, dashboard fully populated across all pages. Login with admin credentials works. `make clean` → clean state. `make dev` → hot-reload works for Go and React. | M |
 
 ---
 
@@ -811,7 +833,7 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 | Phase | Name | Tasks | Depends On | Focus |
 |-------|------|-------|------------|-------|
 | P0 | Scaffolding | 6 | — | Foundation |
-| P1 | HTTP + sentinel_edr | 5 | P0 | Ingestion |
+| P1 | HTTP + SentinelEDR | 5 | P0 | Ingestion |
 | P1a | SentinelAV & DLP Parsers | 4 | P1 | Ingestion |
 | P1b | SentinelNDR Parser | 5 | P1 | Ingestion |
 | P2 | Windows Events | 4 | P1 | Ingestion |
@@ -819,14 +841,14 @@ Same workflow as sentinel_edr: each task has an ID, files, acceptance criteria, 
 | P4 | Sigma Single-Event | 5 | P1 | Detection |
 | P5 | Sigma Correlation | 5 | P4 | Detection |
 | P6 | Query + API | 4 | P0, P1 | Hunting |
-| P7 | Dashboard + Sources | 10 | P6 | Interface |
+| P7 | Dashboard + Sources + Auth | 15 | P6 | Interface + Authentication |
 | P8 | CLI | 4 | P0–P7 | Operations |
 | P9 | Case Management | 7 | P4, P7 | Response + Investigation |
 | P10 | Integration Tests | 8 | All | Validation |
 | P11 | Hardening | 5 | All | Production |
 | P12 | AI Investigation Assistant | 10 | P6, P7, P9 | AI-Augmented Investigation |
 
-**Total: 86 tasks, 15 phases. Estimated 59–83 Claude Code sessions.**
+**Total: 91 tasks, 15 phases. Estimated 63–88 Claude Code sessions.**
 
 ---
 
@@ -842,14 +864,14 @@ ECS field mappings on all indices. Bulk indexing (batch 500, flush 5s). ILM for 
 Git-managed `rules/` dir. Hot-reload, atomic swap. Logsource mapping configurable. Validation on load.
 
 ### Dashboard
-React + Tailwind CSS. Component isolation. TanStack Query for all server state. Zustand for minimal client state. Headless UI for accessible primitives. CodeMirror 6 for query editor. Inter font at 500 weight.
+React + Tailwind CSS. Component isolation. TanStack Query for all server state. Zustand for minimal client state. Headless UI for accessible primitives. CodeMirror 6 for query editor. Inter font at 500 weight. **Testing:** Playwright for headless browser E2E tests against a running instance with seeded data. All critical workflows (auth, triage, hunting, cases, sources, rules) validated end-to-end. Tests run headless in CI via `make test-e2e`. Vitest for component unit tests where E2E coverage is insufficient.
 
 ---
 
 ## v2 Roadmap
 
 - ML anomaly detection: behavioral baselines per user/host.
-- SOAR integration: automated response playbooks (trigger sentinel_edr ISOLATE on critical alert, trigger SentinelFW block on critical NDR alert).
+- SOAR integration: automated response playbooks (trigger SentinelEDR ISOLATE on critical alert, trigger SentinelFW block on critical NDR alert).
 - Multi-tenant: separate data + rules per org.
 - Cloud sources: AWS CloudTrail, Azure AD, GCP Audit.
 - Kibana integration: optional visualization layer.

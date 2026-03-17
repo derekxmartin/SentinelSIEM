@@ -16,7 +16,7 @@ logsource:
   category: dns
 detection:
   selection:
-    dns.question.name|regex: "^[a-z0-9]{30,}\\."
+    dns.question.name|re: "^[a-z0-9]{30,}\\."
   condition: selection
 falsepositives:
   - CDN or cloud services using long hash-based subdomains
