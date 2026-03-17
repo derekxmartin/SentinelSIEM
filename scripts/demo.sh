@@ -74,21 +74,49 @@ fi
 # ─── Step 2: Create demo analyst accounts ─────────────────────────────────────
 info "Creating demo analyst accounts..."
 
-create_user() {
-    local user="$1" pass="$2" display="$3" role="$4"
-    "$CLI" --server "$QUERY_URL" users create \
-        --username "$user" --password "$pass" \
-        --display-name "$display" --role "$role" 2>/dev/null \
-        && ok "Created user: $user ($role)" \
-        || warn "User $user may already exist"
-}
+# Create admin via first-run setup (no auth required, only works when no users exist).
+SETUP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${QUERY_URL}/api/v1/auth/setup" \
+    -H "Content-Type: application/json" \
+    -d '{"username":"admin","password":"Admin@Demo1","display_name":"Demo Admin"}' 2>/dev/null)
+if [[ "$SETUP_STATUS" == "201" ]]; then
+    ok "Created admin user via first-run setup"
+elif [[ "$SETUP_STATUS" == "409" ]]; then
+    ok "Admin user already exists"
+else
+    warn "First-run setup returned HTTP $SETUP_STATUS"
+fi
 
-create_user "admin"       "Admin@Demo1"    "Demo Admin"           "admin"
-create_user "sarah.chen"  "Analyst@Demo1"  "Sarah Chen"           "soc_lead"
-create_user "james.wilson" "Analyst@Demo2" "James Wilson"         "analyst"
-create_user "maria.garcia" "Analyst@Demo3" "Maria Garcia"         "analyst"
-create_user "alex.kumar"   "Engineer@Demo1" "Alex Kumar"          "detection_engineer"
-create_user "viewer"       "Viewer@Demo1"  "Read Only User"       "read_only"
+# Log in as admin to get a JWT for creating remaining users.
+LOGIN_RESP=$(curl -s -X POST "${QUERY_URL}/api/v1/auth/login" \
+    -H "Content-Type: application/json" \
+    -d '{"username":"admin","password":"Admin@Demo1"}' 2>/dev/null)
+ADMIN_TOKEN=$(echo "$LOGIN_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))" 2>/dev/null || echo "")
+
+if [[ -z "$ADMIN_TOKEN" ]]; then
+    warn "Could not obtain admin JWT — skipping user creation"
+else
+    create_user() {
+        local user="$1" pass="$2" display="$3" role="$4"
+        local status
+        status=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${QUERY_URL}/api/v1/admin/users" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${ADMIN_TOKEN}" \
+            -d "{\"username\":\"${user}\",\"password\":\"${pass}\",\"display_name\":\"${display}\",\"role\":\"${role}\"}" 2>/dev/null)
+        if [[ "$status" == "201" ]]; then
+            ok "Created user: $user ($role)"
+        elif [[ "$status" == "409" ]]; then
+            ok "User $user already exists"
+        else
+            warn "Could not create $user (HTTP $status)"
+        fi
+    }
+
+    create_user "sarah.chen"   "Analyst@Demo1"   "Sarah Chen"      "soc_lead"
+    create_user "james.wilson" "Analyst@Demo2"    "James Wilson"    "analyst"
+    create_user "maria.garcia" "Analyst@Demo3"    "Maria Garcia"    "analyst"
+    create_user "alex.kumar"   "Engineer@Demo1"   "Alex Kumar"      "detection_engineer"
+    create_user "viewer"       "Viewer@Demo1"     "Read Only User"  "read_only"
+fi
 
 # ─── Step 3: Replay all fixture datasets ──────────────────────────────────────
 info "Replaying fixture datasets..."
