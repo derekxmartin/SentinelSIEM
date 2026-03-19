@@ -6,7 +6,7 @@ description: |
   indicator of macro-based malware execution.
 references:
   - https://attack.mitre.org/techniques/T1204/002/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.execution

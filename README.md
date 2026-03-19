@@ -1,34 +1,34 @@
 # AkesoSIEM
 
-A proof-of-concept Security Information & Event Management platform built in Go, backed by Elasticsearch. Designed as the central detection and investigation brain for the Sentinel security portfolio.
+A proof-of-concept Security Information & Event Management platform built in Go, backed by Elasticsearch. Designed as the central detection and investigation brain for the Akeso security portfolio.
 
 ![Overview Dashboard](web/docs/screenshots/02-overview.png)
 
-## Why SentinelSIEM?
+## Why AkesoSIEM?
 
-Most SIEM platforms are either expensive commercial products with opaque internals, or open-source projects that require stitching together a dozen loosely coupled tools. SentinelSIEM takes a different approach:
+Most SIEM platforms are either expensive commercial products with opaque internals, or open-source projects that require stitching together a dozen loosely coupled tools. AkesoSIEM takes a different approach:
 
 - **Single-binary simplicity.** Each component is a standalone Go binary — no JVM, no Python runtime, no container orchestration required. Build it, copy it, run it.
 - **Native Sigma support.** Detection rules use [Sigma](https://github.com/SigmaHQ/sigma), the open standard used by thousands of detection engineers worldwide. Ship with 3000+ community rules on day one. No proprietary rule language to learn.
 - **ECS-first normalization.** Every event from every source is normalized to the [Elastic Common Schema](https://www.elastic.co/guide/en/ecs/current/index.html) before it hits storage. Cross-source correlation works because the data model is consistent, not because you wrote custom joins.
-- **Cross-portfolio correlation.** SentinelSIEM natively correlates across EDR, AV, DLP, Windows, and syslog sources. A malware detection on one host plus a DLP policy violation on the same user within 15 minutes? That's one alert, not two tickets in two consoles.
+- **Cross-portfolio correlation.** AkesoSIEM natively correlates across EDR, AV, DLP, Windows, and syslog sources. A malware detection on one host plus a DLP policy violation on the same user within 15 minutes? That's one alert, not two tickets in two consoles.
 - **Built-in case management.** Alert escalation, observable tracking, analyst collaboration, and resolution metrics without an external tool like TheHive or ServiceNow.
 - **Transparent and hackable.** The entire codebase is readable Go with minimal dependencies. If you want to add a parser, write a struct that implements one interface. If you want to add a detection, write a YAML file.
 
-SentinelSIEM is designed for security teams that want to understand their tooling, not just operate it.
+AkesoSIEM is designed for security teams that want to understand their tooling, not just operate it.
 
 ## What It Does
 
-SentinelSIEM ingests telemetry from multiple security sources, normalizes events to ECS, evaluates Sigma detection rules in real time, and provides a query interface for threat hunting — all through a React-based dashboard with built-in case management.
+AkesoSIEM ingests telemetry from multiple security sources, normalizes events to ECS, evaluates Sigma detection rules in real time, and provides a query interface for threat hunting — all through a React-based dashboard with built-in case management.
 
 ### Data Sources
 
 | Source | Protocol | Status | Description |
 |--------|----------|--------|-------------|
-| Sentinel EDR | JSON/HTTP | Implemented | Endpoint behavior telemetry (process, network, registry, file events) |
-| Sentinel AV | JSON/HTTP | Implemented | Malware scan results, quarantine actions, real-time blocks |
-| Sentinel DLP | JSON/HTTP | Implemented | Data classification, policy violations, removable media events |
-| Sentinel NDR | JSON/HTTP | Implemented | Network detection & response (session, DNS, HTTP, TLS, SMB, Kerberos, etc.) |
+| Akeso EDR | JSON/HTTP | Implemented | Endpoint behavior telemetry (process, network, registry, file events) |
+| Akeso AV | JSON/HTTP | Implemented | Malware scan results, quarantine actions, real-time blocks |
+| Akeso DLP | JSON/HTTP | Implemented | Data classification, policy violations, removable media events |
+| Akeso NDR | JSON/HTTP | Implemented | Network detection & response (session, DNS, HTTP, TLS, SMB, Kerberos, etc.) |
 | Windows Event Logs | WEF/HTTP | Implemented | Security, Sysmon, and system events via XML or Winlogbeat JSON |
 | Syslog | TCP/UDP/TLS | Implemented | Firewalls, Linux auditd, network devices (RFC 5424 & 3164) |
 
@@ -71,37 +71,37 @@ Universal entity search with auto-detection: type an IP, hash, domain, username,
 ## Architecture
 
 ```
-[Sentinel EDR] ─┐
-[Sentinel AV]  ─┤
-[Sentinel DLP] ─┤─→ [sentinel-ingest] → [sentinel-normalize] → [sentinel-store (ES)]
-[Sentinel NDR] ─┤                                ↓
-[Windows WEF]  ─┤                       [sentinel-correlate]
+[Akeso EDR] ─┐
+[Akeso AV]  ─┤
+[Akeso DLP] ─┤─→ [akeso-ingest] → [akeso-normalize] → [akeso-store (ES)]
+[Akeso NDR] ─┤                                ↓
+[Windows WEF]  ─┤                       [akeso-correlate]
 [Syslog]       ─┘
                                                  ↓
                                         [alerts + cases in ES]
                                                  ↓
-                                        [sentinel-query / dashboard]
+                                        [akeso-query / dashboard]
 ```
 
 | Component | Description |
 |-----------|-------------|
-| `sentinel-ingest` | HTTP/syslog/WEF listener, API key auth, NDJSON batch support, TLS syslog |
-| `sentinel-normalize` | ECS normalization engine with per-source-type parsers and YAML sub-parsers |
-| `sentinel-store` | Elasticsearch client — index templates, ILM, bulk indexing, dead letter queue |
-| `sentinel-correlate` | Real-time Sigma rule engine with correlation state management |
-| `sentinel-query` | REST API server, query language → ES DSL translation, global search, serves dashboard |
-| `sentinel-cli` | Management CLI — user/key admin, rules validate/update/reload, ingest test/replay, diagnostics, ad-hoc queries |
-| `sentinel-dashboard` | React SPA — alert triage, cases, threat hunting, rule management, source health |
-| `sentinel-auth` | User auth service — JWT, TOTP MFA, RBAC, login rate limiting, first-run setup |
+| `akeso-ingest` | HTTP/syslog/WEF listener, API key auth, NDJSON batch support, TLS syslog |
+| `akeso-normalize` | ECS normalization engine with per-source-type parsers and YAML sub-parsers |
+| `akeso-store` | Elasticsearch client — index templates, ILM, bulk indexing, dead letter queue |
+| `akeso-correlate` | Real-time Sigma rule engine with correlation state management |
+| `akeso-query` | REST API server, query language → ES DSL translation, global search, serves dashboard |
+| `akeso-cli` | Management CLI — user/key admin, rules validate/update/reload, ingest test/replay, diagnostics, ad-hoc queries |
+| `akeso-dashboard` | React SPA — alert triage, cases, threat hunting, rule management, source health |
+| `akeso-auth` | User auth service — JWT, TOTP MFA, RBAC, login rate limiting, first-run setup |
 
 ## Project Structure
 
 ```
 ├── cmd/
-│   ├── sentinel-ingest/       # HTTP/syslog ingestion server
-│   ├── sentinel-correlate/    # Sigma rule evaluation engine
-│   ├── sentinel-query/        # Query API + dashboard server
-│   └── sentinel-cli/          # Management CLI
+│   ├── akeso-ingest/       # HTTP/syslog ingestion server
+│   ├── akeso-correlate/    # Sigma rule evaluation engine
+│   ├── akeso-query/        # Query API + dashboard server
+│   └── akeso-cli/          # Management CLI
 ├── internal/
 │   ├── common/                # Shared types (ECS event, auth, metrics)
 │   ├── config/                # TOML config loading
@@ -119,7 +119,7 @@ Universal entity search with auto-detection: type an IP, hash, domain, username,
 │   └── metrics/               # Prometheus instrumentation (18 metrics)
 ├── rules/                     # Sigma detection rules
 │   ├── sigma_curated/         # Curated SigmaHQ community rules
-│   └── sentinel_portfolio/    # Cross-source correlation rules
+│   └── akeso_portfolio/    # Cross-source correlation rules
 ├── parsers/                   # Logsource maps + syslog sub-parser YAML configs
 ├── scripts/                   # Install, demo, dev, teardown, cert gen
 ├── web/                       # React dashboard
@@ -180,8 +180,8 @@ make clean       # Removes bin/ directory
 
 ```bash
 docker compose up -d                            # Start Elasticsearch + Kibana
-.\bin\sentinel-ingest.exe --config sentinel.toml  # Start ingestion server
-.\bin\sentinel-query.exe --config sentinel.toml   # Start query API (separate terminal)
+.\bin\akeso-ingest.exe --config akeso.toml  # Start ingestion server
+.\bin\akeso-query.exe --config akeso.toml   # Start query API (separate terminal)
 ```
 
 ### Dashboard Development
@@ -192,7 +192,7 @@ npm install                   # Install frontend dependencies
 npm run dev                   # Start Vite dev server (port 3000)
 ```
 
-Requires `sentinel-query` to be running on port 8081 (Vite proxies API requests).
+Requires `akeso-query` to be running on port 8081 (Vite proxies API requests).
 
 ### Scripts
 
@@ -207,7 +207,7 @@ Requires `sentinel-query` to be running on port 8081 (Vite proxies API requests)
 
 ### Integration Tests
 
-SentinelSIEM includes a comprehensive integration test suite that validates the full detection pipeline end-to-end — no Elasticsearch or running servers required.
+AkesoSIEM includes a comprehensive integration test suite that validates the full detection pipeline end-to-end — no Elasticsearch or running servers required.
 
 ```bash
 # Run all integration tests
@@ -226,7 +226,7 @@ go test ./... -v
 |------|-------------------|
 | `TestReplay850Events` | 850 synthetic ECS events (40 malicious + 810 benign) evaluated against 50 Sigma rules. Asserts exactly 40 alerts and zero false positives across all 6 source types. |
 | `TestEngineStats` | Verifies all project rules load, compile, and map to logsource buckets. Currently: 74 compiled rules, 16 logsource buckets, 0 compile errors. |
-| `TestEachRuleCategory` | Fires at least one rule per logsource category (process_creation, sentinel_av, sentinel_dlp, sentinel_ndr, windows_security, syslog_linux). |
+| `TestEachRuleCategory` | Fires at least one rule per logsource category (process_creation, akeso_av, akeso_dlp, akeso_ndr, windows_security, syslog_linux). |
 | `TestBenignEventsZeroAlerts` | Dedicated false-positive regression test — 810 benign events must produce 0 alerts. |
 
 The 40 malicious events cover the full attack surface:
@@ -280,47 +280,47 @@ Global flags must come **before** the subcommand (Go `flag` package requirement)
 
 ```bash
 # System diagnostics (config, servers, ES, rules)
-sentinel-cli diagnose
+akeso-cli diagnose
 
 # User management
-sentinel-cli --server http://localhost:8081 --api-key <key> users list
-sentinel-cli --server http://localhost:8081 --api-key <key> users create --username jsmith --display-name "John Smith" --role analyst --password <pw>
-sentinel-cli --server http://localhost:8081 --api-key <key> users disable --username jsmith
+akeso-cli --server http://localhost:8081 --api-key <key> users list
+akeso-cli --server http://localhost:8081 --api-key <key> users create --username jsmith --display-name "John Smith" --role analyst --password <pw>
+akeso-cli --server http://localhost:8081 --api-key <key> users disable --username jsmith
 
 # API key management
-sentinel-cli --server http://localhost:8081 --api-key <key> keys list
-sentinel-cli --server http://localhost:8081 --api-key <key> keys create --name "ingest-prod" --scopes "ingest"
+akeso-cli --server http://localhost:8081 --api-key <key> keys list
+akeso-cli --server http://localhost:8081 --api-key <key> keys create --name "ingest-prod" --scopes "ingest"
 
 # Rules operations
-sentinel-cli rules validate                                                        # Local validation only
-sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> rules update   # Validate + hot-reload
-sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> rules update --init  # Clone SigmaHQ + validate + reload
+akeso-cli rules validate                                                        # Local validation only
+akeso-cli --ingest-server http://localhost:8080 --ingest-key <key> rules update   # Validate + hot-reload
+akeso-cli --ingest-server http://localhost:8080 --ingest-key <key> rules update --init  # Clone SigmaHQ + validate + reload
 
 # Ingest testing
-sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> ingest test               # Send single test event
-sentinel-cli --ingest-server http://localhost:8080 --ingest-key <key> ingest replay data.ndjson  # Replay NDJSON file
+akeso-cli --ingest-server http://localhost:8080 --ingest-key <key> ingest test               # Send single test event
+akeso-cli --ingest-server http://localhost:8080 --ingest-key <key> ingest replay data.ndjson  # Replay NDJSON file
 
 # Ad-hoc queries
-sentinel-cli --server http://localhost:8081 --api-key <key> query "source_type:sentinel_edr AND event.action:process_create"
-sentinel-cli --server http://localhost:8081 --api-key <key> alerts --level critical
+akeso-cli --server http://localhost:8081 --api-key <key> query "source_type:akeso_edr AND event.action:process_create"
+akeso-cli --server http://localhost:8081 --api-key <key> alerts --level critical
 ```
 
 Global flags: `--server` (query API, default `localhost:8081`), `--ingest-server` (ingest API, default `localhost:8080`), `--api-key`, `--ingest-key`, `--json` (raw JSON output). All support environment variables (`SENTINEL_URL`, `SENTINEL_API_KEY`, `SENTINEL_INGEST_URL`, `SENTINEL_INGEST_KEY`).
 
 ### Configuration
 
-On first run, `make install` or `make demo` generates `sentinel.toml` from `sentinel.toml.template` with random secrets. To customize, edit `sentinel.toml` directly or set environment variables before running.
+On first run, `make install` or `make demo` generates `akeso.toml` from `akeso.toml.template` with random secrets. To customize, edit `akeso.toml` directly or set environment variables before running.
 
 ### Syslog TLS Setup
 
 ```bash
 ./scripts/gen-certs.sh        # Generate self-signed certs for development
-# Then set tls_port, tls_cert, tls_key in sentinel.toml
+# Then set tls_port, tls_cert, tls_key in akeso.toml
 ```
 
 ## Test Data Infrastructure
 
-SentinelSIEM ships with comprehensive test data for development, testing, and portfolio demos.
+AkesoSIEM ships with comprehensive test data for development, testing, and portfolio demos.
 
 ### Static Fixtures (`tests/fixtures/`)
 
@@ -328,10 +328,10 @@ SentinelSIEM ships with comprehensive test data for development, testing, and po
 
 | Directory | Events | Coverage |
 |-----------|--------|----------|
-| `sentinel_edr/` | 80 | All 13 source types (DriverProcess, DriverNetwork, DriverRegistry, etc.) |
-| `sentinel_av/` | 46 | All 5 event types (scan_result, quarantine, realtime_block, etc.) |
-| `sentinel_dlp/` | 47 | All 5 event types (policy_violation, classification, block, etc.) |
-| `sentinel_ndr/` | 211 | All 15 protocol types (session, dns, http, tls, smb, kerberos, etc.) |
+| `akeso_edr/` | 80 | All 13 source types (DriverProcess, DriverNetwork, DriverRegistry, etc.) |
+| `akeso_av/` | 46 | All 5 event types (scan_result, quarantine, realtime_block, etc.) |
+| `akeso_dlp/` | 47 | All 5 event types (policy_violation, classification, block, etc.) |
+| `akeso_ndr/` | 211 | All 15 protocol types (session, dns, http, tls, smb, kerberos, etc.) |
 | `winevt_xml/` | 65 | Event IDs 4624/4625/4688/4768/4769/7045, Sysmon 1/3/11 |
 | `winevt_json/` | 44 | Same Event IDs in Winlogbeat JSON format |
 | `syslog/` | 69 | iptables, auditd, sshd, sudo, httpd, generic |
@@ -363,9 +363,9 @@ Each scenario produces events across multiple source types (EDR, AV, DLP, NDR, W
 | Phase | Description | Tasks | Depends On | Status |
 |-------|-------------|-------|------------|--------|
 | P0 | Scaffolding — Go module, Docker Compose, ECS structs, config, ES client, test fixtures | 6 | — | Complete |
-| P1 | HTTP Ingestion + sentinel_edr Parser + Scenario Generator | 5 | P0 | Complete |
-| P1a | Sentinel AV & DLP Parsers + Cross-Portfolio Rules | 4 | P1 | Complete |
-| P1b | SentinelNDR Parser + Host Score + Logsource Mapping | 5 | P1 | Complete |
+| P1 | HTTP Ingestion + akeso_edr Parser + Scenario Generator | 5 | P0 | Complete |
+| P1a | Akeso AV & DLP Parsers + Cross-Portfolio Rules | 4 | P1 | Complete |
+| P1b | AkesoNDR Parser + Host Score + Logsource Mapping | 5 | P1 | Complete |
 | P2 | Windows Event Log Ingestion (XML + Winlogbeat JSON) | 4 | P1 | Complete |
 | P3 | Syslog Ingestion (TCP/UDP/TLS, RFC 5424 & 3164) | 4 | P1 | Complete |
 | P4 | Sigma Single-Event Detection Engine | 5 | P1 | Complete |
@@ -382,4 +382,4 @@ See `REQUIREMENTS.md` for the full specification and task breakdown.
 
 ## License
 
-Proprietary — Sentinel Security Portfolio.
+Proprietary — Akeso Security Portfolio.

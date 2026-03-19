@@ -1,0 +1,101 @@
+title: NDR + EDR Full Attack Chain - Recon to Exfiltration
+id: c1a2b3c4-d5e6-4f78-9a0b-5c5d6e7f8a05
+status: experimental
+description: |
+  Full kill-chain correlation across NDR and EDR: (1) NDR detects port scan
+  reconnaissance, (2) EDR detects credential dumping on compromised host,
+  (3) NDR detects SMB lateral movement, (4) NDR detects high-volume outbound
+  data exfiltration. Correlated by user.name within 2 hours. Links network
+  recon, credential theft, lateral movement, and data theft into a single
+  high-confidence incident.
+references:
+  - https://github.com/justaguywhocodes/AkesoSIEM
+author: AkesoSIEM
+date: 2026/03/15
+tags:
+  - attack.reconnaissance
+  - attack.t1046           # Network Service Discovery
+  - attack.credential_access
+  - attack.t1003           # OS Credential Dumping
+  - attack.lateral_movement
+  - attack.t1021.002       # SMB/Windows Admin Shares
+  - attack.exfiltration
+  - attack.t1048           # Exfiltration Over Alternative Protocol
+  - sentinel.cross_portfolio
+  - sentinel.ndr_edr
+level: critical
+falsepositives:
+  - Legitimate red team exercises performing full attack simulations
+  - Penetration testing engagements with broad scope
+
+# --- Component rules ---
+
+# Rule 1: NDR port scan reconnaissance
+---
+title: NDR Port Scan Reconnaissance
+id: c1a2b3c4-d5e6-4f78-9a0b-500000000001
+status: experimental
+logsource:
+  product: akeso_ndr
+detection:
+  selection:
+    ndr.detection.category: reconnaissance
+  condition: selection
+
+# Rule 2: EDR credential dumping
+---
+title: EDR Credential Dumping Activity
+id: c1a2b3c4-d5e6-4f78-9a0b-500000000002
+status: experimental
+logsource:
+  product: akeso_edr
+detection:
+  selection:
+    event.category: process
+    event.action: lsass_access
+  condition: selection
+
+# Rule 3: NDR SMB lateral movement
+---
+title: NDR SMB Lateral Movement
+id: c1a2b3c4-d5e6-4f78-9a0b-500000000003
+status: experimental
+logsource:
+  product: akeso_ndr
+detection:
+  selection:
+    event.action: smb_write
+    network.direction: outbound
+  condition: selection
+
+# Rule 4: NDR high-volume outbound exfiltration
+---
+title: NDR Data Exfiltration Outbound
+id: c1a2b3c4-d5e6-4f78-9a0b-500000000004
+status: experimental
+logsource:
+  product: akeso_ndr
+detection:
+  selection:
+    event.action: session
+    network.direction: outbound
+  condition: selection
+
+# Correlation: ordered 4-event chain within 2 hours
+---
+title: Full Attack Chain Correlation - Recon to Exfil
+id: c1a2b3c4-d5e6-4f78-9a0b-500000000005
+type: correlation
+status: experimental
+rules:
+  - c1a2b3c4-d5e6-4f78-9a0b-500000000001
+  - c1a2b3c4-d5e6-4f78-9a0b-500000000002
+  - c1a2b3c4-d5e6-4f78-9a0b-500000000003
+  - c1a2b3c4-d5e6-4f78-9a0b-500000000004
+group-by:
+  - user.name
+timespan: 120m
+ordered: true
+condition:
+  gte: 4
+level: critical

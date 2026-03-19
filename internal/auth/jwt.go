@@ -39,7 +39,7 @@ type JWTManager struct {
 func NewJWTManager(signingKey []byte) *JWTManager {
 	return &JWTManager{
 		signingKey: signingKey,
-		issuer:     "sentinel-siem",
+		issuer:     "akeso-siem",
 	}
 }
 

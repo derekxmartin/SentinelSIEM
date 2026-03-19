@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { apiFetch } from '../lib/api'
 
-const REFRESH_KEY = 'sentinel-refresh-token'
+const REFRESH_KEY = 'akeso-refresh-token'
 
 let refreshTimer = null
 

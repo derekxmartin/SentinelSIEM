@@ -6,7 +6,7 @@ description: |
   commonly used by attackers for lateral movement and privilege escalation.
 references:
   - https://attack.mitre.org/techniques/T1003/001/
-author: SentinelSIEM
+author: AkesoSIEM
 date: 2026/03/15
 tags:
   - attack.credential_access

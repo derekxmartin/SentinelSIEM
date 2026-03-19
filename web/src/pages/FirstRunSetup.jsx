@@ -77,7 +77,7 @@ export default function FirstRunSetup() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0D0608' }}>
-        <img src={logo} alt="SentinelSIEM" className="h-16 w-16 animate-pulse" />
+        <img src={logo} alt="AkesoSIEM" className="h-16 w-16 animate-pulse" />
       </div>
     )
   }
@@ -87,8 +87,8 @@ export default function FirstRunSetup() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <img src={logo} alt="SentinelSIEM" className="h-16 w-16 mb-4" />
-          <h1 className="text-2xl font-bold text-white">Welcome to SentinelSIEM</h1>
+          <img src={logo} alt="AkesoSIEM" className="h-16 w-16 mb-4" />
+          <h1 className="text-2xl font-bold text-white">Welcome to AkesoSIEM</h1>
           <p className="text-slate-400 text-sm mt-1">Create your admin account to get started</p>
         </div>
 

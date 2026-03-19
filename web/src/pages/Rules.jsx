@@ -115,7 +115,7 @@ export default function Rules() {
             >
               <option value="">All Sources</option>
               <option value="sigma_curated">Sigma</option>
-              <option value="sentinel_portfolio">Sentinel</option>
+              <option value="akeso_portfolio">Akeso</option>
             </select>
             <select
               value={enabledFilter}

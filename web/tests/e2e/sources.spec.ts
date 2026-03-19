@@ -20,7 +20,7 @@ test.describe('Sources Page', () => {
 
   test('page title shows Sources', async ({ page }) => {
     await navigateTo(page, '/sources', 'Sources')
-    await expect(page).toHaveTitle(/Sources.*SentinelSIEM/)
+    await expect(page).toHaveTitle(/Sources.*AkesoSIEM/)
   })
 
   test('onboarding wizard button is visible', async ({ page }) => {

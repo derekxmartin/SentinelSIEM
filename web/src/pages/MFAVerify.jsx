@@ -68,7 +68,7 @@ export default function MFAVerify() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <img src={logo} alt="SentinelSIEM" className="h-16 w-16 mb-4" />
+          <img src={logo} alt="AkesoSIEM" className="h-16 w-16 mb-4" />
           <ShieldCheckIcon className="h-10 w-10 text-indigo-400 mb-2" />
           <h1 className="text-xl font-bold text-white">Two-Factor Authentication</h1>
           <p className="text-slate-400 text-sm mt-1 text-center">

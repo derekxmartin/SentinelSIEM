@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 // Backend is the interface for case storage operations.

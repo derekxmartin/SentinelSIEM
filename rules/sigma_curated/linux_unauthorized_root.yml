@@ -6,7 +6,7 @@ description: |
   security best practices and may indicate unauthorized access.
 references:
   - https://attack.mitre.org/techniques/T1078/003/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.persistence

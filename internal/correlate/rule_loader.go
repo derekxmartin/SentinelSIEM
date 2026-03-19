@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // RuleEvaluator is the interface used by the pipeline to evaluate events.

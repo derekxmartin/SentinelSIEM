@@ -6,7 +6,7 @@ description: |
   indicate privilege escalation attempts.
 references:
   - https://attack.mitre.org/techniques/T1078/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.privilege_escalation

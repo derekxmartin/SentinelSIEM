@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 	"gopkg.in/lumberjack.v2"
 )
 

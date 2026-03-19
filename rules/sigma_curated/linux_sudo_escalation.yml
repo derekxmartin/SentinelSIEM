@@ -6,7 +6,7 @@ description: |
   on Linux systems.
 references:
   - https://attack.mitre.org/techniques/T1548/003/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.privilege_escalation

@@ -1,4 +1,4 @@
-// Package benchmark provides load testing for the SentinelSIEM ingest pipeline.
+// Package benchmark provides load testing for the AkesoSIEM ingest pipeline.
 //
 // Tests exercise the full pipeline (normalize → index → rule eval → alert)
 // using mock backends so no Elasticsearch is required.
@@ -23,12 +23,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
-	"github.com/SentinelSIEM/sentinel-siem/internal/ingest"
-	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
-	"github.com/SentinelSIEM/sentinel-siem/internal/normalize/parsers"
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/ingest"
+	"github.com/derekxmartin/akeso-siem/internal/normalize"
+	"github.com/derekxmartin/akeso-siem/internal/normalize/parsers"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 var (
@@ -132,11 +132,11 @@ func generateEvent(i int, sourceTypes []string) json.RawMessage {
 
 	var raw string
 	switch st {
-	case "sentinel_edr":
+	case "akeso_edr":
 		// EDR envelope: host is a string, event is an inner object.
 		raw = fmt.Sprintf(`{
-			"source_type": "sentinel_edr",
-			"schema": "sentinel/v1",
+			"source_type": "akeso_edr",
+			"schema": "akeso/v1",
 			"host": "workstation-%d",
 			"agent_id": "agent-bench-%d",
 			"timestamp": %q,
@@ -166,11 +166,11 @@ func generateEvent(i int, sourceTypes []string) json.RawMessage {
 				}
 			}
 		}`, i%100, i%1000, ts, i, ts, 1000+i%9000, 1000+i%9000)
-	case "sentinel_ndr":
+	case "akeso_ndr":
 		// NDR envelope: needs event_type, ECS fields at top level.
 		// Include ndr.session with community_id to avoid parser warnings.
 		raw = fmt.Sprintf(`{
-			"source_type": "sentinel_ndr",
+			"source_type": "akeso_ndr",
 			"timestamp": %q,
 			"event_type": "ndr:session",
 			"event": {"category": ["network"], "type": ["connection"], "action": "connection_end"},
@@ -209,8 +209,8 @@ func TestLoadTest(t *testing.T) {
 
 	// Build normalization engine with real parsers.
 	registry := normalize.NewRegistry()
-	registry.Register(parsers.Newsentinel_edrParser())
-	registry.Register(parsers.NewSentinelNDRParser())
+	registry.Register(parsers.Newakeso_edrParser())
+	registry.Register(parsers.NewAkesoNDRParser())
 	registry.Register(parsers.NewWinEvtJSONParser())
 	engine := normalize.NewEngine(registry)
 
@@ -220,10 +220,10 @@ func TestLoadTest(t *testing.T) {
 	ruleEval := &mockRuleEvaluator{}
 
 	// Create pipeline.
-	pipeline := ingest.NewPipeline(engine, indexer, "sentinel", hostScore, ruleEval, nil)
+	pipeline := ingest.NewPipeline(engine, indexer, "akeso", hostScore, ruleEval, nil)
 
 	// Source types to cycle through.
-	sourceTypes := []string{"sentinel_edr", "sentinel_ndr", "winevt_json"}
+	sourceTypes := []string{"akeso_edr", "akeso_ndr", "winevt_json"}
 
 	// Memory baseline.
 	runtime.GC()
@@ -412,14 +412,14 @@ func TestLoadTest(t *testing.T) {
 // BenchmarkPipelineHandle measures per-batch throughput for Go's benchmarking framework.
 func BenchmarkPipelineHandle(b *testing.B) {
 	registry := normalize.NewRegistry()
-	registry.Register(parsers.Newsentinel_edrParser())
+	registry.Register(parsers.Newakeso_edrParser())
 	engine := normalize.NewEngine(registry)
 
 	indexer := &mockIndexer{}
 	ruleEval := &mockRuleEvaluator{}
-	pipeline := ingest.NewPipeline(engine, indexer, "sentinel", nil, ruleEval, nil)
+	pipeline := ingest.NewPipeline(engine, indexer, "akeso", nil, ruleEval, nil)
 
-	sourceTypes := []string{"sentinel_edr"}
+	sourceTypes := []string{"akeso_edr"}
 	events := make([]json.RawMessage, 50)
 	for i := range events {
 		events[i] = generateEvent(i, sourceTypes)
@@ -442,7 +442,7 @@ func BenchmarkRuleEvaluation(b *testing.B) {
 
 	event := &common.ECSEvent{
 		Timestamp:  time.Now(),
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Category: []string{"process"},
 			Type:     []string{"start"},

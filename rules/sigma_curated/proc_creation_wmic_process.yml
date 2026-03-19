@@ -6,7 +6,7 @@ description: |
   lateral movement and remote code execution.
 references:
   - https://attack.mitre.org/techniques/T1047/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.execution

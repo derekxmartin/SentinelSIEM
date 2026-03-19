@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // helper to create a temporal correlation rule.

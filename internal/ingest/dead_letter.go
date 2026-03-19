@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/metrics"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 // RawIndexer is an optional interface that indexers can implement to support
@@ -83,10 +83,10 @@ func WithDLQMaxBufferSize(size int) DLQOption {
 
 // NewDeadLetterQueue creates a dead letter queue that writes failed events
 // to the indexer. The prefix is used to construct the DLQ index name
-// (e.g., "sentinel-dlq-2026.03.17").
+// (e.g., "akeso-dlq-2026.03.17").
 func NewDeadLetterQueue(indexer store.Indexer, prefix string, opts ...DLQOption) *DeadLetterQueue {
 	if prefix == "" {
-		prefix = "sentinel"
+		prefix = "akeso"
 	}
 
 	dlq := &DeadLetterQueue{

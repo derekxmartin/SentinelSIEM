@@ -6,7 +6,7 @@ description: |
   execution proxy such as WMI or PowerShell remoting hosts.
 references:
   - https://attack.mitre.org/techniques/T1047/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.execution

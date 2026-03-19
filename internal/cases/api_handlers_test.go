@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/auth"
+	"github.com/derekxmartin/akeso-siem/internal/auth"
 )
 
 // withClaims returns a context with auth claims set.

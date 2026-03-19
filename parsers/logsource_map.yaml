@@ -1,4 +1,4 @@
-# Sigma Logsource Mapping — SentinelSIEM
+# Sigma Logsource Mapping — AkesoSIEM
 #
 # Maps Sigma rule logsource fields (category, product, service) to ECS filter
 # conditions. The correlate engine uses these mappings to determine which events
@@ -12,38 +12,38 @@
 
 mappings:
   # ============================================================
-  # Sentinel Portfolio — Product-Level Mappings
+  # Akeso Portfolio — Product-Level Mappings
   # ============================================================
 
-  # sentinel_edr: endpoint detection and response telemetry
+  # akeso_edr: endpoint detection and response telemetry
   - logsource:
-      product: sentinel_edr
+      product: akeso_edr
     conditions:
-      source_type: sentinel_edr
+      source_type: akeso_edr
 
-  # Sentinel AV: antivirus scan, quarantine, and block events
+  # Akeso AV: antivirus scan, quarantine, and block events
   - logsource:
-      product: sentinel_av
+      product: akeso_av
     conditions:
-      source_type: sentinel_av
+      source_type: akeso_av
 
-  # Sentinel DLP: data loss prevention policy and classification events
+  # Akeso DLP: data loss prevention policy and classification events
   - logsource:
-      product: sentinel_dlp
+      product: akeso_dlp
     conditions:
-      source_type: sentinel_dlp
+      source_type: akeso_dlp
 
-  # SentinelNDR: network detection and response telemetry
+  # AkesoNDR: network detection and response telemetry
   - logsource:
-      product: sentinel_ndr
+      product: akeso_ndr
     conditions:
-      source_type: sentinel_ndr
+      source_type: akeso_ndr
 
   # ============================================================
   # NDR Protocol-Level Mappings (Dual Logsource Matching)
   # ============================================================
   # NDR protocol events support dual logsource matching:
-  # ndr:dns matches both product:sentinel_ndr AND category:dns
+  # ndr:dns matches both product:akeso_ndr AND category:dns
   # This allows community SigmaHQ network rules to automatically
   # evaluate against NDR protocol metadata without modification.
 

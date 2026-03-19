@@ -204,7 +204,7 @@ func (m *mockBackend) UpdateDoc(ctx context.Context, index, id string, doc []byt
 // --- APIKeyStore tests ---
 
 func TestAPIKeyStore_CreateAndAuthenticate(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	result, err := store.Create(context.Background(), "test-key", []string{"ingest"}, time.Time{})
 	if err != nil {
@@ -222,7 +222,7 @@ func TestAPIKeyStore_CreateAndAuthenticate(t *testing.T) {
 }
 
 func TestAPIKeyStore_AuthenticateUnknownKey(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	key := store.Authenticate("sk_nonexistent")
 	if key != nil {
@@ -231,7 +231,7 @@ func TestAPIKeyStore_AuthenticateUnknownKey(t *testing.T) {
 }
 
 func TestAPIKeyStore_Revoke(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	result, _ := store.Create(context.Background(), "revoke-me", nil, time.Time{})
 
@@ -264,7 +264,7 @@ func TestAPIKeyStore_Revoke(t *testing.T) {
 }
 
 func TestAPIKeyStore_RevokeUnknownKey(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	err := store.Revoke(context.Background(), "nonexistent-id")
 	if err == nil {
@@ -273,7 +273,7 @@ func TestAPIKeyStore_RevokeUnknownKey(t *testing.T) {
 }
 
 func TestAPIKeyStore_ExpiredKeyFailsAuth(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	// Create a key that's already expired.
 	result, _ := store.Create(context.Background(), "expired", nil, time.Now().UTC().Add(-1*time.Hour))
@@ -284,7 +284,7 @@ func TestAPIKeyStore_ExpiredKeyFailsAuth(t *testing.T) {
 }
 
 func TestAPIKeyStore_AuthenticateWithScope(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	result, _ := store.Create(context.Background(), "scoped", []string{"ingest"}, time.Time{})
 
@@ -297,7 +297,7 @@ func TestAPIKeyStore_AuthenticateWithScope(t *testing.T) {
 }
 
 func TestAPIKeyStore_List(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	store.Create(context.Background(), "key1", nil, time.Time{})
 	store.Create(context.Background(), "key2", nil, time.Time{})
@@ -310,7 +310,7 @@ func TestAPIKeyStore_List(t *testing.T) {
 }
 
 func TestAPIKeyStore_Count(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	store.Create(context.Background(), "active1", nil, time.Time{})
 	r2, _ := store.Create(context.Background(), "active2", nil, time.Time{})
@@ -329,7 +329,7 @@ func TestAPIKeyStore_Count(t *testing.T) {
 
 func TestAPIKeyStore_LoadAll(t *testing.T) {
 	backend := newMockBackend()
-	index := "sentinel-apikeys"
+	index := "akeso-apikeys"
 
 	// Pre-populate backend with a key.
 	key := &APIKey{
@@ -359,7 +359,7 @@ func TestAPIKeyStore_LoadAll(t *testing.T) {
 }
 
 func TestAPIKeyStore_AddStaticKeys(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	store.AddStaticKeys([]string{"my-config-key-1", "my-config-key-2"})
 
@@ -381,7 +381,7 @@ func TestAPIKeyStore_AddStaticKeys(t *testing.T) {
 }
 
 func TestAPIKeyStore_StaticAndDynamicCoexist(t *testing.T) {
-	store := NewAPIKeyStore(newMockBackend(), "sentinel-apikeys")
+	store := NewAPIKeyStore(newMockBackend(), "akeso-apikeys")
 
 	// Add static key.
 	store.AddStaticKeys([]string{"static-key"})
@@ -405,7 +405,7 @@ func TestAPIKeyStore_StaticAndDynamicCoexist(t *testing.T) {
 
 func TestAPIKeyStore_BackendPersistence(t *testing.T) {
 	backend := newMockBackend()
-	index := "sentinel-apikeys"
+	index := "akeso-apikeys"
 
 	// Create key in store 1.
 	store1 := NewAPIKeyStore(backend, index)
@@ -429,7 +429,7 @@ func TestAPIKeyStore_BackendPersistence(t *testing.T) {
 
 func TestAPIKeyStore_RevokePersistedToBackend(t *testing.T) {
 	backend := newMockBackend()
-	index := "sentinel-apikeys"
+	index := "akeso-apikeys"
 
 	store1 := NewAPIKeyStore(backend, index)
 	result, _ := store1.Create(context.Background(), "to-revoke", nil, time.Time{})

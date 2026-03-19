@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // failNIndexer fails the first N calls to BulkIndex, then succeeds.

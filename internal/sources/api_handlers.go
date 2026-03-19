@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
+	"github.com/derekxmartin/akeso-siem/internal/normalize"
 )
 
 // APIHandler holds dependencies for the source management REST API.

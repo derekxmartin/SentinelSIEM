@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
 )
 
 // TestCrossSourceTemporalCorrelation validates the three-stage attack chain:
@@ -15,12 +15,12 @@ import (
 //	EDR credential theft → NDR lateral movement → EDR outbound transfer
 //
 // All correlated by source.ip within 30 minutes. This is the core P10-T3
-// acceptance test: temporal rules must fire across SentinelEDR + SentinelNDR
+// acceptance test: temporal rules must fire across AkesoEDR + AkesoNDR
 // sources, correlating events from the same host correctly.
 func TestCrossSourceTemporalCorrelation(t *testing.T) {
 	// ── Load rules ──────────────────────────────────────────────────────
 	rulesRoot := filepath.Join("..", "..", "rules")
-	rules, errs := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sentinel_portfolio"))
+	rules, errs := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "akeso_portfolio"))
 	for _, e := range errs {
 		t.Logf("parse warning: %v", e)
 	}
@@ -53,7 +53,7 @@ func TestCrossSourceTemporalCorrelation(t *testing.T) {
 	// Stage 1: EDR credential theft (LSASS access) at T+0
 	edrCredTheft := &common.ECSEvent{
 		Timestamp:  base,
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Action: "lsass_access"},
 		Source:     &common.EndpointFields{IP: attackerIP},
 		Process:    &common.ProcessFields{Name: "mimikatz.exe", CommandLine: "mimikatz.exe sekurlsa::logonpasswords"},
@@ -63,7 +63,7 @@ func TestCrossSourceTemporalCorrelation(t *testing.T) {
 	// Stage 2: NDR lateral movement (SMB write) at T+8min
 	ndrLateral := &common.ECSEvent{
 		Timestamp:   base.Add(8 * time.Minute),
-		SourceType:  "sentinel_ndr",
+		SourceType:  "akeso_ndr",
 		Event:       &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "smb_write"},
 		Source:      &common.EndpointFields{IP: attackerIP, Port: 49152},
 		Destination: &common.EndpointFields{IP: "10.0.0.50", Port: 445},
@@ -73,7 +73,7 @@ func TestCrossSourceTemporalCorrelation(t *testing.T) {
 	// Stage 3: EDR outbound data transfer at T+20min
 	edrExfil := &common.ECSEvent{
 		Timestamp:   base.Add(20 * time.Minute),
-		SourceType:  "sentinel_edr",
+		SourceType:  "akeso_edr",
 		Event:       &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "outbound_transfer"},
 		Source:      &common.EndpointFields{IP: attackerIP, Port: 55000},
 		Destination: &common.EndpointFields{IP: "185.220.101.45", Port: 443},
@@ -133,7 +133,7 @@ func TestCrossSourceTemporalCorrelation(t *testing.T) {
 // events fall outside the 30-minute window.
 func TestTemporalWindowExpiry(t *testing.T) {
 	rulesRoot := filepath.Join("..", "..", "rules")
-	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sentinel_portfolio"))
+	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "akeso_portfolio"))
 	lsMap, _ := correlate.LoadLogsourceMap(filepath.Join("..", "..", "parsers", "logsource_map.yaml"))
 
 	registry := correlate.NewRuleRegistry(rules)
@@ -148,7 +148,7 @@ func TestTemporalWindowExpiry(t *testing.T) {
 		// Stage 1: T+0
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Action: "credential_theft"},
 			Source:     &common.EndpointFields{IP: attackerIP},
 			Host:       &common.HostFields{Name: "WORKSTATION-02"},
@@ -156,7 +156,7 @@ func TestTemporalWindowExpiry(t *testing.T) {
 		// Stage 2: T+10min (within window)
 		{
 			Timestamp:   base.Add(10 * time.Minute),
-			SourceType:  "sentinel_ndr",
+			SourceType:  "akeso_ndr",
 			Event:       &common.EventFields{Kind: "event", Action: "smb_session"},
 			Source:      &common.EndpointFields{IP: attackerIP},
 			Destination: &common.EndpointFields{IP: "10.0.0.60", Port: 445},
@@ -165,7 +165,7 @@ func TestTemporalWindowExpiry(t *testing.T) {
 		// Stage 3: T+45min (OUTSIDE 30-minute window)
 		{
 			Timestamp:   base.Add(45 * time.Minute),
-			SourceType:  "sentinel_edr",
+			SourceType:  "akeso_edr",
 			Event:       &common.EventFields{Kind: "event", Action: "outbound_transfer"},
 			Source:      &common.EndpointFields{IP: attackerIP},
 			Destination: &common.EndpointFields{IP: "91.234.99.42", Port: 443},
@@ -196,7 +196,7 @@ func TestTemporalWindowExpiry(t *testing.T) {
 // when events come from different source IPs (group-by isolation).
 func TestTemporalDifferentSourceIPs(t *testing.T) {
 	rulesRoot := filepath.Join("..", "..", "rules")
-	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sentinel_portfolio"))
+	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "akeso_portfolio"))
 	lsMap, _ := correlate.LoadLogsourceMap(filepath.Join("..", "..", "parsers", "logsource_map.yaml"))
 
 	registry := correlate.NewRuleRegistry(rules)
@@ -210,7 +210,7 @@ func TestTemporalDifferentSourceIPs(t *testing.T) {
 		// Stage 1: IP-A credential theft
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Action: "lsass_access"},
 			Source:     &common.EndpointFields{IP: "192.168.1.50"},
 			Host:       &common.HostFields{Name: "WORKSTATION-03"},
@@ -218,7 +218,7 @@ func TestTemporalDifferentSourceIPs(t *testing.T) {
 		// Stage 2: IP-B (different!) lateral movement
 		{
 			Timestamp:   base.Add(5 * time.Minute),
-			SourceType:  "sentinel_ndr",
+			SourceType:  "akeso_ndr",
 			Event:       &common.EventFields{Kind: "event", Action: "smb_write"},
 			Source:      &common.EndpointFields{IP: "192.168.1.99"},
 			Destination: &common.EndpointFields{IP: "10.0.0.70", Port: 445},
@@ -227,7 +227,7 @@ func TestTemporalDifferentSourceIPs(t *testing.T) {
 		// Stage 3: IP-A exfil (back to original IP, but stage 2 was different)
 		{
 			Timestamp:   base.Add(15 * time.Minute),
-			SourceType:  "sentinel_edr",
+			SourceType:  "akeso_edr",
 			Event:       &common.EventFields{Kind: "event", Action: "outbound_transfer"},
 			Source:      &common.EndpointFields{IP: "192.168.1.50"},
 			Destination: &common.EndpointFields{IP: "203.0.113.42", Port: 443},
@@ -258,7 +258,7 @@ func TestTemporalDifferentSourceIPs(t *testing.T) {
 // do not advance the temporal chain.
 func TestTemporalOutOfOrderIgnored(t *testing.T) {
 	rulesRoot := filepath.Join("..", "..", "rules")
-	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sentinel_portfolio"))
+	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "akeso_portfolio"))
 	lsMap, _ := correlate.LoadLogsourceMap(filepath.Join("..", "..", "parsers", "logsource_map.yaml"))
 
 	registry := correlate.NewRuleRegistry(rules)
@@ -273,7 +273,7 @@ func TestTemporalOutOfOrderIgnored(t *testing.T) {
 		// Stage 2 first (out of order!) — should not start a chain
 		{
 			Timestamp:   base,
-			SourceType:  "sentinel_ndr",
+			SourceType:  "akeso_ndr",
 			Event:       &common.EventFields{Kind: "event", Action: "smb_write"},
 			Source:      &common.EndpointFields{IP: ip},
 			Destination: &common.EndpointFields{IP: "10.0.0.80", Port: 445},
@@ -282,7 +282,7 @@ func TestTemporalOutOfOrderIgnored(t *testing.T) {
 		// Stage 3 next (still out of order)
 		{
 			Timestamp:   base.Add(5 * time.Minute),
-			SourceType:  "sentinel_edr",
+			SourceType:  "akeso_edr",
 			Event:       &common.EventFields{Kind: "event", Action: "outbound_transfer"},
 			Source:      &common.EndpointFields{IP: ip},
 			Destination: &common.EndpointFields{IP: "185.220.101.45", Port: 443},
@@ -291,7 +291,7 @@ func TestTemporalOutOfOrderIgnored(t *testing.T) {
 		// Stage 1 last (chain can't complete — wrong order)
 		{
 			Timestamp:  base.Add(10 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Action: "mimikatz_execution"},
 			Source:     &common.EndpointFields{IP: ip},
 			Host:       &common.HostFields{Name: "WORKSTATION-06"},

@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // AdminHandler handles admin-only user and API key management endpoints.

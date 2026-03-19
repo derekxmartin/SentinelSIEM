@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 // AlertBackend is the interface for fetching and updating alert documents.
@@ -22,7 +22,7 @@ type AlertBackend interface {
 type EscalationService struct {
 	caseSvc      *Service
 	alertBackend AlertBackend
-	alertIndex   string // e.g. "sentinel-alerts-*"
+	alertIndex   string // e.g. "akeso-alerts-*"
 }
 
 // NewEscalationService creates a new escalation service.

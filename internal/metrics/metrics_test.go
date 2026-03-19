@@ -33,32 +33,32 @@ func TestRegistryCollectsAllMetrics(t *testing.T) {
 		names[fam.GetName()] = true
 	}
 
-	// Verify all SentinelSIEM metrics are registered.
+	// Verify all AkesoSIEM metrics are registered.
 	expected := []string{
-		"sentinel_ingest_events_received_total",
-		"sentinel_ingest_events_indexed_total",
-		"sentinel_ingest_events_dropped_total",
-		"sentinel_ingest_batch_size",
-		"sentinel_ingest_index_duration_seconds",
-		"sentinel_ingest_pipeline_duration_seconds",
-		"sentinel_ingest_inflight_batches",
-		"sentinel_detect_alerts_generated_total",
-		"sentinel_detect_alerts_deduplicated_total",
-		"sentinel_detect_eval_duration_seconds",
-		"sentinel_detect_rules_loaded",
-		"sentinel_correlate_buckets_active",
-		"sentinel_syslog_connections_active",
-		"sentinel_syslog_messages_received_total",
-		"sentinel_query_duration_seconds",
-		"sentinel_query_requests_total",
-		"sentinel_auth_login_attempts_total",
-		"sentinel_auth_rate_limited_total",
-		"sentinel_dlq_events_total",
-		"sentinel_dlq_flush_errors_total",
-		"sentinel_dlq_buffer_size",
-		"sentinel_alert_retry_total",
-		"sentinel_alert_retry_exhausted_total",
-		"sentinel_alert_retry_queue_size",
+		"akeso_ingest_events_received_total",
+		"akeso_ingest_events_indexed_total",
+		"akeso_ingest_events_dropped_total",
+		"akeso_ingest_batch_size",
+		"akeso_ingest_index_duration_seconds",
+		"akeso_ingest_pipeline_duration_seconds",
+		"akeso_ingest_inflight_batches",
+		"akeso_detect_alerts_generated_total",
+		"akeso_detect_alerts_deduplicated_total",
+		"akeso_detect_eval_duration_seconds",
+		"akeso_detect_rules_loaded",
+		"akeso_correlate_buckets_active",
+		"akeso_syslog_connections_active",
+		"akeso_syslog_messages_received_total",
+		"akeso_query_duration_seconds",
+		"akeso_query_requests_total",
+		"akeso_auth_login_attempts_total",
+		"akeso_auth_rate_limited_total",
+		"akeso_dlq_events_total",
+		"akeso_dlq_flush_errors_total",
+		"akeso_dlq_buffer_size",
+		"akeso_alert_retry_total",
+		"akeso_alert_retry_exhausted_total",
+		"akeso_alert_retry_queue_size",
 	}
 
 	for _, name := range expected {
@@ -70,7 +70,7 @@ func TestRegistryCollectsAllMetrics(t *testing.T) {
 
 func TestHandlerServesPrometheusFormat(t *testing.T) {
 	// Increment a counter so there's output.
-	EventsIngested.WithLabelValues("sentinel_edr", "http").Inc()
+	EventsIngested.WithLabelValues("akeso_edr", "http").Inc()
 	AlertsGenerated.WithLabelValues("high").Add(3)
 	RulesLoaded.Set(81)
 
@@ -93,9 +93,9 @@ func TestHandlerServesPrometheusFormat(t *testing.T) {
 
 	// Verify key metrics appear in output.
 	checks := []string{
-		"sentinel_ingest_events_received_total",
-		"sentinel_detect_alerts_generated_total",
-		"sentinel_detect_rules_loaded 81",
+		"akeso_ingest_events_received_total",
+		"akeso_detect_alerts_generated_total",
+		"akeso_detect_rules_loaded 81",
 		"go_goroutines",
 	}
 	for _, check := range checks {

@@ -6,7 +6,7 @@ description: |
   content, commonly used to bypass application whitelisting.
 references:
   - https://attack.mitre.org/techniques/T1218/005/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.defense_evasion

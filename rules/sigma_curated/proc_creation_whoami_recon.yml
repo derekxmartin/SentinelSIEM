@@ -6,7 +6,7 @@ description: |
   reconnaissance after gaining access to a system.
 references:
   - https://attack.mitre.org/techniques/T1033/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.discovery

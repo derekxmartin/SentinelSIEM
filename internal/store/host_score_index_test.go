@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 func TestExtractHostIP(t *testing.T) {
@@ -122,9 +122,9 @@ func TestHostScoreIndexMappings(t *testing.T) {
 }
 
 func TestHostScoreIndexName(t *testing.T) {
-	store := &Store{prefix: "sentinel"}
-	if got := store.hostScoreIndexName(); got != "sentinel-ndr-host-scores" {
-		t.Errorf("hostScoreIndexName() = %q, want sentinel-ndr-host-scores", got)
+	store := &Store{prefix: "akeso"}
+	if got := store.hostScoreIndexName(); got != "akeso-ndr-host-scores" {
+		t.Errorf("hostScoreIndexName() = %q, want akeso-ndr-host-scores", got)
 	}
 
 	store2 := &Store{prefix: "myorg"}

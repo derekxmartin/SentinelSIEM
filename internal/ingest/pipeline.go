@@ -9,12 +9,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/alert"
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
-	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
-	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/alert"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/metrics"
+	"github.com/derekxmartin/akeso-siem/internal/normalize"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 // Pipeline wires together the ingestion components:
@@ -43,7 +43,7 @@ type Pipeline struct {
 // hostScoreIndex, ruleEvaluator, dedupCache, dlq, and alertRetryQ may be nil if not needed.
 func NewPipeline(engine *normalize.Engine, indexer store.Indexer, prefix string, hostScoreIndex store.HostScoreIndexer, ruleEvaluator correlate.RuleEvaluator, dedupCache *correlate.DedupCache) *Pipeline {
 	if prefix == "" {
-		prefix = "sentinel"
+		prefix = "akeso"
 	}
 	return &Pipeline{
 		engine:         engine,

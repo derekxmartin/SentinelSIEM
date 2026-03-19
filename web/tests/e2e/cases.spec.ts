@@ -20,7 +20,7 @@ test.describe('Cases Page', () => {
 
   test('page title shows Cases', async ({ page }) => {
     await navigateTo(page, '/cases', 'Cases')
-    await expect(page).toHaveTitle(/Cases.*SentinelSIEM/)
+    await expect(page).toHaveTitle(/Cases.*AkesoSIEM/)
   })
 
   test('navigates to Cases from sidebar', async ({ page }) => {

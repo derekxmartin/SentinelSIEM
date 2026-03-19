@@ -6,7 +6,7 @@ description: |
   credential dumping attempts.
 references:
   - https://attack.mitre.org/techniques/T1003/001/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.credential_access
@@ -14,7 +14,7 @@ tags:
 level: critical
 logsource:
   category: process_creation
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     process.command_line|contains:

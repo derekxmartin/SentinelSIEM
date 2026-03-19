@@ -1,0 +1,64 @@
+# AkesoSIEM Configuration
+# All values shown are defaults. Uncomment and modify as needed.
+
+[elasticsearch]
+addresses = ["http://localhost:9200"]
+# username = ""
+# password = ""
+index_prefix = "akeso"
+
+  [elasticsearch.tls]
+  enabled = false
+  # ca_cert = "/path/to/ca.crt"
+  # insecure_skip_verify = false
+
+[ingest]
+http_addr = "0.0.0.0"
+http_port = 8080
+rate_limit = 10000  # max events per second
+api_keys = ["changeme"]  # API keys for ingestion auth
+
+  [ingest.syslog]
+  tcp_port = 1514
+  udp_port = 1514
+  tls_port = 0            # Set to 6514 and configure tls_cert/tls_key to enable TLS
+  # tls_cert = "/path/to/syslog.crt"
+  # tls_key  = "/path/to/syslog.key"
+  max_connections = 1000
+  subparser_dir = "parsers"
+  max_message_len = 65536
+
+[correlate]
+rules_dir = "rules"
+logsource_map_path = "parsers/logsource_map.yaml"
+reload_interval_sec = 30
+state_expiry_sec = 3600
+dedup_window_sec = 60   # suppress duplicate alerts within this window
+
+[auth]
+jwt_secret = "change-me-in-production"
+# MFA encryption key: 64 hex chars (32 bytes) for AES-256-GCM. Generate with:
+#   python -c "import secrets; print(secrets.token_hex(32))"
+# MFA enrollment is unavailable until this is set.
+mfa_encryption_key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+[query]
+addr = "0.0.0.0"
+port = 8081
+cors_origins = ["http://localhost:3000"]
+
+[cases]
+retention_days = 365
+auto_extract_observables = true
+
+[logging]
+#level = "info"    # debug, info, warn, error
+#format = "json"   # json, text
+level = "info"    # debug, info, warn, error
+format = "text"   # json, text
+file_enabled = true   # set true to write logs to rotating files
+log_dir = "logs"       # directory for log files
+max_size = 100         # max size per log file in MB before rotation
+max_files = 10         # max number of rotated log files to keep
+max_age = 30           # max days to retain old log files
+compress = true        # gzip-compress rotated log files

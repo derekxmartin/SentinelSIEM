@@ -36,7 +36,7 @@ export function generateMockResults(count = 100) {
     const action = actions[Math.floor(Math.random() * actions.length)]
     results.push({
       _id: `evt-${String(i + 1).padStart(5, '0')}`,
-      _index: 'sentinel-events-2026.03.16',
+      _index: 'akeso-events-2026.03.16',
       '@timestamp': ts,
       'event.action': action,
       'event.category': action.includes('logon') ? 'authentication' : action.includes('process') ? 'process' : action.includes('file') ? 'file' : action.includes('network') || action.includes('dns') ? 'network' : 'host',

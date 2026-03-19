@@ -5,17 +5,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
 )
 
-// buildFourSourceEngines loads rules from sentinel_portfolio, builds the single-event
+// buildFourSourceEngines loads rules from akeso_portfolio, builds the single-event
 // engine and temporal evaluator. Shared across all four-source tests.
 func buildFourSourceEngines(t *testing.T) (*correlate.RuleEngine, *correlate.TemporalEvaluator) {
 	t.Helper()
 
 	rulesRoot := filepath.Join("..", "..", "rules")
-	rules, errs := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sentinel_portfolio"))
+	rules, errs := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "akeso_portfolio"))
 	for _, e := range errs {
 		t.Logf("parse warning: %v", e)
 	}
@@ -79,7 +79,7 @@ func TestFourSourceCrossProductCorrelation(t *testing.T) {
 		// Stage 1: NDR detects SMB file transfer to SRV-FINANCE-01 at T+0
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event: &common.EventFields{
 				Kind:     "event",
 				Category: []string{"network"},
@@ -93,7 +93,7 @@ func TestFourSourceCrossProductCorrelation(t *testing.T) {
 		// Stage 2: AV detects malicious file on SRV-FINANCE-01 at T+3min
 		{
 			Timestamp:  base.Add(3 * time.Minute),
-			SourceType: "sentinel_av",
+			SourceType: "akeso_av",
 			Event: &common.EventFields{
 				Kind:     "alert",
 				Category: []string{"malware"},
@@ -114,7 +114,7 @@ func TestFourSourceCrossProductCorrelation(t *testing.T) {
 		// Stage 3: EDR detects the dropped file execution on SRV-FINANCE-01 at T+8min
 		{
 			Timestamp:  base.Add(8 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event: &common.EventFields{
 				Kind:     "event",
 				Category: []string{"process"},
@@ -183,7 +183,7 @@ func TestFourSourceMissingOneStage(t *testing.T) {
 		// Stage 1: NDR
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "smb_write"},
 			Source:     &common.EndpointFields{IP: "10.1.2.45"},
 			Host:       &common.HostFields{Name: targetHost},
@@ -191,7 +191,7 @@ func TestFourSourceMissingOneStage(t *testing.T) {
 		// Stage 2: AV
 		{
 			Timestamp:  base.Add(3 * time.Minute),
-			SourceType: "sentinel_av",
+			SourceType: "akeso_av",
 			Event:      &common.EventFields{Kind: "alert", Action: "scan_result"},
 			Host:       &common.HostFields{Name: targetHost},
 			AV:         &common.AVFields{Scan: &common.AVScan{Result: "malicious"}},
@@ -199,7 +199,7 @@ func TestFourSourceMissingOneStage(t *testing.T) {
 		// Stage 3: EDR
 		{
 			Timestamp:  base.Add(8 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Action: "process_create"},
 			Host:       &common.HostFields{Name: targetHost},
 			Process:    &common.ProcessFields{Name: "dropper.exe"},
@@ -230,7 +230,7 @@ func TestFourSourceDifferentHosts(t *testing.T) {
 		// Stage 1: NDR on Host-A
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "smb_write"},
 			Source:     &common.EndpointFields{IP: "10.1.2.45"},
 			Host:       &common.HostFields{Name: "HOST-A"},
@@ -238,7 +238,7 @@ func TestFourSourceDifferentHosts(t *testing.T) {
 		// Stage 2: AV on Host-B (DIFFERENT!)
 		{
 			Timestamp:  base.Add(3 * time.Minute),
-			SourceType: "sentinel_av",
+			SourceType: "akeso_av",
 			Event:      &common.EventFields{Kind: "alert", Action: "scan_result"},
 			Host:       &common.HostFields{Name: "HOST-B"},
 			AV:         &common.AVFields{Scan: &common.AVScan{Result: "malicious"}},
@@ -246,7 +246,7 @@ func TestFourSourceDifferentHosts(t *testing.T) {
 		// Stage 3: EDR on Host-A (back to original)
 		{
 			Timestamp:  base.Add(8 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Action: "process_create"},
 			Host:       &common.HostFields{Name: "HOST-A"},
 			Process:    &common.ProcessFields{Name: "dropper.exe"},
@@ -285,7 +285,7 @@ func TestFourSourceWindowExpiry(t *testing.T) {
 		// Stage 1: NDR at T+0
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "smb_transfer"},
 			Source:     &common.EndpointFields{IP: "10.1.2.45"},
 			Host:       &common.HostFields{Name: targetHost},
@@ -293,7 +293,7 @@ func TestFourSourceWindowExpiry(t *testing.T) {
 		// Stage 2: AV at T+5min
 		{
 			Timestamp:  base.Add(5 * time.Minute),
-			SourceType: "sentinel_av",
+			SourceType: "akeso_av",
 			Event:      &common.EventFields{Kind: "alert", Action: "realtime_block"},
 			Host:       &common.HostFields{Name: targetHost},
 			AV:         &common.AVFields{Scan: &common.AVScan{Result: "malicious"}},
@@ -301,7 +301,7 @@ func TestFourSourceWindowExpiry(t *testing.T) {
 		// Stage 3: EDR at T+15min
 		{
 			Timestamp:  base.Add(15 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Action: "file_execute"},
 			Host:       &common.HostFields{Name: targetHost},
 			Process:    &common.ProcessFields{Name: "malware.exe"},
@@ -340,7 +340,7 @@ func TestFourSourceOutOfOrder(t *testing.T) {
 		// Stage 2 first (AV — out of order!)
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_av",
+			SourceType: "akeso_av",
 			Event:      &common.EventFields{Kind: "alert", Action: "scan_result"},
 			Host:       &common.HostFields{Name: targetHost},
 			AV:         &common.AVFields{Scan: &common.AVScan{Result: "malicious"}},
@@ -348,7 +348,7 @@ func TestFourSourceOutOfOrder(t *testing.T) {
 		// Stage 1 (NDR — should have been first)
 		{
 			Timestamp:  base.Add(3 * time.Minute),
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "smb_write"},
 			Source:     &common.EndpointFields{IP: "10.1.2.45"},
 			Host:       &common.HostFields{Name: targetHost},
@@ -356,7 +356,7 @@ func TestFourSourceOutOfOrder(t *testing.T) {
 		// Stage 3 (EDR)
 		{
 			Timestamp:  base.Add(8 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Action: "process_create"},
 			Host:       &common.HostFields{Name: targetHost},
 			Process:    &common.ProcessFields{Name: "dropper.exe"},

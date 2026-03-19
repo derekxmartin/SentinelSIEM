@@ -3,7 +3,7 @@ package search
 import (
 	"strings"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
 )
 
 // SearchRules performs a case-insensitive substring match on rule Title

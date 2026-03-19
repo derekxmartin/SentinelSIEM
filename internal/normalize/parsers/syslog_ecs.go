@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	syslogParser "github.com/SentinelSIEM/sentinel-siem/parsers"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	syslogParser "github.com/derekxmartin/akeso-siem/parsers"
 )
 
 // SyslogECSParser normalizes syslog events into ECS format.

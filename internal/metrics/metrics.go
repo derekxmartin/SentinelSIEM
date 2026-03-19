@@ -1,4 +1,4 @@
-// Package metrics provides Prometheus instrumentation for SentinelSIEM.
+// Package metrics provides Prometheus instrumentation for AkesoSIEM.
 //
 // All metrics are registered in a custom registry (not the global default)
 // so tests and multiple instances don't collide. The registry is exposed
@@ -12,15 +12,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-const namespace = "sentinel"
+const namespace = "akeso"
 
-// Registry is the custom Prometheus registry for all SentinelSIEM metrics.
+// Registry is the custom Prometheus registry for all AkesoSIEM metrics.
 var Registry = prometheus.NewRegistry()
 
 // ---- Ingest Pipeline ----
 
 // EventsIngested counts raw events received by the ingest pipeline, partitioned
-// by source_type (sentinel_edr, sentinel_ndr, winevt, syslog, etc.) and
+// by source_type (akeso_edr, akeso_ndr, winevt, syslog, etc.) and
 // transport (http, tcp, udp, tls).
 var EventsIngested = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Namespace: namespace,

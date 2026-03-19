@@ -20,7 +20,7 @@ test.describe('Hunt Page', () => {
 
   test('page title shows Hunt', async ({ page }) => {
     await navigateTo(page, '/hunt', 'Hunt')
-    await expect(page).toHaveTitle(/Hunt.*SentinelSIEM/)
+    await expect(page).toHaveTitle(/Hunt.*AkesoSIEM/)
   })
 
   test('navigates to Hunt from sidebar', async ({ page }) => {

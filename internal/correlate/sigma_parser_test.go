@@ -16,7 +16,7 @@ title: Test Rule
 id: 12345678-1234-1234-1234-123456789abc
 status: experimental
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: process_create
@@ -44,7 +44,7 @@ level: medium
 	if r.Level != "medium" {
 		t.Errorf("level = %q", r.Level)
 	}
-	if r.Logsource.Product != "sentinel_edr" {
+	if r.Logsource.Product != "akeso_edr" {
 		t.Errorf("product = %q", r.Logsource.Product)
 	}
 	if r.Detection == nil {
@@ -147,7 +147,7 @@ title: Component Rule 1
 id: 11111111-1111-1111-1111-111111111111
 status: experimental
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: process_create
@@ -157,7 +157,7 @@ title: Component Rule 2
 id: 22222222-2222-2222-2222-222222222222
 status: experimental
 logsource:
-  product: sentinel_av
+  product: akeso_av
 detection:
   selection:
     av.scan.result: malicious
@@ -251,7 +251,7 @@ func TestParseMultipleFieldsAND(t *testing.T) {
 title: Multi Field AND
 id: 00000000-0000-0000-0000-000000000001
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: process_create
@@ -278,7 +278,7 @@ func TestParseListValuesOR(t *testing.T) {
 title: List Values OR
 id: 00000000-0000-0000-0000-000000000002
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action:
@@ -307,7 +307,7 @@ func TestParseModifiers(t *testing.T) {
 title: Modifier Test
 id: 00000000-0000-0000-0000-000000000003
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action|contains:
@@ -362,7 +362,7 @@ func TestParseMultipleSelections(t *testing.T) {
 title: Selection with Filter
 id: 00000000-0000-0000-0000-000000000004
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.category: network
@@ -414,7 +414,7 @@ func TestParseSelectionListOfMaps(t *testing.T) {
 title: List of Maps (OR of ANDs)
 id: 00000000-0000-0000-0000-000000000005
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     - event.action: foo
@@ -446,7 +446,7 @@ func TestParseMissingCondition(t *testing.T) {
 title: No Condition
 id: 00000000-0000-0000-0000-000000000010
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: process_create
@@ -464,7 +464,7 @@ func TestParseEmptyDocument(t *testing.T) {
 title: After Empty
 id: 00000000-0000-0000-0000-000000000011
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: test
@@ -599,7 +599,7 @@ func TestParseDeepFieldNames(t *testing.T) {
 title: Deep Fields
 id: 00000000-0000-0000-0000-000000000016
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     process.parent.name: explorer.exe
@@ -720,7 +720,7 @@ func TestLoadRulesFromDir(t *testing.T) {
 title: Valid Rule
 id: 00000000-0000-0000-0000-000000000020
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: test
@@ -732,7 +732,7 @@ detection:
 title: Multi Rule 1
 id: 00000000-0000-0000-0000-000000000021
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: test
@@ -741,7 +741,7 @@ detection:
 title: Multi Rule 2
 id: 00000000-0000-0000-0000-000000000022
 logsource:
-  product: sentinel_av
+  product: akeso_av
 detection:
   selection:
     av.scan.result: malicious
@@ -776,7 +776,7 @@ func TestLoadRulesFromDirNested(t *testing.T) {
 title: Top Level
 id: 00000000-0000-0000-0000-000000000030
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action: test
@@ -787,7 +787,7 @@ detection:
 title: Nested Rule
 id: 00000000-0000-0000-0000-000000000031
 logsource:
-  product: sentinel_av
+  product: akeso_av
 detection:
   selection:
     av.scan.result: malicious
@@ -818,8 +818,8 @@ func TestLoadRulesFromDirEmpty(t *testing.T) {
 // --- Parsing existing project rules ---
 
 func TestParseProjectRules(t *testing.T) {
-	// Parse all existing rules in the sentinel_portfolio directory.
-	rulesDir := filepath.Join("..", "..", "rules", "sentinel_portfolio")
+	// Parse all existing rules in the akeso_portfolio directory.
+	rulesDir := filepath.Join("..", "..", "rules", "akeso_portfolio")
 	if _, err := os.Stat(rulesDir); os.IsNotExist(err) {
 		t.Skip("rules directory not found (expected when running from different working dir)")
 	}
@@ -834,7 +834,7 @@ func TestParseProjectRules(t *testing.T) {
 	// We have 10 files with multi-doc YAML. Each has 3-5 documents.
 	// At minimum we expect 30+ rules.
 	if len(rules) < 20 {
-		t.Errorf("expected at least 20 rules from sentinel_portfolio, got %d", len(rules))
+		t.Errorf("expected at least 20 rules from akeso_portfolio, got %d", len(rules))
 	}
 
 	// Verify we got both single-event and correlation rules.
@@ -849,7 +849,7 @@ func TestParseProjectRules(t *testing.T) {
 		t.Error("expected correlation rules")
 	}
 
-	t.Logf("Parsed %d rules (%d single-event, %d correlation) from sentinel_portfolio",
+	t.Logf("Parsed %d rules (%d single-event, %d correlation) from akeso_portfolio",
 		len(rules), len(single), len(corr))
 }
 
@@ -1145,8 +1145,8 @@ level: high
 }
 
 // TestLoadAllProjectRules verifies that all rules from both sigma_curated and
-// sentinel_portfolio directories parse and compile successfully.
-// Acceptance criteria: 50 sigma_curated + 10 sentinel_portfolio files = 60 total.
+// akeso_portfolio directories parse and compile successfully.
+// Acceptance criteria: 50 sigma_curated + 10 akeso_portfolio files = 60 total.
 func TestLoadAllProjectRules(t *testing.T) {
 	projectRoot := filepath.Join("..", "..", "rules")
 
@@ -1159,13 +1159,13 @@ func TestLoadAllProjectRules(t *testing.T) {
 		t.Fatalf("expected 50 sigma_curated rules, got %d", len(sigmaRules))
 	}
 
-	// Load sentinel_portfolio rules.
-	portfolioRules, portfolioErrs := LoadRulesFromDir(filepath.Join(projectRoot, "sentinel_portfolio"))
+	// Load akeso_portfolio rules.
+	portfolioRules, portfolioErrs := LoadRulesFromDir(filepath.Join(projectRoot, "akeso_portfolio"))
 	for _, e := range portfolioErrs {
-		t.Errorf("sentinel_portfolio parse error: %v", e)
+		t.Errorf("akeso_portfolio parse error: %v", e)
 	}
 	if len(portfolioRules) < 30 {
-		t.Fatalf("expected at least 30 sentinel_portfolio rules (multi-doc YAML), got %d", len(portfolioRules))
+		t.Fatalf("expected at least 30 akeso_portfolio rules (multi-doc YAML), got %d", len(portfolioRules))
 	}
 
 	// Verify all rules compile in the engine.
@@ -1205,7 +1205,7 @@ func TestLoadAllProjectRules(t *testing.T) {
 		idSet[r.ID] = r.Title
 	}
 
-	t.Logf("Loaded %d total rules: %d sigma_curated + %d sentinel_portfolio (%d single-event, %d correlation)",
+	t.Logf("Loaded %d total rules: %d sigma_curated + %d akeso_portfolio (%d single-event, %d correlation)",
 		len(allRules), len(sigmaRules), len(portfolioRules), len(single), len(corr))
 }
 

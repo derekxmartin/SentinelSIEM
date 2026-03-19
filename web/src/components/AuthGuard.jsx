@@ -18,7 +18,7 @@ export default function AuthGuard() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0D0608' }}>
         <div className="flex flex-col items-center gap-4">
-          <img src={logo} alt="SentinelSIEM" className="h-16 w-16 animate-pulse" />
+          <img src={logo} alt="AkesoSIEM" className="h-16 w-16 animate-pulse" />
           <p className="text-slate-400 text-sm">Loading...</p>
         </div>
       </div>

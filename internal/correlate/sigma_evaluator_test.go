@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // --- getEventFieldValue tests ---
@@ -835,7 +835,7 @@ title: EDR Behavioral Detection
 id: a1b2c3d4-e5f6-4a7b-8c9d-000000000001
 status: experimental
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.action|contains:
@@ -888,7 +888,7 @@ title: EDR Outbound Data Transfer
 id: e5f6a7b8-c9d0-4e1f-2a3b-000000000004
 status: experimental
 logsource:
-  product: sentinel_edr
+  product: akeso_edr
 detection:
   selection:
     event.category: network
@@ -942,7 +942,7 @@ title: DLP Sensitive Data Access
 id: e5f6a7b8-c9d0-4e1f-2a3b-000000000003
 status: experimental
 logsource:
-  product: sentinel_dlp
+  product: akeso_dlp
 detection:
   selection:
     dlp.classification:
@@ -996,7 +996,7 @@ title: AV Dropped Tool Detection
 id: e5f6a7b8-c9d0-4e1f-2a3b-000000000002
 status: experimental
 logsource:
-  product: sentinel_av
+  product: akeso_av
 detection:
   selection:
     av.scan.result:

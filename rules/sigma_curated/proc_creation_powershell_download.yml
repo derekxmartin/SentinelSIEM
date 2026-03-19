@@ -6,7 +6,7 @@ description: |
   commonly used in initial access and payload staging.
 references:
   - https://attack.mitre.org/techniques/T1059/001/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.execution

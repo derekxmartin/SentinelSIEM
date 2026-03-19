@@ -3,7 +3,7 @@ description: "Normal workstation activity"
 events_per_minute: 5
 event_templates:
   - weight: 30
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     fields:
       process_name: "{{ random_choice(['chrome.exe', 'outlook.exe', 'excel.exe', 'teams.exe', 'notepad.exe', 'code.exe', 'explorer.exe']) }}"
@@ -12,7 +12,7 @@ event_templates:
       severity: Low
 
   - weight: 20
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: network_connection
     fields:
       remote_ip: "{{ random_choice(['151.101.1.140', '142.250.80.46', '13.107.42.14', '23.45.67.89', '20.190.159.0']) }}"
@@ -23,7 +23,7 @@ event_templates:
       severity: Low
 
   - weight: 15
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: file_operation
     fields:
       operation: Write
@@ -31,7 +31,7 @@ event_templates:
       severity: Low
 
   - weight: 10
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: registry_operation
     fields:
       operation: SetValue
@@ -45,19 +45,19 @@ event_templates:
       logon_type: 2
 
   - weight: 5
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: dns_query
     fields:
       query_name: "{{ random_choice(['www.google.com', 'outlook.office365.com', 'teams.microsoft.com', 'cdn.jsdelivr.net', 'update.microsoft.com']) }}"
       severity: Low
 
   - weight: 5
-    source_type: sentinel_av
+    source_type: akeso_av
     template: scan_result_clean
     fields: {}
 
   - weight: 5
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: image_load
     fields:
       image_path: "{{ random_choice(['C:\\\\Windows\\\\System32\\\\kernel32.dll', 'C:\\\\Windows\\\\System32\\\\ntdll.dll', 'C:\\\\Windows\\\\System32\\\\user32.dll', 'C:\\\\Windows\\\\System32\\\\advapi32.dll']) }}"

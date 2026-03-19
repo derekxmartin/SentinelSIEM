@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // writeRule writes a Sigma rule YAML file to the given directory.

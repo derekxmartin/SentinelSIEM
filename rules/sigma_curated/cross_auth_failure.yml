@@ -6,7 +6,7 @@ description: |
   visibility into failed access attempts organization-wide.
 references:
   - https://attack.mitre.org/techniques/T1110/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.credential_access

@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
 )
 
 // mockSearcher returns canned results for testing.
@@ -29,16 +29,16 @@ func TestHandleSearch_IPEntity(t *testing.T) {
 
 	mock := &mockSearcher{
 		results: map[string]*SearchRawResult{
-			"sentinel-events-*": {
+			"akeso-events-*": {
 				Total: 42,
 				Aggs:  json.RawMessage(`{"by_source":{"buckets":[{"key":"process","doc_count":30},{"key":"network","doc_count":12}]}}`),
 			},
-			"sentinel-alerts-*": {
+			"akeso-alerts-*": {
 				Total: 1,
 				Hits:  []json.RawMessage{json.RawMessage(alertDoc)},
 			},
-			"sentinel-cases":           {},
-			"sentinel-ndr-host-scores": {Total: 1, Hits: []json.RawMessage{json.RawMessage(hostDoc)}},
+			"akeso-cases":           {},
+			"akeso-ndr-host-scores": {Total: 1, Hits: []json.RawMessage{json.RawMessage(hostDoc)}},
 		},
 	}
 
@@ -46,7 +46,7 @@ func TestHandleSearch_IPEntity(t *testing.T) {
 		{ID: "r1", Title: "IP Scan Detection", Description: "Detects port scans", Level: "medium"},
 	}
 
-	h := NewHandler(mock, rules, "sentinel")
+	h := NewHandler(mock, rules, "akeso")
 
 	body := `{"query":"10.1.2.45","entity_type":"ip"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/search", bytes.NewBufferString(body))
@@ -91,9 +91,9 @@ func TestHandleSearch_IPEntity(t *testing.T) {
 func TestHandleSearch_FreeText_NoHostScores(t *testing.T) {
 	mock := &mockSearcher{
 		results: map[string]*SearchRawResult{
-			"sentinel-events-*": {Total: 5},
-			"sentinel-alerts-*": {},
-			"sentinel-cases":    {},
+			"akeso-events-*": {Total: 5},
+			"akeso-alerts-*": {},
+			"akeso-cases":    {},
 		},
 	}
 
@@ -102,7 +102,7 @@ func TestHandleSearch_FreeText_NoHostScores(t *testing.T) {
 		{ID: "r2", Title: "PowerShell Download", Description: "Download cradle", Level: "high"},
 	}
 
-	h := NewHandler(mock, rules, "sentinel")
+	h := NewHandler(mock, rules, "akeso")
 
 	body := `{"query":"mimikatz","entity_type":"freetext"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/search", bytes.NewBufferString(body))
@@ -125,7 +125,7 @@ func TestHandleSearch_FreeText_NoHostScores(t *testing.T) {
 }
 
 func TestHandleSearch_EmptyQuery(t *testing.T) {
-	h := NewHandler(&mockSearcher{results: map[string]*SearchRawResult{}}, nil, "sentinel")
+	h := NewHandler(&mockSearcher{results: map[string]*SearchRawResult{}}, nil, "akeso")
 
 	body := `{"query":""}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/search", bytes.NewBufferString(body))

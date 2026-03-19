@@ -14,7 +14,7 @@ event_templates:
     fields: {}
 
   - weight: 15
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     fields:
       process_name: "{{ random_choice(['lsass.exe', 'svchost.exe', 'dns.exe', 'ntfrs.exe', 'dfsr.exe', 'ismserv.exe']) }}"
@@ -23,7 +23,7 @@ event_templates:
       severity: Low
 
   - weight: 15
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: network_connection
     fields:
       remote_ip: "{{ random_choice(['192.168.1.10', '192.168.1.11', '192.168.1.12', '10.0.0.10', '10.0.0.20']) }}"
@@ -34,14 +34,14 @@ event_templates:
       severity: Low
 
   - weight: 10
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: dns_query
     fields:
       query_name: "{{ random_choice(['_ldap._tcp.corp.local', '_kerberos._tcp.corp.local', 'gc._msdcs.corp.local']) }}"
       severity: Low
 
   - weight: 10
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: registry_operation
     fields:
       operation: SetValue
@@ -49,6 +49,6 @@ event_templates:
       severity: Low
 
   - weight: 5
-    source_type: sentinel_av
+    source_type: akeso_av
     template: scan_result_clean
     fields: {}

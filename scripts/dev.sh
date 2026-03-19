@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SentinelSIEM Development Mode
+# AkesoSIEM Development Mode
 # Starts Docker services, runs ingest + query servers in background,
 # and starts the React dev server with live reload.
 #
@@ -33,12 +33,12 @@ echo "[dev] Waiting for Elasticsearch..."
 "$SCRIPT_DIR/wait-for-es.sh" http://localhost:9200 20 || echo "[dev] ES not ready, continuing..."
 
 # ─── Start Go services in background ─────────────────────────────────────────
-echo "[dev] Starting sentinel-ingest..."
-"$BINDIR/sentinel-ingest${EXT}" --config sentinel.toml &
+echo "[dev] Starting akeso-ingest..."
+"$BINDIR/akeso-ingest${EXT}" --config akeso.toml &
 INGEST_PID=$!
 
-echo "[dev] Starting sentinel-query..."
-"$BINDIR/sentinel-query${EXT}" --config sentinel.toml &
+echo "[dev] Starting akeso-query..."
+"$BINDIR/akeso-query${EXT}" --config akeso.toml &
 QUERY_PID=$!
 
 # Trap to kill background processes on exit.

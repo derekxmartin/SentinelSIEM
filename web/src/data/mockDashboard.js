@@ -76,7 +76,7 @@ export const topRulesData = [
 
 // Source health summary
 export const sourceHealthData = [
-  { name: 'SentinelEDR', type: 'EDR', status: 'healthy', eps: 1240, lastEvent: new Date(now - 2000).toISOString() },
+  { name: 'AkesoEDR', type: 'EDR', status: 'healthy', eps: 1240, lastEvent: new Date(now - 2000).toISOString() },
   { name: 'CrowdStrike AV', type: 'AV', status: 'healthy', eps: 680, lastEvent: new Date(now - 5000).toISOString() },
   { name: 'Symantec DLP', type: 'DLP', status: 'healthy', eps: 120, lastEvent: new Date(now - 8000).toISOString() },
   { name: 'Vectra NDR', type: 'NDR', status: 'healthy', eps: 340, lastEvent: new Date(now - 3000).toISOString() },

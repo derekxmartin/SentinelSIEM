@@ -49,8 +49,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 8,
     lastTriggered: new Date(now - 3 * day).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
 
   // Initial Access
@@ -79,8 +79,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 23,
     lastTriggered: new Date(now - 6 * hr).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
   {
     id: 'rule-005',
@@ -93,8 +93,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 5,
     lastTriggered: new Date(now - 12 * hr).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
 
   // Execution
@@ -197,8 +197,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 11,
     lastTriggered: new Date(now - 18 * hr).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
 
   // Defense Evasion
@@ -271,8 +271,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 28,
     lastTriggered: new Date(now - 16 * hr).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
 
   // Discovery
@@ -301,8 +301,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 14,
     lastTriggered: new Date(now - 1 * day).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
 
   // Lateral Movement
@@ -347,8 +347,8 @@ export const mockRules = [
     enabled: false,
     hitCount: 0,
     lastTriggered: null,
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
   {
     id: 'rule-023',
@@ -377,8 +377,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 31,
     lastTriggered: new Date(now - 9 * hr).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
   {
     id: 'rule-025',
@@ -407,8 +407,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 18,
     lastTriggered: new Date(now - 11 * hr).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
   {
     id: 'rule-027',
@@ -421,8 +421,8 @@ export const mockRules = [
     enabled: true,
     hitCount: 44,
     lastTriggered: new Date(now - 4 * hr).toISOString(),
-    source: 'sentinel_portfolio',
-    author: 'Sentinel',
+    source: 'akeso_portfolio',
+    author: 'Akeso',
   },
 
   // Impact
@@ -601,10 +601,10 @@ export function generateNavigatorJSON(coverage) {
   }
 
   return {
-    name: 'SentinelSIEM Coverage',
+    name: 'AkesoSIEM Coverage',
     versions: { attack: '14', navigator: '4.9.1', layer: '4.5' },
     domain: 'enterprise-attack',
-    description: 'ATT&CK coverage layer exported from SentinelSIEM',
+    description: 'ATT&CK coverage layer exported from AkesoSIEM',
     techniques,
     gradient: {
       colors: ['#ef4444', '#f59e0b', '#22c55e'],

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // Backend is the interface for persisting source configs to storage.

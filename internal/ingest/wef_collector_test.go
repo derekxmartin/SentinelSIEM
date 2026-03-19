@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 )
 
 // ============================================================================

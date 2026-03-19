@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SentinelSIEM Installation Script
+# AkesoSIEM Installation Script
 # Builds all binaries, starts Docker Compose services, applies ES templates,
 # creates an initial admin user, and prints credentials + dashboard URL.
 #
@@ -39,8 +39,8 @@ fail()  { echo -e "${RED}[ fail ]${NC} $*"; exit 1; }
 
 # ─── Step 1: Generate config if missing ───────────────────────────────────────
 info "Checking configuration..."
-if [ ! -f sentinel.toml ]; then
-    info "Generating sentinel.toml from template..."
+if [ ! -f akeso.toml ]; then
+    info "Generating akeso.toml from template..."
     INGEST_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))" 2>/dev/null || openssl rand -base64 32 | tr -d '=+/' | head -c 32)
     JWT_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(48))" 2>/dev/null || openssl rand -base64 48 | tr -d '=+/' | head -c 48)
     MFA_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))" 2>/dev/null || openssl rand -hex 32)
@@ -48,18 +48,18 @@ if [ ! -f sentinel.toml ]; then
     sed -e "s|{{INGEST_API_KEY}}|${INGEST_KEY}|g" \
         -e "s|{{JWT_SECRET}}|${JWT_SECRET}|g" \
         -e "s|{{MFA_KEY}}|${MFA_KEY}|g" \
-        sentinel.toml.template > sentinel.toml
+        akeso.toml.template > akeso.toml
 
-    ok "Generated sentinel.toml with random secrets"
+    ok "Generated akeso.toml with random secrets"
     echo -e "    ${BOLD}Ingest API Key:${NC} ${INGEST_KEY}"
 else
-    ok "sentinel.toml already exists"
+    ok "akeso.toml already exists"
     # Extract the ingest key for display later.
-    INGEST_KEY=$(grep -oP 'api_keys\s*=\s*\["\K[^"]+' sentinel.toml 2>/dev/null || echo "see sentinel.toml")
+    INGEST_KEY=$(grep -oP 'api_keys\s*=\s*\["\K[^"]+' akeso.toml 2>/dev/null || echo "see akeso.toml")
 fi
 
 # ─── Step 1b: Create log directory ─────────────────────────────────────────────
-LOG_DIR=$(grep -oP 'log_dir\s*=\s*"\K[^"]+' sentinel.toml 2>/dev/null || echo "logs")
+LOG_DIR=$(grep -oP 'log_dir\s*=\s*"\K[^"]+' akeso.toml 2>/dev/null || echo "logs")
 mkdir -p "$LOG_DIR"
 ok "Log directory ready: ${LOG_DIR}/"
 
@@ -73,10 +73,10 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]] ||
     EXT=".exe"
 fi
 
-go build -o "${BINDIR}/sentinel-ingest${EXT}"    ./cmd/sentinel-ingest
-go build -o "${BINDIR}/sentinel-correlate${EXT}"  ./cmd/sentinel-correlate
-go build -o "${BINDIR}/sentinel-query${EXT}"      ./cmd/sentinel-query
-go build -o "${BINDIR}/sentinel-cli${EXT}"        ./cmd/sentinel-cli
+go build -o "${BINDIR}/akeso-ingest${EXT}"    ./cmd/akeso-ingest
+go build -o "${BINDIR}/akeso-correlate${EXT}"  ./cmd/akeso-correlate
+go build -o "${BINDIR}/akeso-query${EXT}"      ./cmd/akeso-query
+go build -o "${BINDIR}/akeso-cli${EXT}"        ./cmd/akeso-cli
 ok "Built 4 binaries in ${BINDIR}/"
 
 # ─── Step 3: Build React dashboard ───────────────────────────────────────────
@@ -111,7 +111,7 @@ info "Waiting for Elasticsearch..."
 
 # ─── Step 6: Apply ES index templates / ILM ──────────────────────────────────
 info "Applying Elasticsearch index templates..."
-"$BINDIR/sentinel-ingest${EXT}" --config sentinel.toml &
+"$BINDIR/akeso-ingest${EXT}" --config akeso.toml &
 INGEST_PID=$!
 sleep 3
 kill "$INGEST_PID" 2>/dev/null || true
@@ -119,25 +119,25 @@ wait "$INGEST_PID" 2>/dev/null || true
 ok "Index templates applied"
 
 # ─── Step 7: Start services ──────────────────────────────────────────────────
-info "Starting SentinelSIEM services..."
-"$BINDIR/sentinel-ingest${EXT}" --config sentinel.toml &
+info "Starting AkesoSIEM services..."
+"$BINDIR/akeso-ingest${EXT}" --config akeso.toml &
 INGEST_PID=$!
 disown "$INGEST_PID"
-"$BINDIR/sentinel-query${EXT}" --config sentinel.toml &
+"$BINDIR/akeso-query${EXT}" --config akeso.toml &
 QUERY_PID=$!
 disown "$QUERY_PID"
 sleep 2
 
 # Verify services are running.
 if kill -0 "$INGEST_PID" 2>/dev/null; then
-    ok "sentinel-ingest running (PID ${INGEST_PID})"
+    ok "akeso-ingest running (PID ${INGEST_PID})"
 else
-    fail "sentinel-ingest failed to start"
+    fail "akeso-ingest failed to start"
 fi
 if kill -0 "$QUERY_PID" 2>/dev/null; then
-    ok "sentinel-query running (PID ${QUERY_PID})"
+    ok "akeso-query running (PID ${QUERY_PID})"
 else
-    fail "sentinel-query failed to start"
+    fail "akeso-query failed to start"
 fi
 
 # ─── Step 8: Create admin user ───────────────────────────────────────────────
@@ -146,7 +146,7 @@ if [ -z "$ADMIN_PASS" ]; then
     ADMIN_PASS=$(python3 -c "import secrets; print(secrets.token_urlsafe(16))" 2>/dev/null || openssl rand -base64 16 | tr -d '=+/' | head -c 16)
 fi
 
-"$BINDIR/sentinel-cli${EXT}" --server "http://localhost:${QUERY_PORT}" \
+"$BINDIR/akeso-cli${EXT}" --server "http://localhost:${QUERY_PORT}" \
     users create \
     --username "$ADMIN_USER" \
     --password "$ADMIN_PASS" \
@@ -155,19 +155,19 @@ fi
 
 # ─── Step 9: Create ingest API key via CLI ────────────────────────────────────
 info "Creating CLI API key..."
-CLI_KEY=$("$BINDIR/sentinel-cli${EXT}" --server "http://localhost:${QUERY_PORT}" \
+CLI_KEY=$("$BINDIR/akeso-cli${EXT}" --server "http://localhost:${QUERY_PORT}" \
     keys create --name "install-cli" --scopes "ingest,query,admin" 2>/dev/null | grep -oP 'Key:\s*\K.*' || echo "")
 if [ -n "$CLI_KEY" ]; then
     ok "CLI API key created"
 else
-    CLI_KEY="(see sentinel-cli keys create)"
+    CLI_KEY="(see akeso-cli keys create)"
     warn "Could not create CLI API key (may already exist)"
 fi
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}  SentinelSIEM Installation Complete${NC}"
+echo -e "${BOLD}  AkesoSIEM Installation Complete${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  ${BOLD}Services:${NC}"
@@ -185,8 +185,8 @@ echo -e "    Ingest API key: ${INGEST_KEY}"
 echo -e "    CLI API key:    ${CLI_KEY}"
 echo ""
 echo -e "  ${BOLD}Quick start:${NC}"
-echo -e "    sentinel-cli --server http://localhost:${QUERY_PORT} health"
-echo -e "    sentinel-cli --ingest-server http://localhost:${INGEST_PORT} --ingest-key ${INGEST_KEY} ingest test"
+echo -e "    akeso-cli --server http://localhost:${QUERY_PORT} health"
+echo -e "    akeso-cli --ingest-server http://localhost:${INGEST_PORT} --ingest-key ${INGEST_KEY} ingest test"
 echo ""
 echo -e "  PIDs: ingest=${INGEST_PID} query=${QUERY_PID}"
 echo -e "  Stop: kill ${INGEST_PID} ${QUERY_PID}"

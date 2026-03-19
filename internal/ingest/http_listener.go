@@ -11,7 +11,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 )
 
 // EventHandler is called with each batch of raw events received by the listener.

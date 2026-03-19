@@ -45,7 +45,7 @@ func newMockSearcher(total int, hits ...string) *mockSearcher {
 
 func TestHandleQuery_SimpleEquals(t *testing.T) {
 	mock := newMockSearcher(1, `{"process.name":"cmd.exe"}`)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "process.name = \"cmd.exe\""}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -73,7 +73,7 @@ func TestHandleQuery_SimpleEquals(t *testing.T) {
 	}
 
 	// Verify the translated DSL was sent to ES.
-	if mock.lastIndex != "sentinel-events-*" {
+	if mock.lastIndex != "akeso-events-*" {
 		t.Errorf("expected default index, got %q", mock.lastIndex)
 	}
 	queryDSL := mock.lastBody["query"].(map[string]any)
@@ -84,7 +84,7 @@ func TestHandleQuery_SimpleEquals(t *testing.T) {
 
 func TestHandleQuery_CustomIndex(t *testing.T) {
 	mock := newMockSearcher(0)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "status = ok", "index": "custom-index-*"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -102,7 +102,7 @@ func TestHandleQuery_CustomIndex(t *testing.T) {
 
 func TestHandleQuery_Pagination(t *testing.T) {
 	mock := newMockSearcher(500)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "status = ok", "from": 100, "size": 25}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -135,7 +135,7 @@ func TestHandleQuery_Pagination(t *testing.T) {
 
 func TestHandleQuery_SizeClamp(t *testing.T) {
 	mock := newMockSearcher(0)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "status = ok", "size": 99999}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -156,7 +156,7 @@ func TestHandleQuery_SizeClamp(t *testing.T) {
 }
 
 func TestHandleQuery_EmptyQuery(t *testing.T) {
-	handler := NewAPIHandler(newMockSearcher(0), "sentinel-events-*")
+	handler := NewAPIHandler(newMockSearcher(0), "akeso-events-*")
 
 	body := `{"query": ""}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -176,7 +176,7 @@ func TestHandleQuery_EmptyQuery(t *testing.T) {
 }
 
 func TestHandleQuery_InvalidQuery(t *testing.T) {
-	handler := NewAPIHandler(newMockSearcher(0), "sentinel-events-*")
+	handler := NewAPIHandler(newMockSearcher(0), "akeso-events-*")
 
 	body := `{"query": "??? !!!"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -196,7 +196,7 @@ func TestHandleQuery_InvalidQuery(t *testing.T) {
 }
 
 func TestHandleQuery_InvalidJSON(t *testing.T) {
-	handler := NewAPIHandler(newMockSearcher(0), "sentinel-events-*")
+	handler := NewAPIHandler(newMockSearcher(0), "akeso-events-*")
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader("{not json"))
 	rec := httptest.NewRecorder()
@@ -209,7 +209,7 @@ func TestHandleQuery_InvalidJSON(t *testing.T) {
 }
 
 func TestHandleQuery_MethodNotAllowed(t *testing.T) {
-	handler := NewAPIHandler(newMockSearcher(0), "sentinel-events-*")
+	handler := NewAPIHandler(newMockSearcher(0), "akeso-events-*")
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/query", nil)
 	rec := httptest.NewRecorder()
@@ -225,7 +225,7 @@ func TestHandleQuery_ESError(t *testing.T) {
 	mock := &mockSearcher{
 		err: fmt.Errorf("connection refused"),
 	}
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "status = ok"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -246,7 +246,7 @@ func TestHandleQuery_ESError(t *testing.T) {
 
 func TestHandleQuery_WithPipes(t *testing.T) {
 	mock := newMockSearcher(10, `{"user":"admin"}`)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "user.name = admin | sort @timestamp desc | head 10 | fields user.name, host.name"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -278,7 +278,7 @@ func TestHandleQuery_Aggregation(t *testing.T) {
 			TookMs: 3,
 		},
 	}
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "count() by user.name where host.name = srv01"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -311,7 +311,7 @@ func TestHandleQuery_NullHitsBecomesEmptyArray(t *testing.T) {
 			TookMs: 1,
 		},
 	}
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "nonexistent.field = nothing"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -331,7 +331,7 @@ func TestHandleQuery_NullHitsBecomesEmptyArray(t *testing.T) {
 
 func TestHandleQuery_QueryDSLInResponse(t *testing.T) {
 	mock := newMockSearcher(0)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "process.name = cmd.exe"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -351,7 +351,7 @@ func TestHandleQuery_QueryDSLInResponse(t *testing.T) {
 }
 
 func TestHandleHealth(t *testing.T) {
-	handler := NewAPIHandler(newMockSearcher(0), "sentinel-events-*")
+	handler := NewAPIHandler(newMockSearcher(0), "akeso-events-*")
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/health", nil)
 	rec := httptest.NewRecorder()
@@ -368,14 +368,14 @@ func TestHandleHealth(t *testing.T) {
 	if resp["status"] != "ok" {
 		t.Errorf("expected status=ok, got %q", resp["status"])
 	}
-	if resp["service"] != "sentinel-query" {
-		t.Errorf("expected service=sentinel-query, got %q", resp["service"])
+	if resp["service"] != "akeso-query" {
+		t.Errorf("expected service=akeso-query, got %q", resp["service"])
 	}
 }
 
 func TestHandleQuery_ComplexBoolQuery(t *testing.T) {
 	mock := newMockSearcher(5)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "(process.name = cmd.exe OR process.name = powershell.exe) AND host.name = srv01"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -404,7 +404,7 @@ func TestHandleQuery_ComplexBoolQuery(t *testing.T) {
 
 func TestHandleQuery_WildcardQuery(t *testing.T) {
 	mock := newMockSearcher(3)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "process.name = cmd*"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -425,7 +425,7 @@ func TestHandleQuery_WildcardQuery(t *testing.T) {
 func TestHandleQuery_PaginationFromOverride(t *testing.T) {
 	// Verify request-level from overrides pipe-level settings.
 	mock := newMockSearcher(100)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "status = ok | head 20", "from": 40}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -472,7 +472,7 @@ func TestClampSize(t *testing.T) {
 
 func TestHandleQuery_ContentTypeJSON(t *testing.T) {
 	mock := newMockSearcher(0)
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "status = ok"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))
@@ -493,7 +493,7 @@ func TestHandleQuery_TookMsPropagated(t *testing.T) {
 			TookMs: 42,
 		},
 	}
-	handler := NewAPIHandler(mock, "sentinel-events-*")
+	handler := NewAPIHandler(mock, "akeso-events-*")
 
 	body := `{"query": "status = ok"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/query", strings.NewReader(body))

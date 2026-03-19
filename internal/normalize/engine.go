@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // sourceTypeEnvelope is used for lightweight extraction of source_type from raw JSON.

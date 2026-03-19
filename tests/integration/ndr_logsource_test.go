@@ -4,11 +4,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
 )
 
-// buildAllRulesEngine loads both sigma_curated and sentinel_portfolio rules
+// buildAllRulesEngine loads both sigma_curated and akeso_portfolio rules
 // to test dual logsource matching.
 func buildAllRulesEngine(t *testing.T) *correlate.RuleEngine {
 	t.Helper()
@@ -16,7 +16,7 @@ func buildAllRulesEngine(t *testing.T) *correlate.RuleEngine {
 	rulesRoot := filepath.Join("..", "..", "rules")
 
 	var allRules []*correlate.SigmaRule
-	for _, dir := range []string{"sigma_curated", "sentinel_portfolio"} {
+	for _, dir := range []string{"sigma_curated", "akeso_portfolio"} {
 		rules, errs := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, dir))
 		for _, e := range errs {
 			t.Logf("parse warning (%s): %v", dir, e)
@@ -48,7 +48,7 @@ func TestNDRDNSCategoryRuleFires(t *testing.T) {
 	// NDR DNS event querying a suspicious TLD (.xyz).
 	// Should trigger the community `category: dns` rule for suspicious TLDs.
 	dnsEvent := &common.ECSEvent{
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network"},
@@ -92,7 +92,7 @@ func TestNDRDNSTunnelingRuleFires(t *testing.T) {
 
 	// NDR DNS event with a suspiciously long subdomain (tunneling indicator).
 	tunnelingEvent := &common.ECSEvent{
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network"},
@@ -122,15 +122,15 @@ func TestNDRDNSTunnelingRuleFires(t *testing.T) {
 	}
 }
 
-// TestNDRProductRuleNotOnEDR verifies that a `product: sentinel_ndr` rule does
+// TestNDRProductRuleNotOnEDR verifies that a `product: akeso_ndr` rule does
 // NOT fire on EDR events — no cross-contamination between product logsources.
 func TestNDRProductRuleNotOnEDR(t *testing.T) {
 	engine := buildAllRulesEngine(t)
 
 	// EDR event that has similar fields to what an NDR rule looks for,
-	// but comes from sentinel_edr — should NOT trigger NDR rules.
+	// but comes from akeso_edr — should NOT trigger NDR rules.
 	edrEvent := &common.ECSEvent{
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network"},
@@ -151,7 +151,7 @@ func TestNDRProductRuleNotOnEDR(t *testing.T) {
 		t.Logf("  → %s (%s)", a.Title, a.RuleID)
 	}
 
-	// Check that no `product: sentinel_ndr` rules fired.
+	// Check that no `product: akeso_ndr` rules fired.
 	ndrRuleIDs := map[string]bool{
 		// sigma_curated NDR rules
 		"a1b2c3d4-4001-4a1b-9c26-000000000026": true, // ndr_long_session_c2
@@ -168,17 +168,17 @@ func TestNDRProductRuleNotOnEDR(t *testing.T) {
 		}
 	}
 
-	t.Log("PASS: product:sentinel_ndr rules do not fire on EDR events")
+	t.Log("PASS: product:akeso_ndr rules do not fire on EDR events")
 }
 
-// TestNDRProductRuleOnlyOnNDR verifies that `product: sentinel_ndr` rules DO
+// TestNDRProductRuleOnlyOnNDR verifies that `product: akeso_ndr` rules DO
 // fire on NDR events but NOT on events from other sources.
 func TestNDRProductRuleOnlyOnNDR(t *testing.T) {
 	engine := buildAllRulesEngine(t)
 
 	// NDR session event that should trigger the long session C2 rule.
 	ndrEvent := &common.ECSEvent{
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network"},
@@ -211,11 +211,11 @@ func TestNDRProductRuleOnlyOnNDR(t *testing.T) {
 	}
 
 	if !foundNDRRule {
-		t.Error("FAIL: product:sentinel_ndr long session rule did not fire on NDR event")
+		t.Error("FAIL: product:akeso_ndr long session rule did not fire on NDR event")
 	}
 
 	// Now send the exact same event but as a non-NDR source.
-	for _, sourceType := range []string{"sentinel_edr", "sentinel_av", "sentinel_dlp", "winevt", "syslog"} {
+	for _, sourceType := range []string{"akeso_edr", "akeso_av", "akeso_dlp", "winevt", "syslog"} {
 		nonNDR := *ndrEvent
 		nonNDR.SourceType = sourceType
 		nonNDRAlerts := engine.Evaluate(&nonNDR)
@@ -227,7 +227,7 @@ func TestNDRProductRuleOnlyOnNDR(t *testing.T) {
 		}
 	}
 
-	t.Log("PASS: product:sentinel_ndr rule fires only on NDR events")
+	t.Log("PASS: product:akeso_ndr rule fires only on NDR events")
 }
 
 // TestDNSCategoryNotOnEDR verifies that `category: dns` rules do NOT fire on
@@ -236,9 +236,9 @@ func TestDNSCategoryNotOnEDR(t *testing.T) {
 	engine := buildAllRulesEngine(t)
 
 	// EDR event with DNS fields — should NOT match category:dns rules
-	// because source_type is sentinel_edr, not matching the dns category conditions.
+	// because source_type is akeso_edr, not matching the dns category conditions.
 	edrWithDNS := &common.ECSEvent{
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network"},
@@ -265,7 +265,7 @@ func TestDNSCategoryNotOnEDR(t *testing.T) {
 		t.Logf("  → %s (%s)", a.Title, a.RuleID)
 	}
 
-	// The key test is that product:sentinel_ndr rules don't fire here.
+	// The key test is that product:akeso_ndr rules don't fire here.
 	ndrRuleIDs := map[string]bool{
 		"a1b2c3d4-4001-4a1b-9c26-000000000026": true,
 		"a1b2c3d4-4002-4a1b-9c27-000000000027": true,
@@ -281,5 +281,5 @@ func TestDNSCategoryNotOnEDR(t *testing.T) {
 		}
 	}
 
-	t.Log("PASS: product:sentinel_ndr rules do not fire on EDR events with DNS fields")
+	t.Log("PASS: product:akeso_ndr rules do not fire on EDR events with DNS fields")
 }

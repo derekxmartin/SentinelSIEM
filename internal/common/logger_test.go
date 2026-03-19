@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 )
 
 func TestSetupLogging_Disabled(t *testing.T) {

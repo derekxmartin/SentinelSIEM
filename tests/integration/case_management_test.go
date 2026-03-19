@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/cases"
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/cases"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 // ── Mock backends ──────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ func assertNoObservable(t *testing.T, obs []cases.Observable, typ, value string)
 func TestCaseEscalationFromCrossPortfolioAlerts(t *testing.T) {
 	// ── Step 1: Generate alerts from detection engine ───────────────
 	rulesRoot := filepath.Join("..", "..", "rules")
-	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sentinel_portfolio"))
+	rules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "akeso_portfolio"))
 	lsMap, err := correlate.LoadLogsourceMap(filepath.Join("..", "..", "parsers", "logsource_map.yaml"))
 	if err != nil {
 		t.Fatalf("loading logsource map: %v", err)
@@ -174,7 +174,7 @@ func TestCaseEscalationFromCrossPortfolioAlerts(t *testing.T) {
 	// EDR: process creation with attacker IP + process + parent process
 	edrEvent := &common.ECSEvent{
 		Timestamp:  base,
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"process"},
@@ -200,7 +200,7 @@ func TestCaseEscalationFromCrossPortfolioAlerts(t *testing.T) {
 	// AV: malware detection with file hash + signature name
 	avEvent := &common.ECSEvent{
 		Timestamp:  base.Add(2 * time.Minute),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event: &common.EventFields{
 			Kind:   "alert",
 			Action: "realtime_block",
@@ -224,7 +224,7 @@ func TestCaseEscalationFromCrossPortfolioAlerts(t *testing.T) {
 	// DLP: policy violation with user + classification
 	dlpEvent := &common.ECSEvent{
 		Timestamp:  base.Add(5 * time.Minute),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event: &common.EventFields{
 			Kind:   "alert",
 			Action: "policy_violation",
@@ -241,7 +241,7 @@ func TestCaseEscalationFromCrossPortfolioAlerts(t *testing.T) {
 	// NDR: session with JA3, JA4, Community ID, SNI
 	ndrEvent := &common.ECSEvent{
 		Timestamp:  base.Add(8 * time.Minute),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network"},

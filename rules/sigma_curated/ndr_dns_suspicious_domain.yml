@@ -6,7 +6,7 @@ description: |
   commonly used for phishing and malware distribution.
 references:
   - https://attack.mitre.org/techniques/T1071/004/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.command_and_control

@@ -1,7 +1,7 @@
 package parsers
 
 import (
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // EnsureCommunityID copies the community_id from NDR session metadata to

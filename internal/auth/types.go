@@ -22,7 +22,7 @@ var ValidRoles = map[Role]bool{
 	RoleReadOnly:          true,
 }
 
-// User represents a SentinelSIEM user account.
+// User represents a AkesoSIEM user account.
 type User struct {
 	ID           string     `json:"id"`
 	Username     string     `json:"username"`

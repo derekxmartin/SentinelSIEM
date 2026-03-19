@@ -6,7 +6,7 @@ description: |
   technique used to cover tracks after compromise.
 references:
   - https://attack.mitre.org/techniques/T1070/001/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.defense_evasion

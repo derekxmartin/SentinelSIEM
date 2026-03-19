@@ -7,8 +7,8 @@
       "pluginId": "prometheus"
     }
   ],
-  "title": "SentinelSIEM Overview",
-  "uid": "sentinel-siem-overview",
+  "title": "AkesoSIEM Overview",
+  "uid": "akeso-siem-overview",
   "version": 1,
   "timezone": "browser",
   "refresh": "10s",
@@ -20,7 +20,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(sentinel_ingest_events_received_total[5m])) by (source_type)",
+          "expr": "sum(rate(akeso_ingest_events_received_total[5m])) by (source_type)",
           "legendFormat": "{{source_type}}"
         }
       ],
@@ -34,11 +34,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [
         {
-          "expr": "sum(rate(sentinel_ingest_events_indexed_total[5m]))",
+          "expr": "sum(rate(akeso_ingest_events_indexed_total[5m]))",
           "legendFormat": "indexed"
         },
         {
-          "expr": "sum(rate(sentinel_ingest_events_dropped_total[5m])) by (reason)",
+          "expr": "sum(rate(akeso_ingest_events_dropped_total[5m])) by (reason)",
           "legendFormat": "dropped ({{reason}})"
         }
       ],
@@ -52,11 +52,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "targets": [
         {
-          "expr": "sum(rate(sentinel_detect_alerts_generated_total[5m])) by (level)",
+          "expr": "sum(rate(akeso_detect_alerts_generated_total[5m])) by (level)",
           "legendFormat": "{{level}}"
         },
         {
-          "expr": "rate(sentinel_detect_alerts_deduplicated_total[5m])",
+          "expr": "rate(akeso_detect_alerts_deduplicated_total[5m])",
           "legendFormat": "deduplicated"
         }
       ],
@@ -70,7 +70,7 @@
       "gridPos": { "h": 4, "w": 4, "x": 12, "y": 8 },
       "targets": [
         {
-          "expr": "sentinel_detect_rules_loaded",
+          "expr": "akeso_detect_rules_loaded",
           "legendFormat": "rules"
         }
       ],
@@ -87,7 +87,7 @@
       "gridPos": { "h": 4, "w": 4, "x": 16, "y": 8 },
       "targets": [
         {
-          "expr": "sentinel_ingest_inflight_batches",
+          "expr": "akeso_ingest_inflight_batches",
           "legendFormat": "batches"
         }
       ]
@@ -98,7 +98,7 @@
       "gridPos": { "h": 4, "w": 4, "x": 20, "y": 8 },
       "targets": [
         {
-          "expr": "sentinel_correlate_buckets_active",
+          "expr": "akeso_correlate_buckets_active",
           "legendFormat": "buckets"
         }
       ]
@@ -109,7 +109,7 @@
       "gridPos": { "h": 4, "w": 4, "x": 12, "y": 12 },
       "targets": [
         {
-          "expr": "sum(sentinel_syslog_connections_active) by (transport)",
+          "expr": "sum(akeso_syslog_connections_active) by (transport)",
           "legendFormat": "{{transport}}"
         }
       ]
@@ -120,7 +120,7 @@
       "gridPos": { "h": 4, "w": 8, "x": 16, "y": 12 },
       "targets": [
         {
-          "expr": "sum(rate(sentinel_syslog_messages_received_total[5m])) by (transport)",
+          "expr": "sum(rate(akeso_syslog_messages_received_total[5m])) by (transport)",
           "legendFormat": "{{transport}}"
         }
       ],
@@ -134,11 +134,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(sentinel_ingest_pipeline_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(akeso_ingest_pipeline_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "pipeline p95"
         },
         {
-          "expr": "histogram_quantile(0.50, sum(rate(sentinel_ingest_pipeline_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(akeso_ingest_pipeline_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "pipeline p50"
         }
       ],
@@ -152,11 +152,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(sentinel_detect_eval_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(akeso_detect_eval_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "eval p95"
         },
         {
-          "expr": "histogram_quantile(0.50, sum(rate(sentinel_detect_eval_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(akeso_detect_eval_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "eval p50"
         }
       ],
@@ -170,7 +170,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(sentinel_ingest_index_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(akeso_ingest_index_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "index p95"
         }
       ],
@@ -184,11 +184,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(sentinel_query_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(akeso_query_duration_seconds_bucket[5m])) by (le))",
           "legendFormat": "query p95"
         },
         {
-          "expr": "rate(sentinel_query_requests_total[5m])",
+          "expr": "rate(akeso_query_requests_total[5m])",
           "legendFormat": "queries/s"
         }
       ],
@@ -202,11 +202,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
       "targets": [
         {
-          "expr": "sum(rate(sentinel_auth_login_attempts_total[5m])) by (result)",
+          "expr": "sum(rate(akeso_auth_login_attempts_total[5m])) by (result)",
           "legendFormat": "{{result}}"
         },
         {
-          "expr": "rate(sentinel_auth_rate_limited_total[5m])",
+          "expr": "rate(akeso_auth_rate_limited_total[5m])",
           "legendFormat": "rate_limited"
         }
       ],
@@ -220,11 +220,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(sentinel_ingest_batch_size_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(akeso_ingest_batch_size_bucket[5m])) by (le))",
           "legendFormat": "p95 batch size"
         },
         {
-          "expr": "histogram_quantile(0.50, sum(rate(sentinel_ingest_batch_size_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.50, sum(rate(akeso_ingest_batch_size_bucket[5m])) by (le))",
           "legendFormat": "p50 batch size"
         }
       ]
@@ -264,11 +264,11 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 48 },
       "targets": [
         {
-          "expr": "sum(rate(sentinel_dlq_events_total[5m])) by (reason)",
+          "expr": "sum(rate(akeso_dlq_events_total[5m])) by (reason)",
           "legendFormat": "{{reason}}"
         },
         {
-          "expr": "rate(sentinel_dlq_flush_errors_total[5m])",
+          "expr": "rate(akeso_dlq_flush_errors_total[5m])",
           "legendFormat": "flush errors"
         }
       ],
@@ -282,15 +282,15 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 48 },
       "targets": [
         {
-          "expr": "rate(sentinel_alert_retry_total[5m])",
+          "expr": "rate(akeso_alert_retry_total[5m])",
           "legendFormat": "retries/s"
         },
         {
-          "expr": "rate(sentinel_alert_retry_exhausted_total[5m])",
+          "expr": "rate(akeso_alert_retry_exhausted_total[5m])",
           "legendFormat": "exhausted/s"
         },
         {
-          "expr": "sentinel_alert_retry_queue_size",
+          "expr": "akeso_alert_retry_queue_size",
           "legendFormat": "queue depth"
         }
       ]
@@ -301,7 +301,7 @@
       "gridPos": { "h": 4, "w": 4, "x": 0, "y": 56 },
       "targets": [
         {
-          "expr": "sentinel_dlq_buffer_size",
+          "expr": "akeso_dlq_buffer_size",
           "legendFormat": "buffered"
         }
       ],

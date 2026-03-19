@@ -3,7 +3,7 @@ description: "Normal NDR sensor traffic observations"
 events_per_minute: 20
 event_templates:
   - weight: 30
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_session
     fields:
       src_ip: "{{ random_choice(['192.168.1.10', '192.168.1.11', '192.168.1.12']) }}"
@@ -15,7 +15,7 @@ event_templates:
       bytes_out: "{{ random_int(100, 50000) }}"
 
   - weight: 25
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_dns
     fields:
       query_name: "{{ random_choice(['www.google.com', 'outlook.office365.com', 'teams.microsoft.com', 'update.microsoft.com', 'cdn.jsdelivr.net']) }}"
@@ -24,7 +24,7 @@ event_templates:
       src_ip: "{{ random_choice(['192.168.1.10', '192.168.1.11', '192.168.1.12']) }}"
 
   - weight: 20
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_tls
     fields:
       server_name: "{{ random_choice(['www.google.com', 'outlook.office365.com', 'teams.microsoft.com', 'github.com']) }}"
@@ -33,7 +33,7 @@ event_templates:
       src_ip: "{{ random_choice(['192.168.1.10', '192.168.1.11', '192.168.1.12']) }}"
 
   - weight: 15
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_http
     fields:
       method: "{{ random_choice(['GET', 'POST', 'GET', 'GET']) }}"
@@ -43,7 +43,7 @@ event_templates:
       host: "{{ random_choice(['www.google.com', 'outlook.office365.com']) }}"
 
   - weight: 10
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_smb
     fields:
       action: "{{ random_choice(['tree_connect', 'read', 'write', 'close']) }}"

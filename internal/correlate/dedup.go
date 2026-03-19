@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // DedupCache suppresses duplicate alerts within a configurable time window.

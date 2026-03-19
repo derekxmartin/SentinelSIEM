@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
 )
 
 const searchTimeout = 10 * time.Second
@@ -18,7 +18,7 @@ const searchTimeout = 10 * time.Second
 type Handler struct {
 	searcher Searcher
 	rules    []*correlate.SigmaRule
-	prefix   string // ES index prefix, e.g. "sentinel"
+	prefix   string // ES index prefix, e.g. "akeso"
 }
 
 // NewHandler creates a global search handler.

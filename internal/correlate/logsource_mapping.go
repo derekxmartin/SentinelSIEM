@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 	"gopkg.in/yaml.v3"
 )
 

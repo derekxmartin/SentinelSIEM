@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // TemporalEvaluator implements temporal (ordered sequence) correlation rules.

@@ -17,7 +17,7 @@ test.describe('Rules Page', () => {
 
   test('page title shows Rules', async ({ page }) => {
     await navigateTo(page, '/rules', 'Rules')
-    await expect(page).toHaveTitle(/Rules.*SentinelSIEM/)
+    await expect(page).toHaveTitle(/Rules.*AkesoSIEM/)
   })
 
   test('toggle between Detection Rules and ATT&CK Coverage tabs', async ({ page }) => {

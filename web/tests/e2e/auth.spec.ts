@@ -6,7 +6,7 @@ test.describe('Auth Flows', () => {
     // Clear any stored tokens.
     await page.goto('/login')
     await page.waitForLoadState('domcontentloaded')
-    await page.evaluate(() => localStorage.removeItem('sentinel-refresh-token'))
+    await page.evaluate(() => localStorage.removeItem('akeso-refresh-token'))
 
     await page.goto('/')
     await page.waitForURL(/\/login/, { timeout: 15000 })
@@ -16,7 +16,7 @@ test.describe('Auth Flows', () => {
   test('shows login page with branding', async ({ page }) => {
     await page.goto('/login')
     await page.waitForLoadState('networkidle')
-    await expect(page.locator('text=SentinelSIEM')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('text=AkesoSIEM')).toBeVisible({ timeout: 10000 })
     await expect(page.locator('#username')).toBeVisible()
     await expect(page.locator('#password')).toBeVisible()
     await expect(page.locator('button[type="submit"]')).toBeVisible()

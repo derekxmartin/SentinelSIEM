@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 func TestStateManager_ExpireOnce(t *testing.T) {

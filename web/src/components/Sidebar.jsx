@@ -51,9 +51,9 @@ function SidebarContent({ collapsed, onToggle, onClose }) {
       {/* Logo */}
       <div className={`flex items-center justify-center h-16 px-4 border-b border-slate-700/50 ${collapsed ? 'px-2' : ''}`}>
         <NavLink to="/" className="flex items-center gap-2 min-w-0">
-          <img src={logo} alt="SentinelSIEM" className={`shrink-0 transition-all ${collapsed ? 'h-10 w-10' : 'h-9 w-9'}`} />
+          <img src={logo} alt="AkesoSIEM" className={`shrink-0 transition-all ${collapsed ? 'h-10 w-10' : 'h-9 w-9'}`} />
           {!collapsed && (
-            <span className="text-white font-semibold text-lg truncate">SentinelSIEM</span>
+            <span className="text-white font-semibold text-lg truncate">AkesoSIEM</span>
           )}
         </NavLink>
         {/* Mobile close button */}

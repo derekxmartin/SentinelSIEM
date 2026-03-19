@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
-	"github.com/SentinelSIEM/sentinel-siem/internal/metrics"
+	"github.com/derekxmartin/akeso-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/metrics"
 )
 
 // SyslogListener accepts syslog messages over TCP and UDP, wraps them in JSON

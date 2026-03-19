@@ -5,7 +5,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // Alert is returned when an ECS event matches a Sigma rule's detection logic.

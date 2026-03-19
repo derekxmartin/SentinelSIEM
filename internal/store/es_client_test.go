@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 )
 
 // esAvailable checks if Elasticsearch is reachable at localhost:9200.
@@ -37,7 +37,7 @@ func newTestStore(t *testing.T) *Store {
 	t.Helper()
 	cfg := config.ElasticsearchConfig{
 		Addresses:   []string{"http://localhost:9200"},
-		IndexPrefix: "test-sentinel",
+		IndexPrefix: "test-akeso",
 	}
 	store, err := New(cfg)
 	if err != nil {
@@ -86,7 +86,7 @@ func TestBulkIndexAndSearch(t *testing.T) {
 	}
 
 	// Use a unique index to avoid collisions between test runs.
-	index := fmt.Sprintf("test-sentinel-events-%d", time.Now().UnixNano())
+	index := fmt.Sprintf("test-akeso-events-%d", time.Now().UnixNano())
 
 	// Generate 100 events.
 	events := make([]common.ECSEvent, 100)

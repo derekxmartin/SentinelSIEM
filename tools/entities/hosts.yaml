@@ -42,5 +42,5 @@ hosts:
 
   - name: NDR-SENSOR-01
     ip: 10.0.0.200
-    os: "SentinelNDR Appliance"
+    os: "AkesoNDR Appliance"
     profile: ndr_sensor

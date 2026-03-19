@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 )
 
 // helper: create a syslog listener with ephemeral ports and a capture handler.

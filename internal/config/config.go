@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// Config is the top-level SentinelSIEM configuration.
+// Config is the top-level AkesoSIEM configuration.
 type Config struct {
 	Elasticsearch ElasticsearchConfig `toml:"elasticsearch"`
 	Ingest        IngestConfig        `toml:"ingest"`
@@ -102,7 +102,7 @@ func Defaults() Config {
 	return Config{
 		Elasticsearch: ElasticsearchConfig{
 			Addresses:   []string{"http://localhost:9200"},
-			IndexPrefix: "sentinel",
+			IndexPrefix: "akeso",
 		},
 		Ingest: IngestConfig{
 			HTTPAddr:  "0.0.0.0",

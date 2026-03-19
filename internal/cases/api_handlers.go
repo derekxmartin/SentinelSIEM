@@ -8,8 +8,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/auth"
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/auth"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 // CaseAPIHandler holds dependencies for the case management REST API.

@@ -87,7 +87,7 @@ func TestECSEventRoundTrip(t *testing.T) {
 			Channel:        "usb",
 		},
 		AV: &AVFields{
-			Scan:      &AVScan{Result: "malicious", Engine: "sentinel-yara"},
+			Scan:      &AVScan{Result: "malicious", Engine: "akeso-yara"},
 			Signature: &AVSignature{Name: "Mimikatz_Binary"},
 			Action:    "quarantine",
 		},

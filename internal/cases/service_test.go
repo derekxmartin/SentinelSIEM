@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/store"
+	"github.com/derekxmartin/akeso-siem/internal/store"
 )
 
 // mockBackend is an in-memory Backend for testing.

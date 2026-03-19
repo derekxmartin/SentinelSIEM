@@ -6,7 +6,7 @@ description: |
   technique for staging payloads.
 references:
   - https://attack.mitre.org/techniques/T1197/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.defense_evasion

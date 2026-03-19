@@ -3,7 +3,7 @@ package parsers
 import (
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 func TestEnsureCommunityIDFromNDRSession(t *testing.T) {

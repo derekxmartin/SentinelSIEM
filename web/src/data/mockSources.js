@@ -14,10 +14,10 @@ function generateSparkline(base, variance, points = 20) {
 export const sourceHealthSources = [
   {
     id: 'src-001',
-    name: 'SentinelEDR',
+    name: 'AkesoEDR',
     type: 'EDR',
     protocol: 'http',
-    parser: 'sentinel_edr',
+    parser: 'akeso_edr',
     status: 'active',
     eps: 1240,
     epsSparkline: generateSparkline(1240, 200),
@@ -331,7 +331,7 @@ export const sourceTypeOptions = [
 
 // Available parsers for each source type
 export const parsersByType = {
-  EDR: ['sentinel_edr'],
+  EDR: ['akeso_edr'],
   AV: ['crowdstrike_av', 'windows_defender'],
   DLP: ['symantec_dlp'],
   NDR: ['vectra_ndr'],

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 )
 
 const testAPIKey = "test-key-12345"

@@ -25,7 +25,7 @@ type SearchRawResult struct {
 
 // QueryRequest is the JSON body for POST /api/v1/query.
 type QueryRequest struct {
-	Query string `json:"query"`          // SentinelSIEM query language string
+	Query string `json:"query"`          // AkesoSIEM query language string
 	Index string `json:"index"`          // ES index pattern (optional, defaults to prefix-*)
 	From  int    `json:"from,omitempty"` // pagination offset
 	Size  int    `json:"size,omitempty"` // page size (default 100, max 10000)
@@ -154,7 +154,7 @@ func (h *APIHandler) HandleQuery(w http.ResponseWriter, r *http.Request) {
 
 // HandleHealth handles GET /api/v1/health for the query service.
 func (h *APIHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "sentinel-query"})
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "akeso-query"})
 }
 
 // --- Helpers ---

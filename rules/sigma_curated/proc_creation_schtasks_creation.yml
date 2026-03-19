@@ -6,7 +6,7 @@ description: |
   for persistence and privilege escalation.
 references:
   - https://attack.mitre.org/techniques/T1053/005/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.persistence

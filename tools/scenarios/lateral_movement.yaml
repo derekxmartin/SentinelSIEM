@@ -12,7 +12,7 @@ actors:
 timeline:
   # Phase 1: Initial RDP to web server
   - time_offset_sec: 0
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_session
     fields:
       src_ip: "{{ host_ip(actors.attacker.initial_host) }}"
@@ -24,7 +24,7 @@ timeline:
       bytes_out: 1820000
 
   - time_offset_sec: 1
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_rdp
     fields:
       src_ip: "{{ host_ip(actors.attacker.initial_host) }}"
@@ -42,7 +42,7 @@ timeline:
       event_id: 4624
 
   - time_offset_sec: 6
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.pivot_host }}"
     fields:
@@ -54,7 +54,7 @@ timeline:
 
   # Phase 2: Recon from pivot host
   - time_offset_sec: 60
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.pivot_host }}"
     fields:
@@ -65,7 +65,7 @@ timeline:
       severity: Low
 
   - time_offset_sec: 75
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.pivot_host }}"
     fields:
@@ -76,7 +76,7 @@ timeline:
       severity: Medium
 
   - time_offset_sec: 90
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.pivot_host }}"
     fields:
@@ -87,7 +87,7 @@ timeline:
       severity: Medium
 
   - time_offset_sec: 110
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: dns_query
     host: "{{ actors.pivot_host }}"
     fields:
@@ -97,7 +97,7 @@ timeline:
 
   # Phase 3: PsExec to DB server
   - time_offset_sec: 180
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.pivot_host }}"
     fields:
@@ -108,7 +108,7 @@ timeline:
       severity: High
 
   - time_offset_sec: 181
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_session
     fields:
       src_ip: "{{ host_ip(actors.pivot_host) }}"
@@ -120,7 +120,7 @@ timeline:
       bytes_out: 18000
 
   - time_offset_sec: 182
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_smb
     fields:
       src_ip: "{{ host_ip(actors.pivot_host) }}"
@@ -129,7 +129,7 @@ timeline:
       share_name: "\\\\SERVER-DB-01\\ADMIN$"
 
   - time_offset_sec: 183
-    source_type: sentinel_ndr
+    source_type: akeso_ndr
     template: ndr_smb
     fields:
       src_ip: "{{ host_ip(actors.pivot_host) }}"
@@ -157,7 +157,7 @@ timeline:
       event_id: 7045
 
   - time_offset_sec: 187
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.target_host }}"
     fields:
@@ -168,7 +168,7 @@ timeline:
       severity: High
 
   - time_offset_sec: 188
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.target_host }}"
     fields:
@@ -180,7 +180,7 @@ timeline:
 
   # Phase 4: Data exfiltration prep on DB server
   - time_offset_sec: 300
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     host: "{{ actors.target_host }}"
     fields:
@@ -191,7 +191,7 @@ timeline:
       severity: Medium
 
   - time_offset_sec: 350
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: file_operation
     host: "{{ actors.target_host }}"
     fields:

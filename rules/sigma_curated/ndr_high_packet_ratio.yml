@@ -6,14 +6,14 @@ description: |
   beacon-like C2 communication patterns.
 references:
   - https://attack.mitre.org/techniques/T1071/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.command_and_control
   - attack.t1071
 level: medium
 logsource:
-  product: sentinel_ndr
+  product: akeso_ndr
 detection:
   selection:
     ndr.session.packets_sent|gt: 400

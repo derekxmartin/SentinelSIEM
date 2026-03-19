@@ -34,7 +34,7 @@ echo "==> Generating CA key and certificate..."
 openssl genrsa -out "$CERT_DIR/ca-key.pem" 2048 2>/dev/null
 openssl req -new -x509 -days 365 -key "$CERT_DIR/ca-key.pem" \
     -out "$CERT_DIR/ca-cert.pem" \
-    -subj "/CN=SentinelSIEM Test CA" 2>/dev/null
+    -subj "/CN=AkesoSIEM Test CA" 2>/dev/null
 
 echo "==> Generating server key and CSR..."
 openssl genrsa -out "$CERT_DIR/server-key.pem" 2048 2>/dev/null

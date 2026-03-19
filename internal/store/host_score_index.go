@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // HostScoreIndexer is the interface for upserting NDR host scores.
@@ -20,7 +20,7 @@ type HostScoreIndexer interface {
 var _ HostScoreIndexer = (*Store)(nil)
 
 // HostScoreDocument is the Elasticsearch document written to the dedicated
-// sentinel-ndr-host-scores index. Each document is keyed by host IP so that
+// akeso-ndr-host-scores index. Each document is keyed by host IP so that
 // subsequent upserts replace the previous score rather than creating duplicates.
 type HostScoreDocument struct {
 	HostIP    string    `json:"host.ip"`
@@ -38,7 +38,7 @@ func (s *Store) hostScoreIndexName() string {
 }
 
 // UpsertHostScore indexes or updates a host score document in the dedicated
-// sentinel-ndr-host-scores index, keyed by host IP. If a document for this
+// akeso-ndr-host-scores index, keyed by host IP. If a document for this
 // host IP already exists, it is replaced with the latest score.
 func (s *Store) UpsertHostScore(ctx context.Context, event *common.ECSEvent) error {
 	if event == nil {

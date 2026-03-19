@@ -25,9 +25,9 @@ test.describe('Overview Page', () => {
     expect(criticalErrors).toEqual([])
   })
 
-  test('page title includes SentinelSIEM', async ({ page }) => {
+  test('page title includes AkesoSIEM', async ({ page }) => {
     await navigateTo(page, '/', 'Overview')
-    await expect(page).toHaveTitle(/SentinelSIEM/)
+    await expect(page).toHaveTitle(/AkesoSIEM/)
   })
 
   test('sidebar navigation links are visible', async ({ page }) => {

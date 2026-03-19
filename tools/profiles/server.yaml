@@ -3,7 +3,7 @@ description: "Normal server activity"
 events_per_minute: 8
 event_templates:
   - weight: 25
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: network_connection
     fields:
       remote_ip: "{{ random_choice(['192.168.1.10', '192.168.1.11', '192.168.1.12', '10.0.0.1']) }}"
@@ -14,7 +14,7 @@ event_templates:
       severity: Low
 
   - weight: 20
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: process_creation
     fields:
       process_name: "{{ random_choice(['svchost.exe', 'w3wp.exe', 'sqlservr.exe', 'lsass.exe', 'services.exe', 'taskhostw.exe']) }}"
@@ -23,7 +23,7 @@ event_templates:
       severity: Low
 
   - weight: 15
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: file_operation
     fields:
       operation: "{{ random_choice(['Write', 'Create', 'Read']) }}"
@@ -37,7 +37,7 @@ event_templates:
       logon_type: 3
 
   - weight: 10
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: registry_operation
     fields:
       operation: SetValue
@@ -45,12 +45,12 @@ event_templates:
       severity: Low
 
   - weight: 10
-    source_type: sentinel_av
+    source_type: akeso_av
     template: scan_result_clean
     fields: {}
 
   - weight: 5
-    source_type: sentinel_edr
+    source_type: akeso_edr
     template: dns_query
     fields:
       query_name: "{{ random_choice(['dc01.corp.local', 'update.microsoft.com', 'time.windows.com']) }}"

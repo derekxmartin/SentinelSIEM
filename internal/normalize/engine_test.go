@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // mockParser is a test parser that returns a fixed ECSEvent.
@@ -32,10 +32,10 @@ func (m *mockParser) Parse(raw json.RawMessage) (*common.ECSEvent, error) {
 
 func TestRouteToRegisteredParser(t *testing.T) {
 	reg := NewRegistry()
-	reg.Register(&mockParser{sourceType: "sentinel_edr"})
+	reg.Register(&mockParser{sourceType: "akeso_edr"})
 	engine := NewEngine(reg)
 
-	raw := json.RawMessage(`{"source_type":"sentinel_edr","pid":1234}`)
+	raw := json.RawMessage(`{"source_type":"akeso_edr","pid":1234}`)
 	event, err := engine.Normalize(raw)
 	if err != nil {
 		t.Fatalf("normalize failed: %v", err)
@@ -104,19 +104,19 @@ func TestMalformedJSON(t *testing.T) {
 
 func TestNormalizeBatch(t *testing.T) {
 	reg := NewRegistry()
-	reg.Register(&mockParser{sourceType: "sentinel_edr"})
+	reg.Register(&mockParser{sourceType: "akeso_edr"})
 	engine := NewEngine(reg)
 
 	rawEvents := []json.RawMessage{
-		json.RawMessage(`{"source_type":"sentinel_edr","seq":1}`),
+		json.RawMessage(`{"source_type":"akeso_edr","seq":1}`),
 		json.RawMessage(`{broken`),
-		json.RawMessage(`{"source_type":"sentinel_edr","seq":2}`),
+		json.RawMessage(`{"source_type":"akeso_edr","seq":2}`),
 		json.RawMessage(`{"source_type":"unknown","seq":3}`),
 	}
 
 	events, errs := engine.NormalizeBatch(rawEvents)
 
-	// 3 successful (2 sentinel_edr + 1 unknown), 1 error (broken JSON).
+	// 3 successful (2 akeso_edr + 1 unknown), 1 error (broken JSON).
 	if len(events) != 3 {
 		t.Errorf("events: got %d, want 3", len(events))
 	}

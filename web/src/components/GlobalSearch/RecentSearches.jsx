@@ -1,6 +1,6 @@
 import { XMarkIcon, ClockIcon } from '@heroicons/react/24/outline'
 
-const STORAGE_KEY_PREFIX = 'sentinel-recent-searches-'
+const STORAGE_KEY_PREFIX = 'akeso-recent-searches-'
 
 export function getRecentSearches(username) {
   try {

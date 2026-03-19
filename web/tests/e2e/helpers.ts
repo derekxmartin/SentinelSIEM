@@ -19,7 +19,7 @@ export async function loginAsAdmin(page: Page) {
           username: 'e2e_admin',
           password: 'E2eTestPass123!',
           display_name: 'E2E Admin',
-          email: 'e2e@sentinel.local',
+          email: 'e2e@akeso.local',
         }),
       })
     }
@@ -54,7 +54,7 @@ export async function loginAsAdmin(page: Page) {
 
   // Inject refresh token.
   await page.evaluate((token) => {
-    localStorage.setItem('sentinel-refresh-token', token)
+    localStorage.setItem('akeso-refresh-token', token)
   }, loginData.refresh_token)
 
   // Navigate to dashboard and wait for auth guard to resolve + sidebar to render.

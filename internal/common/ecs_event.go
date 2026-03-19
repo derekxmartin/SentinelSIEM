@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// ECSEvent is the core normalized event structure used throughout SentinelSIEM.
+// ECSEvent is the core normalized event structure used throughout AkesoSIEM.
 // All ingested events are normalized into this schema before storage and correlation.
 // Field groups follow the Elastic Common Schema (ECS) specification.
 type ECSEvent struct {
@@ -39,7 +39,7 @@ type ECSEvent struct {
 	Log         *LogFields         `json:"log,omitempty"`
 	WinEvt      *WinEvtFields      `json:"winevt,omitempty"`
 
-	// SourceType identifies the originating source (e.g., "sentinel_edr", "sentinel_av").
+	// SourceType identifies the originating source (e.g., "akeso_edr", "akeso_av").
 	// Used by the pipeline to route events to the correct ES index.
 	// Not part of ECS — excluded from JSON sent to Elasticsearch.
 	SourceType string `json:"-"`
@@ -155,7 +155,7 @@ type ThreatTechnique struct {
 	Name string `json:"name,omitempty"`
 }
 
-// DLPFields captures Data Loss Prevention event details (custom extension for Sentinel DLP).
+// DLPFields captures Data Loss Prevention event details (custom extension for Akeso DLP).
 type DLPFields struct {
 	Policy         *DLPPolicy `json:"policy,omitempty"`
 	Classification string     `json:"classification,omitempty"`
@@ -168,7 +168,7 @@ type DLPPolicy struct {
 	Action string `json:"action,omitempty"`
 }
 
-// AVFields captures antivirus event details (custom extension for Sentinel AV).
+// AVFields captures antivirus event details (custom extension for Akeso AV).
 type AVFields struct {
 	Scan      *AVScan `json:"scan,omitempty"`
 	Signature *AVSignature `json:"signature,omitempty"`
@@ -346,7 +346,7 @@ type SSHFields struct {
 	HASSHServer string `json:"hassh_server,omitempty"`
 }
 
-// NDRFields captures SentinelNDR-specific metadata (custom extension).
+// NDRFields captures AkesoNDR-specific metadata (custom extension).
 type NDRFields struct {
 	Detection *NDRDetection `json:"detection,omitempty"`
 	HostScore *NDRHostScore `json:"host_score,omitempty"`

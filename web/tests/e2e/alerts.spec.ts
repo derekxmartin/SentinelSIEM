@@ -20,7 +20,7 @@ test.describe('Alerts Page', () => {
 
   test('page title shows Alerts', async ({ page }) => {
     await navigateTo(page, '/alerts', 'Alerts')
-    await expect(page).toHaveTitle(/Alerts.*SentinelSIEM/)
+    await expect(page).toHaveTitle(/Alerts.*AkesoSIEM/)
   })
 
   test('navigates to Alerts from sidebar', async ({ page }) => {

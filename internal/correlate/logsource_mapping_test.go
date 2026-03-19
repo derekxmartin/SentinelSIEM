@@ -5,25 +5,25 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 const testLogsourceMap = `
 mappings:
   - logsource:
-      product: sentinel_edr
+      product: akeso_edr
     conditions:
-      source_type: sentinel_edr
+      source_type: akeso_edr
 
   - logsource:
-      product: sentinel_av
+      product: akeso_av
     conditions:
-      source_type: sentinel_av
+      source_type: akeso_av
 
   - logsource:
-      product: sentinel_dlp
+      product: akeso_dlp
     conditions:
-      source_type: sentinel_dlp
+      source_type: akeso_dlp
 
   - logsource:
       category: malware
@@ -62,9 +62,9 @@ mappings:
       winevt.channel: Microsoft-Windows-Sysmon/Operational
 
   - logsource:
-      product: sentinel_ndr
+      product: akeso_ndr
     conditions:
-      source_type: sentinel_ndr
+      source_type: akeso_ndr
 
   - logsource:
       category: dns
@@ -130,36 +130,36 @@ mappings:
 	}
 }
 
-func TestResolveProductSentinelAV(t *testing.T) {
+func TestResolveProductAkesoAV(t *testing.T) {
 	lm := loadTestMap(t)
-	conds := lm.Resolve("", "sentinel_av", "")
+	conds := lm.Resolve("", "akeso_av", "")
 	if conds == nil {
-		t.Fatal("expected conditions for product: sentinel_av")
+		t.Fatal("expected conditions for product: akeso_av")
 	}
-	if conds["source_type"] != "sentinel_av" {
-		t.Errorf("source_type = %q, want sentinel_av", conds["source_type"])
+	if conds["source_type"] != "akeso_av" {
+		t.Errorf("source_type = %q, want akeso_av", conds["source_type"])
 	}
 }
 
-func TestResolveProductSentinelDLP(t *testing.T) {
+func TestResolveProductAkesoDLP(t *testing.T) {
 	lm := loadTestMap(t)
-	conds := lm.Resolve("", "sentinel_dlp", "")
+	conds := lm.Resolve("", "akeso_dlp", "")
 	if conds == nil {
-		t.Fatal("expected conditions for product: sentinel_dlp")
+		t.Fatal("expected conditions for product: akeso_dlp")
 	}
-	if conds["source_type"] != "sentinel_dlp" {
-		t.Errorf("source_type = %q, want sentinel_dlp", conds["source_type"])
+	if conds["source_type"] != "akeso_dlp" {
+		t.Errorf("source_type = %q, want akeso_dlp", conds["source_type"])
 	}
 }
 
-func TestResolveProductsentinel_edr(t *testing.T) {
+func TestResolveProductakeso_edr(t *testing.T) {
 	lm := loadTestMap(t)
-	conds := lm.Resolve("", "sentinel_edr", "")
+	conds := lm.Resolve("", "akeso_edr", "")
 	if conds == nil {
-		t.Fatal("expected conditions for product: sentinel_edr")
+		t.Fatal("expected conditions for product: akeso_edr")
 	}
-	if conds["source_type"] != "sentinel_edr" {
-		t.Errorf("source_type = %q, want sentinel_edr", conds["source_type"])
+	if conds["source_type"] != "akeso_edr" {
+		t.Errorf("source_type = %q, want akeso_edr", conds["source_type"])
 	}
 }
 
@@ -250,12 +250,12 @@ func TestResolveAllCategoryMalware(t *testing.T) {
 // --- Event matching tests ---
 
 func TestMatchesEventAVScanResult(t *testing.T) {
-	// An AV malicious scan result should match both product:sentinel_av AND category:malware.
+	// An AV malicious scan result should match both product:akeso_av AND category:malware.
 	lm := loadTestMap(t)
 
 	avEvent := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"malware"},
@@ -264,10 +264,10 @@ func TestMatchesEventAVScanResult(t *testing.T) {
 		},
 	}
 
-	// Should match product: sentinel_av conditions.
-	productConds := lm.Resolve("", "sentinel_av", "")
+	// Should match product: akeso_av conditions.
+	productConds := lm.Resolve("", "akeso_av", "")
 	if !MatchesEvent(productConds, avEvent) {
-		t.Error("AV event should match product: sentinel_av conditions")
+		t.Error("AV event should match product: akeso_av conditions")
 	}
 
 	// Should also match category: malware conditions.
@@ -283,7 +283,7 @@ func TestMatchesEventEDRMalwareDetection(t *testing.T) {
 
 	edrEvent := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Kind:     "alert",
 			Category: []string{"malware"},
@@ -298,10 +298,10 @@ func TestMatchesEventEDRMalwareDetection(t *testing.T) {
 		t.Error("EDR malware detection should match category: malware conditions")
 	}
 
-	// Should NOT match product: sentinel_av.
-	avConds := lm.Resolve("", "sentinel_av", "")
+	// Should NOT match product: akeso_av.
+	avConds := lm.Resolve("", "akeso_av", "")
 	if MatchesEvent(avConds, edrEvent) {
-		t.Error("EDR event should NOT match product: sentinel_av conditions")
+		t.Error("EDR event should NOT match product: akeso_av conditions")
 	}
 }
 
@@ -310,7 +310,7 @@ func TestMatchesEventDLPPolicyViolation(t *testing.T) {
 
 	dlpEvent := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"file"},
@@ -319,10 +319,10 @@ func TestMatchesEventDLPPolicyViolation(t *testing.T) {
 		},
 	}
 
-	// Should match product: sentinel_dlp.
-	dlpConds := lm.Resolve("", "sentinel_dlp", "")
+	// Should match product: akeso_dlp.
+	dlpConds := lm.Resolve("", "akeso_dlp", "")
 	if !MatchesEvent(dlpConds, dlpEvent) {
-		t.Error("DLP event should match product: sentinel_dlp conditions")
+		t.Error("DLP event should match product: akeso_dlp conditions")
 	}
 
 	// Should match category: file_event.
@@ -331,10 +331,10 @@ func TestMatchesEventDLPPolicyViolation(t *testing.T) {
 		t.Error("DLP file event should match category: file_event conditions")
 	}
 
-	// Should NOT match product: sentinel_av.
-	avConds := lm.Resolve("", "sentinel_av", "")
+	// Should NOT match product: akeso_av.
+	avConds := lm.Resolve("", "akeso_av", "")
 	if MatchesEvent(avConds, dlpEvent) {
-		t.Error("DLP event should NOT match product: sentinel_av conditions")
+		t.Error("DLP event should NOT match product: akeso_av conditions")
 	}
 }
 
@@ -343,7 +343,7 @@ func TestMatchesEventProcessCreation(t *testing.T) {
 
 	procEvent := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"process"},
@@ -371,7 +371,7 @@ func TestMatchesEventCrossProductMalware(t *testing.T) {
 
 	avMalware := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event: &common.EventFields{
 			Category: []string{"malware"},
 			Type:     []string{"info"},
@@ -380,7 +380,7 @@ func TestMatchesEventCrossProductMalware(t *testing.T) {
 
 	edrMalware := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Category: []string{"malware"},
 			Type:     []string{"info"},
@@ -389,7 +389,7 @@ func TestMatchesEventCrossProductMalware(t *testing.T) {
 
 	nonMalware := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event: &common.EventFields{
 			Category: []string{"file"},
 			Type:     []string{"access"},
@@ -424,7 +424,7 @@ func TestMatchesEventMultiCategoryEvent(t *testing.T) {
 
 	multiCatEvent := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"process", "malware"},
@@ -451,9 +451,9 @@ func TestResolveCategoryAndProduct(t *testing.T) {
 	yaml := `
 mappings:
   - logsource:
-      product: sentinel_av
+      product: akeso_av
     conditions:
-      source_type: sentinel_av
+      source_type: akeso_av
 
   - logsource:
       category: malware
@@ -462,9 +462,9 @@ mappings:
 
   - logsource:
       category: malware
-      product: sentinel_av
+      product: akeso_av
     conditions:
-      source_type: sentinel_av
+      source_type: akeso_av
       event.category: malware
 `
 	lm, err := ParseLogsourceMap([]byte(yaml))
@@ -472,14 +472,14 @@ mappings:
 		t.Fatalf("ParseLogsourceMap failed: %v", err)
 	}
 
-	// category:malware + product:sentinel_av should pick the most specific (score 2) mapping.
-	conds := lm.Resolve("malware", "sentinel_av", "")
+	// category:malware + product:akeso_av should pick the most specific (score 2) mapping.
+	conds := lm.Resolve("malware", "akeso_av", "")
 	if conds == nil {
-		t.Fatal("expected match for category:malware + product:sentinel_av")
+		t.Fatal("expected match for category:malware + product:akeso_av")
 	}
 	// Should have both conditions from the specific mapping.
-	if conds["source_type"] != "sentinel_av" {
-		t.Errorf("source_type = %q, want sentinel_av", conds["source_type"])
+	if conds["source_type"] != "akeso_av" {
+		t.Errorf("source_type = %q, want akeso_av", conds["source_type"])
 	}
 	if conds["event.category"] != "malware" {
 		t.Errorf("event.category = %q, want malware", conds["event.category"])
@@ -488,7 +488,7 @@ mappings:
 	// AV malware event should match this combined condition.
 	avMalware := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event: &common.EventFields{
 			Category: []string{"malware"},
 		},
@@ -500,13 +500,13 @@ mappings:
 	// EDR malware event should NOT match (wrong source_type).
 	edrMalware := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_edr",
+		SourceType: "akeso_edr",
 		Event: &common.EventFields{
 			Category: []string{"malware"},
 		},
 	}
 	if MatchesEvent(conds, edrMalware) {
-		t.Error("EDR malware event should NOT match sentinel_av+malware conditions")
+		t.Error("EDR malware event should NOT match akeso_av+malware conditions")
 	}
 }
 
@@ -514,7 +514,7 @@ func TestResolveReturnsCopy(t *testing.T) {
 	// Mutating the returned map should not affect internal state.
 	lm := loadTestMap(t)
 
-	conds1 := lm.Resolve("", "sentinel_av", "")
+	conds1 := lm.Resolve("", "akeso_av", "")
 	if conds1 == nil {
 		t.Fatal("expected conditions")
 	}
@@ -523,9 +523,9 @@ func TestResolveReturnsCopy(t *testing.T) {
 	conds1["source_type"] = "MUTATED"
 
 	// Resolve again — should get the original value.
-	conds2 := lm.Resolve("", "sentinel_av", "")
-	if conds2["source_type"] != "sentinel_av" {
-		t.Errorf("mutation leaked: source_type = %q, want sentinel_av", conds2["source_type"])
+	conds2 := lm.Resolve("", "akeso_av", "")
+	if conds2["source_type"] != "akeso_av" {
+		t.Errorf("mutation leaked: source_type = %q, want akeso_av", conds2["source_type"])
 	}
 }
 
@@ -555,14 +555,14 @@ func TestLoadLogsourceMapFileNotFound(t *testing.T) {
 
 // --- NDR logsource mapping tests ---
 
-func TestResolveProductSentinelNDR(t *testing.T) {
+func TestResolveProductAkesoNDR(t *testing.T) {
 	lm := loadTestMap(t)
-	conds := lm.Resolve("", "sentinel_ndr", "")
+	conds := lm.Resolve("", "akeso_ndr", "")
 	if conds == nil {
-		t.Fatal("expected conditions for product: sentinel_ndr")
+		t.Fatal("expected conditions for product: akeso_ndr")
 	}
-	if conds["source_type"] != "sentinel_ndr" {
-		t.Errorf("source_type = %q, want sentinel_ndr", conds["source_type"])
+	if conds["source_type"] != "akeso_ndr" {
+		t.Errorf("source_type = %q, want akeso_ndr", conds["source_type"])
 	}
 }
 
@@ -607,7 +607,7 @@ func TestMatchesNDRSessionEvent(t *testing.T) {
 
 	ndrSession := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network_connection"},
@@ -616,27 +616,27 @@ func TestMatchesNDRSessionEvent(t *testing.T) {
 		},
 	}
 
-	// Should match product: sentinel_ndr.
-	ndrConds := lm.Resolve("", "sentinel_ndr", "")
+	// Should match product: akeso_ndr.
+	ndrConds := lm.Resolve("", "akeso_ndr", "")
 	if !MatchesEvent(ndrConds, ndrSession) {
-		t.Error("NDR session should match product: sentinel_ndr")
+		t.Error("NDR session should match product: akeso_ndr")
 	}
 
-	// Should NOT match product: sentinel_edr.
-	edrConds := lm.Resolve("", "sentinel_edr", "")
+	// Should NOT match product: akeso_edr.
+	edrConds := lm.Resolve("", "akeso_edr", "")
 	if MatchesEvent(edrConds, ndrSession) {
-		t.Error("NDR session should NOT match product: sentinel_edr")
+		t.Error("NDR session should NOT match product: akeso_edr")
 	}
 }
 
 func TestMatchesNDRDNSEventDualLogsource(t *testing.T) {
 	// The key acceptance criteria: ndr:dns events match BOTH
-	// product:sentinel_ndr AND category:dns.
+	// product:akeso_ndr AND category:dns.
 	lm := loadTestMap(t)
 
 	ndrDNS := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network"},
@@ -651,10 +651,10 @@ func TestMatchesNDRDNSEventDualLogsource(t *testing.T) {
 		},
 	}
 
-	// Should match product: sentinel_ndr (by source_type).
-	ndrConds := lm.Resolve("", "sentinel_ndr", "")
+	// Should match product: akeso_ndr (by source_type).
+	ndrConds := lm.Resolve("", "akeso_ndr", "")
 	if !MatchesEvent(ndrConds, ndrDNS) {
-		t.Error("NDR DNS event should match product: sentinel_ndr")
+		t.Error("NDR DNS event should match product: akeso_ndr")
 	}
 
 	// Should ALSO match category: dns (by event.category + event.action).
@@ -669,7 +669,7 @@ func TestMatchesNDRDetectionEvent(t *testing.T) {
 
 	ndrDetection := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "alert",
 			Category: []string{"intrusion_detection"},
@@ -684,10 +684,10 @@ func TestMatchesNDRDetectionEvent(t *testing.T) {
 		},
 	}
 
-	// Should match product: sentinel_ndr.
-	ndrConds := lm.Resolve("", "sentinel_ndr", "")
+	// Should match product: akeso_ndr.
+	ndrConds := lm.Resolve("", "akeso_ndr", "")
 	if !MatchesEvent(ndrConds, ndrDetection) {
-		t.Error("NDR detection should match product: sentinel_ndr")
+		t.Error("NDR detection should match product: akeso_ndr")
 	}
 
 	// Should match category: ids.
@@ -702,7 +702,7 @@ func TestMatchesNDRKerberosAuthCategory(t *testing.T) {
 
 	ndrKerb := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event: &common.EventFields{
 			Kind:     "event",
 			Category: []string{"network", "authentication"},
@@ -722,7 +722,7 @@ func TestMatchesNDRFieldEquals(t *testing.T) {
 	// Test the new NDR-specific field matchers.
 	ndrEvent := &common.ECSEvent{
 		Timestamp:  time.Now().UTC(),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Network: &common.NetworkFields{
 			CommunityID: "1:abc123",
 			Transport:   "tcp",

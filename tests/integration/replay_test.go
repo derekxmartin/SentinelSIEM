@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
 )
 
 // TestReplay850Events loads all project rules and evaluates 850 synthetic ECS
@@ -264,14 +264,14 @@ func generateMaliciousEvents() []*common.ECSEvent {
 		Host: &common.HostFields{Name: "WORKSTATION-03"},
 	})
 
-	// ── AV Detections (product: sentinel_av) ── 4 events ────────────────
-	// Logsource conditions: source_type=sentinel_av
+	// ── AV Detections (product: akeso_av) ── 4 events ────────────────
+	// Logsource conditions: source_type=akeso_av
 	// Note: NOT setting event.category=malware to avoid cross_malware_any_source double-fire.
 
 	// 15: Trojan detected
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(15 * time.Minute),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event:      &common.EventFields{Kind: "event", Action: "scan_result"},
 		AV: &common.AVFields{
 			Scan:      &common.AVScan{Result: "malicious"},
@@ -283,7 +283,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 16: Webshell detected
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(16 * time.Minute),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event:      &common.EventFields{Kind: "event", Action: "scan_result"},
 		AV: &common.AVFields{
 			Scan:      &common.AVScan{Result: "malicious"},
@@ -295,7 +295,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 17: Cobalt Strike beacon
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(17 * time.Minute),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event:      &common.EventFields{Kind: "event", Action: "scan_result"},
 		AV: &common.AVFields{
 			Scan:      &common.AVScan{Result: "malicious"},
@@ -307,7 +307,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 18: PUA/Hacktool
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(18 * time.Minute),
-		SourceType: "sentinel_av",
+		SourceType: "akeso_av",
 		Event:      &common.EventFields{Kind: "event", Action: "scan_result"},
 		AV: &common.AVFields{
 			Scan:      &common.AVScan{Result: "suspicious"},
@@ -316,13 +316,13 @@ func generateMaliciousEvents() []*common.ECSEvent {
 		Host: &common.HostFields{Name: "WORKSTATION-04"},
 	})
 
-	// ── DLP (product: sentinel_dlp) ── 5 events ────────────────────────
-	// Logsource conditions: source_type=sentinel_dlp
+	// ── DLP (product: akeso_dlp) ── 5 events ────────────────────────
+	// Logsource conditions: source_type=akeso_dlp
 
 	// 19: PCI data exfiltration via email
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(19 * time.Minute),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event:      &common.EventFields{Kind: "event", Action: "policy_violation"},
 		DLP: &common.DLPFields{
 			Policy:         &common.DLPPolicy{Name: "PCI-DSS", Action: "alert"},
@@ -335,7 +335,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 20: PII violation
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(20 * time.Minute),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event:      &common.EventFields{Kind: "event", Action: "policy_violation"},
 		DLP: &common.DLPFields{
 			Policy:         &common.DLPPolicy{Name: "PII-Protection", Action: "alert"},
@@ -348,7 +348,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 21: Source code exfiltration
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(21 * time.Minute),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event:      &common.EventFields{Kind: "event", Action: "policy_violation"},
 		DLP: &common.DLPFields{
 			Policy:         &common.DLPPolicy{Name: "IP-Protection", Action: "alert"},
@@ -361,7 +361,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 22: USB restricted data
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(22 * time.Minute),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event:      &common.EventFields{Kind: "event", Action: "policy_violation"},
 		DLP: &common.DLPFields{
 			Policy:         &common.DLPPolicy{Name: "Data-Protection", Action: "block"},
@@ -374,7 +374,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 23: Financial data leak
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(23 * time.Minute),
-		SourceType: "sentinel_dlp",
+		SourceType: "akeso_dlp",
 		Event:      &common.EventFields{Kind: "event", Action: "policy_violation"},
 		DLP: &common.DLPFields{
 			Policy:         &common.DLPPolicy{Name: "Financial-Data", Action: "alert"},
@@ -384,13 +384,13 @@ func generateMaliciousEvents() []*common.ECSEvent {
 		Host: &common.HostFields{Name: "WORKSTATION-01"},
 	})
 
-	// ── NDR (product: sentinel_ndr) ── 6 events ────────────────────────
-	// Logsource conditions: source_type=sentinel_ndr
+	// ── NDR (product: akeso_ndr) ── 6 events ────────────────────────
+	// Logsource conditions: source_type=akeso_ndr
 
 	// 24: Long duration C2 session (port 443 to avoid ndr_suspicious_port double-fire)
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(24 * time.Minute),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Type: []string{"connection"}},
 		Source:      &common.EndpointFields{IP: "192.168.1.100", Port: 49152},
 		Destination: &common.EndpointFields{IP: "185.220.101.45", Port: 443},
@@ -403,7 +403,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 25: Large outbound data transfer
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(25 * time.Minute),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Type: []string{"connection"}},
 		Source:      &common.EndpointFields{IP: "10.0.0.30", Port: 1433},
 		Destination: &common.EndpointFields{IP: "91.234.99.42", Port: 443},
@@ -416,7 +416,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 26: Connection to Tor port
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(26 * time.Minute),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Type: []string{"connection"}},
 		Source:      &common.EndpointFields{IP: "192.168.1.105", Port: 53000},
 		Destination: &common.EndpointFields{IP: "198.51.100.77", Port: 9050},
@@ -429,7 +429,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 27: Suspicious port 4444
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(27 * time.Minute),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Type: []string{"connection"}},
 		Source:      &common.EndpointFields{IP: "192.168.1.101", Port: 50000},
 		Destination: &common.EndpointFields{IP: "203.0.113.42", Port: 5555},
@@ -441,10 +441,10 @@ func generateMaliciousEvents() []*common.ECSEvent {
 
 	// 28: DNS suspicious TLD (.xyz)
 	// Uses category:dns logsource (event.category=network, event.action=dns_query)
-	// Set source_type to empty to avoid sentinel_ndr bucket cross-match.
+	// Set source_type to empty to avoid akeso_ndr bucket cross-match.
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(28 * time.Minute),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "dns_query"},
 		DNS: &common.DNSFields{
 			Question: &common.DNSQuestion{Name: "c2-beacon.malware-download.xyz", Type: "A"},
@@ -455,7 +455,7 @@ func generateMaliciousEvents() []*common.ECSEvent {
 	// 29: High packet ratio session (beaconing)
 	events = append(events, &common.ECSEvent{
 		Timestamp:  ts.Add(29 * time.Minute),
-		SourceType: "sentinel_ndr",
+		SourceType: "akeso_ndr",
 		Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Type: []string{"connection"}},
 		Source:      &common.EndpointFields{IP: "192.168.1.103", Port: 55000},
 		Destination: &common.EndpointFields{IP: "185.220.101.45", Port: 443},
@@ -593,7 +593,7 @@ func generateBenignEvents(count int) []*common.ECSEvent {
 			// Benign EDR: normal process (svchost, explorer, chrome — nothing suspicious)
 			events = append(events, &common.ECSEvent{
 				Timestamp:  t,
-				SourceType: "sentinel_edr",
+				SourceType: "akeso_edr",
 				Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Type: []string{"start"}},
 				Process:    &common.ProcessFields{Name: "svchost.exe", CommandLine: "svchost.exe -k netsvcs"},
 				Host:       &common.HostFields{Name: host},
@@ -602,7 +602,7 @@ func generateBenignEvents(count int) []*common.ECSEvent {
 			// Benign NDR: normal HTTPS traffic (short duration, normal ports, normal size)
 			events = append(events, &common.ECSEvent{
 				Timestamp:  t,
-				SourceType: "sentinel_ndr",
+				SourceType: "akeso_ndr",
 				Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Type: []string{"connection"}},
 				Source:      &common.EndpointFields{IP: "192.168.1.100", Port: 49152 + i},
 				Destination: &common.EndpointFields{IP: "142.250.80.46", Port: 443},
@@ -615,7 +615,7 @@ func generateBenignEvents(count int) []*common.ECSEvent {
 			// Benign AV: clean scan result
 			events = append(events, &common.ECSEvent{
 				Timestamp:  t,
-				SourceType: "sentinel_av",
+				SourceType: "akeso_av",
 				Event:      &common.EventFields{Kind: "event", Action: "scan_result"},
 				AV: &common.AVFields{
 					Scan:      &common.AVScan{Result: "clean"},
@@ -627,7 +627,7 @@ func generateBenignEvents(count int) []*common.ECSEvent {
 			// Benign DLP: classification event (not policy violation)
 			events = append(events, &common.ECSEvent{
 				Timestamp:  t,
-				SourceType: "sentinel_dlp",
+				SourceType: "akeso_dlp",
 				Event:      &common.EventFields{Kind: "event", Action: "classification"},
 				DLP: &common.DLPFields{
 					Policy:         &common.DLPPolicy{Name: "General-Policy", Action: "allow"},
@@ -660,7 +660,7 @@ func generateBenignEvents(count int) []*common.ECSEvent {
 			// Benign EDR: normal process (explorer, not in any rule)
 			events = append(events, &common.ECSEvent{
 				Timestamp:  t,
-				SourceType: "sentinel_edr",
+				SourceType: "akeso_edr",
 				Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Type: []string{"info"}},
 				Process:    &common.ProcessFields{Name: "explorer.exe", CommandLine: "explorer.exe"},
 				Host:       &common.HostFields{Name: host},
@@ -669,7 +669,7 @@ func generateBenignEvents(count int) []*common.ECSEvent {
 			// Benign NDR: DNS query to legitimate domain
 			events = append(events, &common.ECSEvent{
 				Timestamp:  t,
-				SourceType: "sentinel_ndr",
+				SourceType: "akeso_ndr",
 				Event:      &common.EventFields{Kind: "event", Category: []string{"network"}, Action: "dns_query"},
 				DNS: &common.DNSFields{
 					Question: &common.DNSQuestion{Name: "www.google.com", Type: "A"},
@@ -696,7 +696,7 @@ func generateBenignEvents(count int) []*common.ECSEvent {
 func TestEngineStats(t *testing.T) {
 	rulesRoot := filepath.Join("..", "..", "rules")
 	sigmaRules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sigma_curated"))
-	portfolioRules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "sentinel_portfolio"))
+	portfolioRules, _ := correlate.LoadRulesFromDir(filepath.Join(rulesRoot, "akeso_portfolio"))
 
 	allRules := append(sigmaRules, portfolioRules...)
 	lsMapPath := filepath.Join("..", "..", "parsers", "logsource_map.yaml")
@@ -752,25 +752,25 @@ func TestEachRuleCategory(t *testing.T) {
 			},
 		},
 		{
-			name: "sentinel_av",
+			name: "akeso_av",
 			event: &common.ECSEvent{
-				SourceType: "sentinel_av",
+				SourceType: "akeso_av",
 				Event:      &common.EventFields{Kind: "event"},
 				AV:         &common.AVFields{Scan: &common.AVScan{Result: "malicious"}, Signature: &common.AVSignature{Name: "Trojan.Test"}},
 			},
 		},
 		{
-			name: "sentinel_dlp",
+			name: "akeso_dlp",
 			event: &common.ECSEvent{
-				SourceType: "sentinel_dlp",
+				SourceType: "akeso_dlp",
 				Event:      &common.EventFields{Kind: "event"},
 				DLP:        &common.DLPFields{Policy: &common.DLPPolicy{Name: "PCI-DSS"}, Channel: "email"},
 			},
 		},
 		{
-			name: "sentinel_ndr",
+			name: "akeso_ndr",
 			event: &common.ECSEvent{
-				SourceType: "sentinel_ndr",
+				SourceType: "akeso_ndr",
 				Event:      &common.EventFields{Kind: "event"},
 				NDR:        &common.NDRFields{Session: &common.NDRSession{Duration: 5000.0}},
 			},

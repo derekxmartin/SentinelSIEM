@@ -7,15 +7,15 @@ import (
 )
 
 func TestLoadValidConfig(t *testing.T) {
-	cfg, err := Load(filepath.Join("..", "..", "sentinel.toml"))
+	cfg, err := Load(filepath.Join("..", "..", "akeso.toml"))
 	if err != nil {
-		t.Fatalf("failed to load sentinel.toml: %v", err)
+		t.Fatalf("failed to load akeso.toml: %v", err)
 	}
 
 	if len(cfg.Elasticsearch.Addresses) != 1 || cfg.Elasticsearch.Addresses[0] != "http://localhost:9200" {
 		t.Errorf("elasticsearch.addresses: got %v", cfg.Elasticsearch.Addresses)
 	}
-	if cfg.Elasticsearch.IndexPrefix != "sentinel" {
+	if cfg.Elasticsearch.IndexPrefix != "akeso" {
 		t.Errorf("elasticsearch.index_prefix: got %q", cfg.Elasticsearch.IndexPrefix)
 	}
 	if cfg.Ingest.HTTPPort != 8080 {
@@ -138,7 +138,7 @@ format = "xml"
 }
 
 func TestMissingFile(t *testing.T) {
-	_, err := Load("/nonexistent/sentinel.toml")
+	_, err := Load("/nonexistent/akeso.toml")
 	if err == nil {
 		t.Fatal("expected error for missing file")
 	}
@@ -180,7 +180,7 @@ format = "bad"
 func writeTempConfig(t *testing.T, content string) string {
 	t.Helper()
 	dir := t.TempDir()
-	path := filepath.Join(dir, "sentinel.toml")
+	path := filepath.Join(dir, "akeso.toml")
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}

@@ -1,0 +1,68 @@
+title: NDR + DLP - Network Exfiltration with DLP Confirmation
+id: c1a2b3c4-d5e6-4f78-9a0b-4c5d6e7f8a04
+status: experimental
+description: |
+  DLP classifies files on Host A as confidential followed by NDR detecting
+  high-volume outbound transfer from Host A within 60 minutes. Correlated
+  by host.ip and user.name. Confirms data exfiltration by linking DLP
+  content classification with NDR network behavior evidence.
+references:
+  - https://github.com/justaguywhocodes/AkesoSIEM
+author: AkesoSIEM
+date: 2026/03/15
+tags:
+  - attack.exfiltration
+  - attack.t1041           # Exfiltration Over C2 Channel
+  - sentinel.cross_portfolio
+  - sentinel.ndr_dlp
+level: critical
+falsepositives:
+  - Large legitimate file uploads to approved cloud storage following classification
+  - Backup processes transferring classified data to approved destinations
+
+# --- Component rules ---
+
+# Rule 1: DLP confidential data classification or violation
+---
+title: DLP Confidential Data Activity
+id: c1a2b3c4-d5e6-4f78-9a0b-400000000001
+status: experimental
+logsource:
+  product: akeso_dlp
+detection:
+  selection:
+    dlp.classification:
+      - confidential
+      - restricted
+      - top_secret
+  condition: selection
+
+# Rule 2: NDR high-volume outbound transfer
+---
+title: NDR High Volume Outbound Transfer
+id: c1a2b3c4-d5e6-4f78-9a0b-400000000002
+status: experimental
+logsource:
+  product: akeso_ndr
+detection:
+  selection:
+    event.action: session
+    network.direction: outbound
+  condition: selection
+
+# Correlation: same user within 60 minutes
+---
+title: DLP Classification to NDR Exfiltration Correlation
+id: c1a2b3c4-d5e6-4f78-9a0b-400000000003
+type: correlation
+status: experimental
+rules:
+  - c1a2b3c4-d5e6-4f78-9a0b-400000000001
+  - c1a2b3c4-d5e6-4f78-9a0b-400000000002
+group-by:
+  - user.name
+timespan: 60m
+ordered: true
+condition:
+  gte: 2
+level: critical

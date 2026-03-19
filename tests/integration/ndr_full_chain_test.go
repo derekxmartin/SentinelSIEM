@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // TestNDRFullChainCorrelation validates the 4-event NDR+EDR attack scenario:
@@ -23,7 +23,7 @@ func TestNDRFullChainCorrelation(t *testing.T) {
 		// Stage 1: NDR port scan reconnaissance at T+0
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event: &common.EventFields{
 				Kind:     "event",
 				Category: []string{"network"},
@@ -43,7 +43,7 @@ func TestNDRFullChainCorrelation(t *testing.T) {
 		// Stage 2: EDR LSASS credential dumping at T+15min
 		{
 			Timestamp:  base.Add(15 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event: &common.EventFields{
 				Kind:     "event",
 				Category: []string{"process"},
@@ -57,7 +57,7 @@ func TestNDRFullChainCorrelation(t *testing.T) {
 		// Stage 3: NDR SMB lateral movement at T+30min
 		{
 			Timestamp:  base.Add(30 * time.Minute),
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event: &common.EventFields{
 				Kind:     "event",
 				Category: []string{"network"},
@@ -75,7 +75,7 @@ func TestNDRFullChainCorrelation(t *testing.T) {
 		// Stage 4: NDR data exfiltration at T+90min
 		{
 			Timestamp:  base.Add(90 * time.Minute),
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event: &common.EventFields{
 				Kind:     "event",
 				Category: []string{"network"},
@@ -136,7 +136,7 @@ func TestNDRFullChainDifferentUsers(t *testing.T) {
 		// Stage 1: user_a does port scan
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Action: "port_scan"},
 			User:       &common.UserFields{Name: "user_a"},
 			NDR:        &common.NDRFields{Detection: &common.NDRDetection{Category: "reconnaissance"}},
@@ -144,14 +144,14 @@ func TestNDRFullChainDifferentUsers(t *testing.T) {
 		// Stage 2: user_b does credential dump (DIFFERENT user!)
 		{
 			Timestamp:  base.Add(15 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Action: "lsass_access"},
 			User:       &common.UserFields{Name: "user_b"},
 		},
 		// Stage 3: user_a does SMB
 		{
 			Timestamp:  base.Add(30 * time.Minute),
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Action: "smb_write"},
 			User:       &common.UserFields{Name: "user_a"},
 			Network:    &common.NetworkFields{Direction: "outbound"},
@@ -159,7 +159,7 @@ func TestNDRFullChainDifferentUsers(t *testing.T) {
 		// Stage 4: user_a does exfil
 		{
 			Timestamp:  base.Add(90 * time.Minute),
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Action: "session"},
 			User:       &common.UserFields{Name: "user_a"},
 			Network:    &common.NetworkFields{Direction: "outbound"},
@@ -190,7 +190,7 @@ func TestNDRFullChainWindowExpiry(t *testing.T) {
 		// Stage 1: T+0
 		{
 			Timestamp:  base,
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Action: "port_scan"},
 			User:       &common.UserFields{Name: user},
 			NDR:        &common.NDRFields{Detection: &common.NDRDetection{Category: "reconnaissance"}},
@@ -198,14 +198,14 @@ func TestNDRFullChainWindowExpiry(t *testing.T) {
 		// Stage 2: T+30min
 		{
 			Timestamp:  base.Add(30 * time.Minute),
-			SourceType: "sentinel_edr",
+			SourceType: "akeso_edr",
 			Event:      &common.EventFields{Kind: "event", Category: []string{"process"}, Action: "lsass_access"},
 			User:       &common.UserFields{Name: user},
 		},
 		// Stage 3: T+60min
 		{
 			Timestamp:  base.Add(60 * time.Minute),
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Action: "smb_write"},
 			User:       &common.UserFields{Name: user},
 			Network:    &common.NetworkFields{Direction: "outbound"},
@@ -213,7 +213,7 @@ func TestNDRFullChainWindowExpiry(t *testing.T) {
 		// Stage 4: T+150min (OUTSIDE 120-minute window from stage 1)
 		{
 			Timestamp:  base.Add(150 * time.Minute),
-			SourceType: "sentinel_ndr",
+			SourceType: "akeso_ndr",
 			Event:      &common.EventFields{Kind: "event", Action: "session"},
 			User:       &common.UserFields{Name: user},
 			Network:    &common.NetworkFields{Direction: "outbound"},

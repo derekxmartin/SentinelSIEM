@@ -68,8 +68,8 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <img src={logo} alt="SentinelSIEM" className="h-16 w-16 mb-4" />
-          <h1 className="text-2xl font-bold text-white">SentinelSIEM</h1>
+          <img src={logo} alt="AkesoSIEM" className="h-16 w-16 mb-4" />
+          <h1 className="text-2xl font-bold text-white">AkesoSIEM</h1>
           <p className="text-slate-400 text-sm mt-1">Sign in to your account</p>
         </div>
 

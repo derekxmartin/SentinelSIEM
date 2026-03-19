@@ -3,7 +3,7 @@ package cases
 import (
 	"net"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // ExtractObservables extracts observables from an ECS-normalized event,

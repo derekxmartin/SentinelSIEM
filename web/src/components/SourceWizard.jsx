@@ -231,21 +231,21 @@ function generateMockSnippet(config, format, apiKey) {
 
   if (format === 'toml') {
     if (isSyslog) {
-      return `# SentinelSIEM source config for ${name}\n[syslog_output]\n  protocol = "${config.protocol?.replace('syslog_', '')}"\n  target = "<SENTINEL_HOST>:${port}"\n  source_type = "${parser}"`
+      return `# AkesoSIEM source config for ${name}\n[syslog_output]\n  protocol = "${config.protocol?.replace('syslog_', '')}"\n  target = "<AKESO_HOST>:${port}"\n  source_type = "${parser}"`
     }
-    return `# SentinelSIEM source config for ${name}\n[http_output]\n  endpoint = "https://<SENTINEL_HOST>:8080/api/v1/ingest"\n  source_type = "${parser}"\n  api_key = "${key}"\n  batch_size = 100\n  flush_interval = "5s"`
+    return `# AkesoSIEM source config for ${name}\n[http_output]\n  endpoint = "https://<AKESO_HOST>:8080/api/v1/ingest"\n  source_type = "${parser}"\n  api_key = "${key}"\n  batch_size = 100\n  flush_interval = "5s"`
   }
   if (format === 'yaml') {
     if (isSyslog) {
-      return `# SentinelSIEM source config for ${name}\nsyslog_output:\n  protocol: "${config.protocol?.replace('syslog_', '')}"\n  target: "<SENTINEL_HOST>:${port}"\n  source_type: "${parser}"`
+      return `# AkesoSIEM source config for ${name}\nsyslog_output:\n  protocol: "${config.protocol?.replace('syslog_', '')}"\n  target: "<AKESO_HOST>:${port}"\n  source_type: "${parser}"`
     }
-    return `# SentinelSIEM source config for ${name}\nhttp_output:\n  endpoint: "https://<SENTINEL_HOST>:8080/api/v1/ingest"\n  source_type: "${parser}"\n  api_key: "${key}"\n  batch_size: 100\n  flush_interval: "5s"`
+    return `# AkesoSIEM source config for ${name}\nhttp_output:\n  endpoint: "https://<AKESO_HOST>:8080/api/v1/ingest"\n  source_type: "${parser}"\n  api_key: "${key}"\n  batch_size: 100\n  flush_interval: "5s"`
   }
   if (format === 'rsyslog') {
-    return `# rsyslog config for ${name}\n# Add to /etc/rsyslog.d/sentinel.conf\n\n*.* @@<SENTINEL_HOST>:${port}`
+    return `# rsyslog config for ${name}\n# Add to /etc/rsyslog.d/akeso.conf\n\n*.* @@<AKESO_HOST>:${port}`
   }
   // pfsense
-  return `# pfSense config for ${name}\n# Navigate to: Status > System Logs > Settings\n#\n# 1. Check "Enable Remote Logging"\n# 2. Remote log servers: <SENTINEL_HOST>:${port}\n# 3. Remote Syslog Contents: Everything\n# 4. Click Save`
+  return `# pfSense config for ${name}\n# Navigate to: Status > System Logs > Settings\n#\n# 1. Check "Enable Remote Logging"\n# 2. Remote log servers: <AKESO_HOST>:${port}\n# 3. Remote Syslog Contents: Everything\n# 4. Click Save`
 }
 
 export default function SourceWizard({ onClose }) {

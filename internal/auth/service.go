@@ -40,7 +40,7 @@ func NewService(backend Backend, jwtManager *JWTManager, mfaEncryptor *MFAEncryp
 		backend:      backend,
 		jwt:          jwtManager,
 		mfaEncryptor: mfaEncryptor,
-		totp:         NewTOTPManager("SentinelSIEM"),
+		totp:         NewTOTPManager("AkesoSIEM"),
 		userIndex:    userIndex,
 		sessionIndex: sessionIndex,
 	}

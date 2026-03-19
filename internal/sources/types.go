@@ -2,8 +2,8 @@ package sources
 
 import "time"
 
-// SourceConfig represents a registered log source in SentinelSIEM.
-// Each source maps to a document in the sentinel-sources ES index.
+// SourceConfig represents a registered log source in AkesoSIEM.
+// Each source maps to a document in the akeso-sources ES index.
 type SourceConfig struct {
 	ID            string    `json:"id"`
 	Name          string    `json:"name"`

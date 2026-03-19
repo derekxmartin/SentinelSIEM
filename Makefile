@@ -1,15 +1,15 @@
 .PHONY: build test clean lint run-ingest run-correlate run-query install dev demo demo-clean dashboard
 
 BINDIR := bin
-MODULE := github.com/SentinelSIEM/sentinel-siem
+MODULE := github.com/derekxmartin/akeso-siem
 
 all: build
 
 build:
-	go build -o $(BINDIR)/sentinel-ingest.exe ./cmd/sentinel-ingest
-	go build -o $(BINDIR)/sentinel-correlate.exe ./cmd/sentinel-correlate
-	go build -o $(BINDIR)/sentinel-query.exe ./cmd/sentinel-query
-	go build -o $(BINDIR)/sentinel-cli.exe ./cmd/sentinel-cli
+	go build -o $(BINDIR)/akeso-ingest.exe ./cmd/akeso-ingest
+	go build -o $(BINDIR)/akeso-correlate.exe ./cmd/akeso-correlate
+	go build -o $(BINDIR)/akeso-query.exe ./cmd/akeso-query
+	go build -o $(BINDIR)/akeso-cli.exe ./cmd/akeso-cli
 	@echo All binaries built in $(BINDIR)/
 
 test:
@@ -47,10 +47,10 @@ dashboard:
 	cd web && npm install && npm run build
 
 run-ingest: build
-	$(BINDIR)/sentinel-ingest.exe
+	$(BINDIR)/akeso-ingest.exe
 
 run-correlate: build
-	$(BINDIR)/sentinel-correlate.exe
+	$(BINDIR)/akeso-correlate.exe
 
 run-query: build
-	$(BINDIR)/sentinel-query.exe
+	$(BINDIR)/akeso-query.exe

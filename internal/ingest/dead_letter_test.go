@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/common"
 )
 
 // mockDLQIndexer captures bulk-indexed events for test assertions.
@@ -55,7 +55,7 @@ func TestDLQSendAndFlush(t *testing.T) {
 	dlq.SendRaw(raw, fmt.Errorf("invalid source_type"))
 
 	// Send an index failure.
-	dlq.Send(DLQReasonIndexFailure, "sentinel_edr", json.RawMessage(`{"edr": true}`),
+	dlq.Send(DLQReasonIndexFailure, "akeso_edr", json.RawMessage(`{"edr": true}`),
 		fmt.Errorf("bulk index timeout"), 0, "test-events-edr-2026.03.17")
 
 	// Wait for flush.
@@ -168,16 +168,16 @@ func TestDLQDefaultPrefix(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	dlq.Stop()
 
-	// Check that the default "sentinel" prefix was used.
+	// Check that the default "akeso" prefix was used.
 	indexer.mu.Lock()
 	defer indexer.mu.Unlock()
 	found := false
 	for idx := range indexer.indexed {
-		if len(idx) > 0 && idx[:8] == "sentinel" {
+		if len(idx) > 0 && idx[:8] == "akeso" {
 			found = true
 		}
 	}
 	if !found {
-		t.Error("expected index with 'sentinel' prefix")
+		t.Error("expected index with 'akeso' prefix")
 	}
 }

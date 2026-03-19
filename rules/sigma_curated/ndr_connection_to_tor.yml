@@ -6,7 +6,7 @@ description: |
   Tor anonymity network, which may indicate evasion or data exfiltration.
 references:
   - https://attack.mitre.org/techniques/T1090/003/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.command_and_control
@@ -14,7 +14,7 @@ tags:
 level: high
 logsource:
   category: network_connection
-  product: sentinel_ndr
+  product: akeso_ndr
 detection:
   selection:
     destination.port:

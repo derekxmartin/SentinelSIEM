@@ -1,14 +1,15 @@
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
-    container_name: sentinel-es
+    container_name: akeso-es
+    hostname: akeso-es
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - xpack.security.http.ssl.enabled=false
       - ES_JAVA_OPTS=-Xms1g -Xmx1g
-      - cluster.name=sentinel-siem
-      - node.name=sentinel-es-01
+      - cluster.name=akeso-siem
+      - node.name=akeso-es-01
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -24,7 +25,7 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.17.0
-    container_name: sentinel-kibana
+    container_name: akeso-kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
       - xpack.security.enabled=false

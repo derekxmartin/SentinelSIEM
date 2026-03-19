@@ -1,0 +1,71 @@
+2026/03/17 10:27:35 File logging enabled: logs/sentinel-ingest.log (max 100MB, 10 files, 30 days retention)
+2026/03/17 10:27:35 Registered parsers: [sentinel_edr sentinel_ndr winevt_xml winevt_json syslog]
+2026/03/17 10:27:35 Elasticsearch index template ensured
+2026/03/17 10:27:35 NDR host score index ensured
+2026/03/17 10:27:35 [rule-loader] built engine: 81 rules compiled, 12 skipped, 16 buckets, 0 errors
+2026/03/17 10:27:35 Sigma rule engine loaded: 81 rules compiled, 12 skipped, 16 buckets, 0 errors
+2026/03/17 10:27:35 [rule-loader] file watcher started (interval=30s, dir=rules)
+2026/03/17 10:27:35 Alert dedup window: 60s
+2026/03/17 10:27:35 Dead letter queue enabled
+2026/03/17 10:27:35 Alert retry queue enabled (max 3 retries)
+2026/03/17 10:27:35 Correlation state manager started (expiry every 1h0m0s, max 10000 buckets/rule)
+2026/03/17 10:27:35 [syslog] TCP listening on :1514
+2026/03/17 10:27:35 [syslog] UDP listening on :1514
+2026/03/17 10:30:16 [pipeline] normalization error: normalize: parser "sentinel_edr": sentinel_edr: unmarshal inner event: unexpected end of JSON input
+2026/03/17 10:30:25 [dlq] flushed 1 entries to sentinel-dlq-2026.03.17
+2026/03/17 10:31:36 [pipeline] normalization error: normalize: parser "sentinel_edr": sentinel_edr: unmarshal inner event: unexpected end of JSON input
+2026/03/17 10:31:45 [dlq] flushed 1 entries to sentinel-dlq-2026.03.17
+2026/03/17 10:33:36 [pipeline] normalization error: normalize: parser "sentinel_edr": sentinel_edr: unmarshal inner event: unexpected end of JSON input
+2026/03/17 10:33:45 [dlq] flushed 1 entries to sentinel-dlq-2026.03.17
+2026/03/17 10:35:29 [pipeline] indexed 2 alert(s) to sentinel-alerts-2026.03.17
+2026/03/17 13:01:40 [shutdown] received interrupt, starting graceful shutdown (deadline: 10s)
+2026/03/17 13:01:40 [shutdown] [1/7] stop HTTP server ...
+2026/03/17 13:01:40 [shutdown] [1/7] stop HTTP server OK (1ms)
+2026/03/17 13:01:40 [shutdown] [2/7] stop syslog listeners ...
+2026/03/17 13:01:40 [shutdown] [2/7] stop syslog listeners OK (1ms)
+2026/03/17 13:01:40 [shutdown] [3/7] drain in-flight events ...
+2026/03/17 13:01:40 [shutdown] 1 events processed during lifetime
+2026/03/17 13:01:40 [shutdown] [3/7] drain in-flight events OK (1ms)
+2026/03/17 13:01:40 [shutdown] [4/7] stop correlation state manager ...
+2026/03/17 13:01:40 Correlation state manager stopped
+2026/03/17 13:01:40 [shutdown] [4/7] stop correlation state manager OK (0s)
+2026/03/17 13:01:40 [shutdown] [5/7] flush alert retry queue ...
+2026/03/17 13:01:40 [shutdown] [5/7] flush alert retry queue OK (1ms)
+2026/03/17 13:01:40 [shutdown] [6/7] flush dead letter queue ...
+2026/03/17 13:01:40 [shutdown] [6/7] flush dead letter queue OK (0s)
+2026/03/17 13:01:40 [shutdown] [7/7] stop rule loader ...
+2026/03/17 13:01:40 [rule-loader] file watcher stopped
+2026/03/17 13:01:40 [shutdown] [7/7] stop rule loader OK (1ms)
+2026/03/17 13:01:40 [shutdown] clean shutdown in 3ms
+2026/03/17 13:01:41 File logging enabled: logs/sentinel-ingest.log (max 100MB, 10 files, 30 days retention)
+2026/03/17 13:01:41 Registered parsers: [syslog sentinel_edr sentinel_ndr winevt_xml winevt_json]
+2026/03/17 13:01:41 Elasticsearch index template ensured
+2026/03/17 13:01:41 NDR host score index ensured
+2026/03/17 13:01:41 [rule-loader] built engine: 81 rules compiled, 12 skipped, 16 buckets, 0 errors
+2026/03/17 13:01:41 Sigma rule engine loaded: 81 rules compiled, 12 skipped, 16 buckets, 0 errors
+2026/03/17 13:01:41 [rule-loader] file watcher started (interval=30s, dir=rules)
+2026/03/17 13:01:41 Alert dedup window: 60s
+2026/03/17 13:01:41 Dead letter queue enabled
+2026/03/17 13:01:41 Alert retry queue enabled (max 3 retries)
+2026/03/17 13:01:41 Correlation state manager started (expiry every 1h0m0s, max 10000 buckets/rule)
+2026/03/17 13:01:41 [syslog] TCP listening on :1514
+2026/03/17 13:01:41 [syslog] UDP listening on :1514
+2026/03/17 20:31:37 [shutdown] received interrupt, starting graceful shutdown (deadline: 10s)
+2026/03/17 20:31:37 [shutdown] [1/7] stop HTTP server ...
+2026/03/17 20:31:37 [shutdown] [1/7] stop HTTP server OK (0s)
+2026/03/17 20:31:37 [shutdown] [2/7] stop syslog listeners ...
+2026/03/17 20:31:37 [shutdown] [2/7] stop syslog listeners OK (0s)
+2026/03/17 20:31:37 [shutdown] [3/7] drain in-flight events ...
+2026/03/17 20:31:37 [shutdown] 0 events processed during lifetime
+2026/03/17 20:31:37 [shutdown] [3/7] drain in-flight events OK (0s)
+2026/03/17 20:31:37 [shutdown] [4/7] stop correlation state manager ...
+2026/03/17 20:31:37 Correlation state manager stopped
+2026/03/17 20:31:37 [shutdown] [4/7] stop correlation state manager OK (0s)
+2026/03/17 20:31:37 [shutdown] [5/7] flush alert retry queue ...
+2026/03/17 20:31:37 [shutdown] [5/7] flush alert retry queue OK (0s)
+2026/03/17 20:31:37 [shutdown] [6/7] flush dead letter queue ...
+2026/03/17 20:31:37 [shutdown] [6/7] flush dead letter queue OK (1ms)
+2026/03/17 20:31:37 [shutdown] [7/7] stop rule loader ...
+2026/03/17 20:31:37 [rule-loader] file watcher stopped
+2026/03/17 20:31:37 [shutdown] [7/7] stop rule loader OK (0s)
+2026/03/17 20:31:37 [shutdown] clean shutdown in 2ms

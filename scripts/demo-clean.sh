@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SentinelSIEM Demo Cleanup
+# AkesoSIEM Demo Cleanup
 # Removes demo accounts, demo data indices, and stops services.
 #
 # Usage: ./scripts/demo-clean.sh
@@ -36,7 +36,7 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]] ||
     EXT=".exe"
 fi
 
-CLI="bin/sentinel-cli${EXT}"
+CLI="bin/akeso-cli${EXT}"
 
 # ─── Step 1: Disable demo accounts ──────────────────────────────────────────
 DEMO_USERS=("sarah.chen" "james.wilson" "maria.garcia" "alex.kumar" "viewer")
@@ -56,7 +56,7 @@ info "Deleting demo data and user indices..."
 curl -s -X PUT "${ES_HOST}/_cluster/settings" \
     -H "Content-Type: application/json" \
     -d '{"transient":{"action.destructive_requires_name":false}}' >/dev/null 2>&1
-for pattern in "sentinel-events-*" "sentinel-alerts-*" "sentinel-dlq-*" "sentinel-users" "sentinel-sessions" "sentinel-api-keys"; do
+for pattern in "akeso-events-*" "akeso-alerts-*" "akeso-dlq-*" "akeso-users" "sentinel-sessions" "sentinel-api-keys"; do
     result=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "${ES_HOST}/${pattern}" 2>/dev/null)
     if [[ "$result" == "200" ]]; then
         ok "Deleted indices: $pattern"
@@ -68,13 +68,13 @@ for pattern in "sentinel-events-*" "sentinel-alerts-*" "sentinel-dlq-*" "sentine
 done
 
 # ─── Step 3: Stop services ─────────────────────────────────────────────────
-info "Stopping SentinelSIEM services..."
+info "Stopping AkesoSIEM services..."
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]] || [[ "$(uname -s)" == MINGW* ]] || [[ -n "${WINDIR:-}" ]]; then
-    taskkill //IM sentinel-ingest.exe //F 2>/dev/null && ok "Stopped sentinel-ingest" || warn "sentinel-ingest not running"
-    taskkill //IM sentinel-query.exe //F 2>/dev/null && ok "Stopped sentinel-query" || warn "sentinel-query not running"
+    taskkill //IM akeso-ingest.exe //F 2>/dev/null && ok "Stopped akeso-ingest" || warn "akeso-ingest not running"
+    taskkill //IM akeso-query.exe //F 2>/dev/null && ok "Stopped akeso-query" || warn "akeso-query not running"
 else
-    pkill -f sentinel-ingest 2>/dev/null && ok "Stopped sentinel-ingest" || warn "sentinel-ingest not running"
-    pkill -f sentinel-query 2>/dev/null && ok "Stopped sentinel-query" || warn "sentinel-query not running"
+    pkill -f akeso-ingest 2>/dev/null && ok "Stopped akeso-ingest" || warn "akeso-ingest not running"
+    pkill -f akeso-query 2>/dev/null && ok "Stopped akeso-query" || warn "akeso-query not running"
 fi
 
 echo ""

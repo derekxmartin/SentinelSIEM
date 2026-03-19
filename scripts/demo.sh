@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SentinelSIEM Demo Script
+# AkesoSIEM Demo Script
 # Runs install, creates demo analyst accounts, replays fixture data through
 # all source types, triggers correlation rules, and populates the dashboard.
 #
@@ -42,26 +42,26 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]] ||
     EXT=".exe"
 fi
 
-CLI="$BINDIR/sentinel-cli${EXT}"
+CLI="$BINDIR/akeso-cli${EXT}"
 if [ ! -f "$CLI" ]; then
     info "Binaries not found. Running install first..."
     "$SCRIPT_DIR/install.sh"
 fi
 
 # Extract ingest key from config.
-INGEST_KEY=$(grep -oP 'api_keys\s*=\s*\["\K[^"]+' sentinel.toml 2>/dev/null || echo "changeme")
+INGEST_KEY=$(grep -oP 'api_keys\s*=\s*\["\K[^"]+' akeso.toml 2>/dev/null || echo "changeme")
 INGEST_URL="http://localhost:${INGEST_PORT}"
 QUERY_URL="http://localhost:${QUERY_PORT}"
 
 # ─── Step 1: Verify services are running ──────────────────────────────────────
 info "Checking services..."
 STARTED_SERVICES=false
-if ! curl -s "http://localhost:${INGEST_PORT}/metrics" 2>/dev/null | grep -q "sentinel"; then
+if ! curl -s "http://localhost:${INGEST_PORT}/metrics" 2>/dev/null | grep -q "akeso"; then
     info "Ingest not running, starting services..."
-    "$BINDIR/sentinel-ingest${EXT}" --config sentinel.toml &
+    "$BINDIR/akeso-ingest${EXT}" --config akeso.toml &
     INGEST_PID=$!
     disown "$INGEST_PID"
-    "$BINDIR/sentinel-query${EXT}" --config sentinel.toml &
+    "$BINDIR/akeso-query${EXT}" --config akeso.toml &
     QUERY_PID=$!
     disown "$QUERY_PID"
     STARTED_SERVICES=true
@@ -134,12 +134,12 @@ replay() {
     fi
 }
 
-replay "tests/fixtures/sentinel_edr/sentinel_edr_events.ndjson"     "Sentinel EDR"
-replay "tests/fixtures/sentinel_ndr/sentinel_ndr_events.ndjson"     "Sentinel NDR"
+replay "tests/fixtures/akeso_edr/akeso_edr_events.ndjson"     "Akeso EDR"
+replay "tests/fixtures/akeso_ndr/akeso_ndr_events.ndjson"     "Akeso NDR"
 replay "tests/fixtures/winevt_json/winevt_json_events.ndjson"       "Windows Events (JSON)"
 replay "tests/fixtures/winevt_xml/winevt_xml_events.ndjson"         "Windows Events (XML)"
-replay "tests/fixtures/sentinel_av/sentinel_av_events.ndjson"       "Sentinel AV"
-replay "tests/fixtures/sentinel_dlp/sentinel_dlp_events.ndjson"     "Sentinel DLP"
+replay "tests/fixtures/akeso_av/akeso_av_events.ndjson"       "Akeso AV"
+replay "tests/fixtures/akeso_dlp/akeso_dlp_events.ndjson"     "Akeso DLP"
 replay "tests/fixtures/syslog/syslog_events.ndjson"                 "Syslog"
 
 # Also replay edge case data.
@@ -159,15 +159,15 @@ sleep 5
 info "Verifying data in Elasticsearch..."
 
 # Count total events.
-TOTAL_EVENTS=$(curl -s "${ES_HOST}/sentinel-events-*/_count" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null || echo "?")
+TOTAL_EVENTS=$(curl -s "${ES_HOST}/akeso-events-*/_count" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null || echo "?")
 ok "Total events indexed: ${TOTAL_EVENTS}"
 
 # Count alerts.
-TOTAL_ALERTS=$(curl -s "${ES_HOST}/sentinel-alerts-*/_count" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null || echo "?")
+TOTAL_ALERTS=$(curl -s "${ES_HOST}/akeso-alerts-*/_count" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null || echo "?")
 ok "Total alerts generated: ${TOTAL_ALERTS}"
 
 # Count DLQ entries.
-DLQ_COUNT=$(curl -s "${ES_HOST}/sentinel-dlq-*/_count" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null || echo "0")
+DLQ_COUNT=$(curl -s "${ES_HOST}/akeso-dlq-*/_count" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('count',0))" 2>/dev/null || echo "0")
 if [ "$DLQ_COUNT" != "0" ] && [ "$DLQ_COUNT" != "?" ]; then
     info "DLQ entries: ${DLQ_COUNT} (expected for edge case data)"
 fi
@@ -178,7 +178,7 @@ info "Demo data loading complete."
 # ─── Summary ─────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${BOLD}  SentinelSIEM Demo Ready${NC}"
+echo -e "${BOLD}  AkesoSIEM Demo Ready${NC}"
 echo -e "${BOLD}═══════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "  ${BOLD}Data Summary:${NC}"
@@ -202,8 +202,8 @@ echo -e "    Kibana:         http://localhost:5601"
 echo -e "    Prometheus:     http://localhost:${INGEST_PORT}/metrics"
 echo ""
 echo -e "  ${BOLD}Try:${NC}"
-echo -e "    sentinel-cli --server http://localhost:${QUERY_PORT} alerts"
-echo -e "    sentinel-cli --server http://localhost:${QUERY_PORT} query 'event.action:process_start'"
+echo -e "    akeso-cli --server http://localhost:${QUERY_PORT} alerts"
+echo -e "    akeso-cli --server http://localhost:${QUERY_PORT} query 'event.action:process_start'"
 echo ""
 echo -e "  ${BOLD}Teardown:${NC}"
 echo -e "    make demo-clean    (disables demo users, deletes indices, stops services)"

@@ -6,14 +6,14 @@ description: |
   potentially exposing sensitive fiscal information.
 references:
   - https://attack.mitre.org/techniques/T1041/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.exfiltration
   - attack.t1041
 level: high
 logsource:
-  product: sentinel_dlp
+  product: akeso_dlp
 detection:
   selection:
     dlp.policy.name|contains:

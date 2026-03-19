@@ -6,7 +6,7 @@ description: |
   payloads, a well-known living-off-the-land technique.
 references:
   - https://attack.mitre.org/techniques/T1105/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.command_and_control

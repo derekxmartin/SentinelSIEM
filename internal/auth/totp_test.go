@@ -9,7 +9,7 @@ import (
 )
 
 func TestTOTPManager_GenerateSecret(t *testing.T) {
-	mgr := NewTOTPManager("SentinelSIEM")
+	mgr := NewTOTPManager("AkesoSIEM")
 
 	secret, uri, err := mgr.GenerateSecret("testuser")
 	if err != nil {
@@ -31,7 +31,7 @@ func TestTOTPManager_GenerateSecret(t *testing.T) {
 }
 
 func TestTOTPManager_ValidateCode_Valid(t *testing.T) {
-	mgr := NewTOTPManager("SentinelSIEM")
+	mgr := NewTOTPManager("AkesoSIEM")
 
 	secret, _, err := mgr.GenerateSecret("testuser")
 	if err != nil {
@@ -54,7 +54,7 @@ func TestTOTPManager_ValidateCode_Valid(t *testing.T) {
 }
 
 func TestTOTPManager_ValidateCode_Invalid(t *testing.T) {
-	mgr := NewTOTPManager("SentinelSIEM")
+	mgr := NewTOTPManager("AkesoSIEM")
 
 	secret, _, err := mgr.GenerateSecret("testuser")
 	if err != nil {
@@ -70,7 +70,7 @@ func TestTOTPManager_ValidateCode_Invalid(t *testing.T) {
 }
 
 func TestTOTPManager_ValidateCode_WindowTolerance(t *testing.T) {
-	mgr := NewTOTPManager("SentinelSIEM")
+	mgr := NewTOTPManager("AkesoSIEM")
 
 	secret, _, err := mgr.GenerateSecret("testuser")
 	if err != nil {

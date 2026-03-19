@@ -10,8 +10,8 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esutil"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/config"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/config"
 )
 
 // Indexer is the interface used by the ingest pipeline to write events to storage.
@@ -44,7 +44,7 @@ func New(cfg config.ElasticsearchConfig) (*Store, error) {
 
 	prefix := cfg.IndexPrefix
 	if prefix == "" {
-		prefix = "sentinel"
+		prefix = "akeso"
 	}
 
 	return &Store{client: client, prefix: prefix}, nil

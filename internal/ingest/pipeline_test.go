@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/SentinelSIEM/sentinel-siem/internal/common"
-	"github.com/SentinelSIEM/sentinel-siem/internal/correlate"
-	"github.com/SentinelSIEM/sentinel-siem/internal/normalize"
+	"github.com/derekxmartin/akeso-siem/internal/common"
+	"github.com/derekxmartin/akeso-siem/internal/correlate"
+	"github.com/derekxmartin/akeso-siem/internal/normalize"
 )
 
 // mockIndexer captures BulkIndex calls for verification.
@@ -123,15 +123,15 @@ func makeTestEvent(sourceType string) json.RawMessage {
 
 func TestPipelineNormalizeAndIndex(t *testing.T) {
 	reg := normalize.NewRegistry()
-	reg.Register(&testParser{sourceType: "sentinel_edr"})
+	reg.Register(&testParser{sourceType: "akeso_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
 	// Send 5 events.
 	events := make([]json.RawMessage, 5)
 	for i := range events {
-		events[i] = makeTestEvent("sentinel_edr")
+		events[i] = makeTestEvent("akeso_edr")
 	}
 
 	pipeline.Handle(events)
@@ -143,20 +143,20 @@ func TestPipelineNormalizeAndIndex(t *testing.T) {
 
 func TestPipelineIndexNaming(t *testing.T) {
 	reg := normalize.NewRegistry()
-	reg.Register(&testParser{sourceType: "sentinel_edr"})
+	reg.Register(&testParser{sourceType: "akeso_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
-	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
+	pipeline.Handle([]json.RawMessage{makeTestEvent("akeso_edr")})
 
 	names := indexer.indexNames()
 	if len(names) != 1 {
 		t.Fatalf("expected 1 index, got %d", len(names))
 	}
 
-	// Index should match pattern: sentinel-events-sentinel_edr-YYYY.MM.dd
-	expected := "sentinel-events-sentinel_edr-"
+	// Index should match pattern: akeso-events-akeso_edr-YYYY.MM.dd
+	expected := "akeso-events-akeso_edr-"
 	if len(names[0]) < len(expected) || names[0][:len(expected)] != expected {
 		t.Errorf("index name = %q, want prefix %q", names[0], expected)
 	}
@@ -166,7 +166,7 @@ func TestPipelineUnknownSourceType(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
 	raw := json.RawMessage(`{"source_type":"futuretype","data":"test"}`)
 	pipeline.Handle([]json.RawMessage{raw})
@@ -176,7 +176,7 @@ func TestPipelineUnknownSourceType(t *testing.T) {
 		t.Fatalf("expected 1 index, got %d", len(names))
 	}
 
-	expected := "sentinel-events-futuretype-"
+	expected := "akeso-events-futuretype-"
 	if len(names[0]) < len(expected) || names[0][:len(expected)] != expected {
 		t.Errorf("index name = %q, want prefix %q", names[0], expected)
 	}
@@ -186,7 +186,7 @@ func TestPipelineMissingSourceType(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
 	raw := json.RawMessage(`{"data":"no source type"}`)
 	pipeline.Handle([]json.RawMessage{raw})
@@ -196,7 +196,7 @@ func TestPipelineMissingSourceType(t *testing.T) {
 		t.Fatalf("expected 1 index, got %d", len(names))
 	}
 
-	expected := "sentinel-events-unknown-"
+	expected := "akeso-events-unknown-"
 	if len(names[0]) < len(expected) || names[0][:len(expected)] != expected {
 		t.Errorf("index name = %q, want prefix %q", names[0], expected)
 	}
@@ -204,17 +204,17 @@ func TestPipelineMissingSourceType(t *testing.T) {
 
 func TestPipelineMixedValidInvalid(t *testing.T) {
 	reg := normalize.NewRegistry()
-	reg.Register(&testParser{sourceType: "sentinel_edr"})
+	reg.Register(&testParser{sourceType: "akeso_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
 	events := []json.RawMessage{
-		makeTestEvent("sentinel_edr"),
+		makeTestEvent("akeso_edr"),
 		json.RawMessage(`{broken json`),
-		makeTestEvent("sentinel_edr"),
+		makeTestEvent("akeso_edr"),
 		json.RawMessage(`{also broken`),
-		makeTestEvent("sentinel_edr"),
+		makeTestEvent("akeso_edr"),
 	}
 
 	pipeline.Handle(events)
@@ -227,16 +227,16 @@ func TestPipelineMixedValidInvalid(t *testing.T) {
 
 func TestPipelineMultipleSourceTypes(t *testing.T) {
 	reg := normalize.NewRegistry()
-	reg.Register(&testParser{sourceType: "sentinel_edr"})
-	reg.Register(&testParser{sourceType: "sentinel_av"})
+	reg.Register(&testParser{sourceType: "akeso_edr"})
+	reg.Register(&testParser{sourceType: "akeso_av"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
 	events := []json.RawMessage{
-		makeTestEvent("sentinel_edr"),
-		makeTestEvent("sentinel_edr"),
-		makeTestEvent("sentinel_av"),
+		makeTestEvent("akeso_edr"),
+		makeTestEvent("akeso_edr"),
+		makeTestEvent("akeso_av"),
 	}
 
 	pipeline.Handle(events)
@@ -251,11 +251,11 @@ func TestPipelineMultipleSourceTypes(t *testing.T) {
 	indexer.mu.Lock()
 	defer indexer.mu.Unlock()
 	for _, call := range indexer.calls {
-		if contains(call.Index, "sentinel_edr") && len(call.Events) != 2 {
-			t.Errorf("sentinel_edr group: got %d events, want 2", len(call.Events))
+		if contains(call.Index, "akeso_edr") && len(call.Events) != 2 {
+			t.Errorf("akeso_edr group: got %d events, want 2", len(call.Events))
 		}
-		if contains(call.Index, "sentinel_av") && len(call.Events) != 1 {
-			t.Errorf("sentinel_av group: got %d events, want 1", len(call.Events))
+		if contains(call.Index, "akeso_av") && len(call.Events) != 1 {
+			t.Errorf("akeso_av group: got %d events, want 1", len(call.Events))
 		}
 	}
 }
@@ -264,7 +264,7 @@ func TestPipelineEmptyBatch(t *testing.T) {
 	reg := normalize.NewRegistry()
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
 	// Should not panic or call indexer.
 	pipeline.Handle(nil)
@@ -289,7 +289,7 @@ func TestPipelineDefaultPrefix(t *testing.T) {
 		t.Fatalf("expected 1 index, got %d", len(names))
 	}
 
-	expected := "sentinel-events-test-"
+	expected := "akeso-events-test-"
 	if len(names[0]) < len(expected) || names[0][:len(expected)] != expected {
 		t.Errorf("index name = %q, want prefix %q", names[0], expected)
 	}
@@ -340,7 +340,7 @@ func (m *mockHostScoreIndexer) upsertCount() int {
 // hostScoreParser returns an NDR host_score event.
 type hostScoreParser struct{}
 
-func (p *hostScoreParser) SourceType() string { return "sentinel_ndr" }
+func (p *hostScoreParser) SourceType() string { return "akeso_ndr" }
 
 func (p *hostScoreParser) Parse(raw json.RawMessage) (*common.ECSEvent, error) {
 	return &common.ECSEvent{
@@ -371,7 +371,7 @@ func TestPipelineHostScoreUpsert(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	hsIndexer := &mockHostScoreIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", hsIndexer, nil, nil)
 
 	events := []json.RawMessage{
 		makeTestNDRHostScoreEvent(),
@@ -391,13 +391,13 @@ func TestPipelineHostScoreUpsert(t *testing.T) {
 
 func TestPipelineHostScoreNotUpsertedForNonHostScore(t *testing.T) {
 	reg := normalize.NewRegistry()
-	reg.Register(&testParser{sourceType: "sentinel_edr"})
+	reg.Register(&testParser{sourceType: "akeso_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	hsIndexer := &mockHostScoreIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", hsIndexer, nil, nil)
 
-	events := []json.RawMessage{makeTestEvent("sentinel_edr")}
+	events := []json.RawMessage{makeTestEvent("akeso_edr")}
 	pipeline.Handle(events)
 
 	// Regular events should NOT trigger host score upsert.
@@ -412,7 +412,7 @@ func TestPipelineHostScoreNilIndexer(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	// nil host score indexer — should not panic.
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
 	events := []json.RawMessage{makeTestNDRHostScoreEvent()}
 	pipeline.Handle(events) // Should not panic.
@@ -428,7 +428,7 @@ func TestPipelineMultipleHostScoreEvents(t *testing.T) {
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	hsIndexer := &mockHostScoreIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", hsIndexer, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", hsIndexer, nil, nil)
 
 	events := []json.RawMessage{
 		makeTestNDRHostScoreEvent(),
@@ -479,7 +479,7 @@ func TestIsHostScoreEvent(t *testing.T) {
 
 func makeTestNDRHostScoreEvent() json.RawMessage {
 	event := map[string]any{
-		"source_type": "sentinel_ndr",
+		"source_type": "akeso_ndr",
 		"timestamp":   "2026-03-15T10:00:00Z",
 		"event_type":  "ndr:host_score",
 	}
@@ -536,7 +536,7 @@ mappings:
 // matchingParser returns an event that will match the test rule.
 type matchingParser struct{}
 
-func (p *matchingParser) SourceType() string { return "sentinel_edr" }
+func (p *matchingParser) SourceType() string { return "akeso_edr" }
 
 func (p *matchingParser) Parse(raw json.RawMessage) (*common.ECSEvent, error) {
 	return &common.ECSEvent{
@@ -557,7 +557,7 @@ func (p *matchingParser) Parse(raw json.RawMessage) (*common.ECSEvent, error) {
 // nonMatchingParser returns an event that will NOT match the test rule.
 type nonMatchingParser struct{}
 
-func (p *nonMatchingParser) SourceType() string { return "sentinel_edr" }
+func (p *nonMatchingParser) SourceType() string { return "akeso_edr" }
 
 func (p *nonMatchingParser) Parse(raw json.RawMessage) (*common.ECSEvent, error) {
 	return &common.ECSEvent{
@@ -581,9 +581,9 @@ func TestPipelineRuleEngineMatchGeneratesAlert(t *testing.T) {
 	reg.Register(&matchingParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, ruleEngine, nil)
 
-	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
+	pipeline.Handle([]json.RawMessage{makeTestEvent("akeso_edr")})
 
 	// Should have event index + alert index calls.
 	alertCalls := indexer.alertCalls()
@@ -593,8 +593,8 @@ func TestPipelineRuleEngineMatchGeneratesAlert(t *testing.T) {
 
 	// Verify alert was indexed to correct index pattern.
 	for _, call := range alertCalls {
-		if !strings.HasPrefix(call.Index, "sentinel-alerts-") {
-			t.Errorf("alert index = %q, want prefix 'sentinel-alerts-'", call.Index)
+		if !strings.HasPrefix(call.Index, "akeso-alerts-") {
+			t.Errorf("alert index = %q, want prefix 'akeso-alerts-'", call.Index)
 		}
 	}
 
@@ -638,9 +638,9 @@ func TestPipelineRuleEngineNoMatchNoAlert(t *testing.T) {
 	reg.Register(&nonMatchingParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, ruleEngine, nil)
 
-	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
+	pipeline.Handle([]json.RawMessage{makeTestEvent("akeso_edr")})
 
 	// Events should still be indexed.
 	eventCalls := indexer.eventCalls()
@@ -657,13 +657,13 @@ func TestPipelineRuleEngineNoMatchNoAlert(t *testing.T) {
 
 func TestPipelineNilRuleEngineNoAlerts(t *testing.T) {
 	reg := normalize.NewRegistry()
-	reg.Register(&testParser{sourceType: "sentinel_edr"})
+	reg.Register(&testParser{sourceType: "akeso_edr"})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
 	// nil rule engine — should not panic or generate alerts.
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, nil, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, nil, nil)
 
-	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
+	pipeline.Handle([]json.RawMessage{makeTestEvent("akeso_edr")})
 
 	alertCalls := indexer.alertCalls()
 	if len(alertCalls) != 0 {
@@ -677,12 +677,12 @@ func TestPipelineMultipleMatchingEvents(t *testing.T) {
 	reg.Register(&matchingParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, ruleEngine, nil)
 
 	events := []json.RawMessage{
-		makeTestEvent("sentinel_edr"),
-		makeTestEvent("sentinel_edr"),
-		makeTestEvent("sentinel_edr"),
+		makeTestEvent("akeso_edr"),
+		makeTestEvent("akeso_edr"),
+		makeTestEvent("akeso_edr"),
 	}
 	pipeline.Handle(events)
 
@@ -704,11 +704,11 @@ func TestPipelineMixedMatchAndNonMatch(t *testing.T) {
 	reg.Register(&mixedParser{})
 	engine := normalize.NewEngine(reg)
 	indexer := &mockIndexer{}
-	pipeline := NewPipeline(engine, indexer, "sentinel", nil, ruleEngine, nil)
+	pipeline := NewPipeline(engine, indexer, "akeso", nil, ruleEngine, nil)
 
 	events := []json.RawMessage{
-		makeTestEvent("sentinel_edr"),
-		makeTestEvent("sentinel_edr"),
+		makeTestEvent("akeso_edr"),
+		makeTestEvent("akeso_edr"),
 	}
 	pipeline.Handle(events)
 
@@ -728,7 +728,7 @@ type mixedParser struct {
 	count int
 }
 
-func (p *mixedParser) SourceType() string { return "sentinel_edr" }
+func (p *mixedParser) SourceType() string { return "akeso_edr" }
 
 func (p *mixedParser) Parse(raw json.RawMessage) (*common.ECSEvent, error) {
 	p.mu.Lock()
@@ -894,7 +894,7 @@ func TestPipelineAlertIndexNaming(t *testing.T) {
 	indexer := &mockIndexer{}
 	pipeline := NewPipeline(engine, indexer, "myprefix", nil, ruleEngine, nil)
 
-	pipeline.Handle([]json.RawMessage{makeTestEvent("sentinel_edr")})
+	pipeline.Handle([]json.RawMessage{makeTestEvent("akeso_edr")})
 
 	alertCalls := indexer.alertCalls()
 	if len(alertCalls) == 0 {

@@ -6,7 +6,7 @@ description: |
   a common reconnaissance technique during post-exploitation.
 references:
   - https://attack.mitre.org/techniques/T1087/001/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.discovery

@@ -5,12 +5,12 @@ import { mitreTactics } from '../data/mockRules'
 
 const sourceLabel = {
   sigma_curated: 'Sigma',
-  sentinel_portfolio: 'Sentinel',
+  akeso_portfolio: 'Akeso',
 }
 
 const sourceBadgeClass = {
   sigma_curated: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  sentinel_portfolio: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  akeso_portfolio: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
 }
 
 function formatTriggered(ts) {

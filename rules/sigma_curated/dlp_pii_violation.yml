@@ -6,14 +6,14 @@ description: |
   of data loss prevention policies.
 references:
   - https://attack.mitre.org/techniques/T1530/
-author: SentinelSIEM (SigmaHQ)
+author: AkesoSIEM (SigmaHQ)
 date: 2026/03/16
 tags:
   - attack.collection
   - attack.t1530
 level: high
 logsource:
-  product: sentinel_dlp
+  product: akeso_dlp
 detection:
   selection:
     dlp.policy.name|contains:
